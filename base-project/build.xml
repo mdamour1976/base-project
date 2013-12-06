@@ -1,0 +1,55 @@
+<!-- ======================================================================
+     description: main build file
+     ====================================================================== -->
+<project name="base-project" default="dist">
+	<description>build process..</description>
+
+	<property file="build_override.properties" />
+	<property file="build.properties" />
+
+	<propertyfile file="version.properties">
+		<entry key="release.build.number" type="int" operation="+" value="1" />
+	</propertyfile>
+
+	<property file="version.properties" />
+
+	<path id="classpath" >
+		<fileset dir="war/WEB-INF/lib" includes="**/*.jar, **/*.zip" />
+	</path>
+
+	<!-- ===================================================================
+        target: clean              
+       =================================================================== -->
+	<target name="clean" depends="">
+		<delete dir="dist" />
+	</target>
+
+	<!-- ===================================================================
+        target: init              
+       =================================================================== -->
+	<target name="init">
+		<mkdir dir="dist" />
+		<mkdir dir="dist/bin" />
+	</target>
+
+	<target name="copy-source" depends="init">
+		<copy todir="dist/bin" overwrite="true">
+			<fileset dir="source" includes="**/*" />
+		</copy>
+	</target>
+
+	<target name="compile" depends="copy-source">
+		<javac destdir="dist/bin" debug="${debug}" optimize="${optimize}" deprecation="${deprecation}" compiler="modern" source="1.5" target="1.5" fork="true">
+			<src path="source" />
+			<classpath refid="classpath" />
+		</javac>
+	</target>
+
+	<target name="dist-nodeps" depends="compile">
+		<jar basedir="dist/bin" destfile="dist/${project.name}-${release.major.number}.${release.minor.number}.${release.milestone.number}.jar" />
+	</target>
+
+	<target name="dist" depends="clean, dist-nodeps">
+	</target>
+
+</project>
