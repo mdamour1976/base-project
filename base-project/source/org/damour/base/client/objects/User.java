@@ -116,6 +116,6 @@ public class User extends SecurityPrincipal implements Serializable, IHibernateF
   }
 
   public void setFacebook(Boolean facebook) {
-    this.facebook = facebook;
+    this.facebook = facebook!=null?facebook:false;
   }  
 }
