@@ -1,3 +1,6 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
 <%@page import="java.util.Locale"%>
 <%@page import="java.util.Properties"%>
 <%@page import="java.io.File"%>
@@ -90,6 +93,7 @@
 		</script>
 		
 	    <script language='javascript' src='<%=applicationName%>/soundmanager/soundmanager2.js' type="text/javascript"></script>
+	    <script language='javascript' src='<%=applicationName%>/buzz/buzz.js' type="text/javascript"></script>
 	</head>
 	
 	<body>

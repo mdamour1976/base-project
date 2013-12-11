@@ -2,6 +2,7 @@ package org.damour.base.client;
 
 import java.util.Date;
 
+import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.ui.admin.AdministratorPanel;
 import org.damour.base.client.ui.admin.commands.CreateGroupCommand;
@@ -26,13 +27,17 @@ import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
@@ -114,7 +119,9 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
     return logoutLink;
   }
 
-  public Label buildWelcomeLabel() {
+  public Widget buildWelcomeLabel() {
+    HorizontalPanel container = new HorizontalPanel();
+    container.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
     Label welcomeLabel = new Label(getMessages().getString("welcome", "Welcome"), false);
     if (getAuthenticatedUser() != null && StringUtils.isEmpty(getAuthenticatedUser().getFirstname())) {
       welcomeLabel.setText(welcomeLabel.getText() + " " + getAuthenticatedUser().getUsername());
@@ -122,7 +129,20 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
       welcomeLabel.setText(welcomeLabel.getText() + " " + getAuthenticatedUser().getFirstname());
     }
     welcomeLabel.setStyleName("welcomeLabel");
-    return welcomeLabel;
+    container.add(welcomeLabel);
+    if (getAuthenticatedUser() != null && getAuthenticatedUser().isFacebook()) {
+      container.add(new HTML("&nbsp;"));
+      Image fbImage = new Image(BaseImageBundle.images.facebook16());
+      fbImage.setTitle("You are logged in via Facebook");
+      VerticalPanel imagePanel = new VerticalPanel();
+      HTML space = new HTML("");
+      space.getElement().getStyle().setHeight(3, Unit.PX);
+      imagePanel.add(space);
+      imagePanel.add(fbImage);
+      imagePanel.setCellVerticalAlignment(fbImage, HasVerticalAlignment.ALIGN_MIDDLE);
+      container.add(imagePanel);
+    }
+    return container;
   }
 
   public Widget buildProfileButton(boolean enabled) {
@@ -301,7 +321,8 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
     linkCol = -1;
     int row = -1;
 
-    String date = "" + ((new Date()).getYear() + 1900);
+    DateTimeFormat yearFormat = DateTimeFormat.getFormat("yyyy");
+    String date = yearFormat.format(new Date());
     String company = BaseApplication.getMessages().getString("companyName", "Your Company");
     String copyright = "Copyright &#169 2007-" + date + " " + company + ".  All rights reserved.";
 

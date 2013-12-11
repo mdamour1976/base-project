@@ -1,6 +1,7 @@
 package org.damour.base.seed.client;
 
 import org.damour.base.client.objects.User;
+import org.damour.base.client.soundmanager.HTML5AudioPlayer;
 import org.damour.base.client.soundmanager.MP3Player;
 import org.damour.base.client.ui.authentication.CreateNewAccountCommand;
 import org.damour.base.client.ui.colorpicker.ColorPickerDialog;
@@ -109,8 +110,10 @@ public class Launcher extends VerticalPanel {
     ratePhotosImage.setStyleName("genericImageButton");
     ratePhotosImage.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
-        MP3Player.getInstance().createSound("clong", GWT.getModuleBaseURL() + "sounds/clong.mp3");
-        MP3Player.getInstance().playSound("clong");
+        HTML5AudioPlayer.getInstance().createSound("clong", GWT.getModuleBaseURL() + "sounds/clong");
+        HTML5AudioPlayer.getInstance().playSound("clong");
+        //MP3Player.getInstance().createSound("clong", GWT.getModuleBaseURL() + "sounds/clong.mp3");
+        //MP3Player.getInstance().playSound("clong");
       }
     });
     ratePhotosImage.addMouseListener(new MouseListener() {

@@ -123,5 +123,7 @@ public interface BaseImageBundle extends ClientBundle, Resources {
   
   // facebook / social icons
   ImageResource facebookLogin22();
+  ImageResource facebook19();
   ImageResource facebook16();
+  ImageResource facebook13();
 }

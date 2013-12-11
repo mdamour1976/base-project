@@ -6,5 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/base-project"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/slf4j-api-1.6.4.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/slf4j-log4j12-1.6.4.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jackson-jaxrs-1.9.2.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

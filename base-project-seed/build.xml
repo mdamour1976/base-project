@@ -42,7 +42,7 @@
 	</target>
 
 	<target name="compile" depends="copy-source">
-		<javac destdir="dist/bin" debug="${debug}" optimize="${optimize}" deprecation="${deprecation}" compiler="modern" source="1.5" target="1.5" fork="true">
+		<javac destdir="dist/bin" debug="${debug}" optimize="${optimize}" deprecation="${deprecation}" fork="true">
 			<src path="dist/bin" />
 			<classpath refid="classpath" />
 		</javac>
@@ -54,8 +54,12 @@
 				<path refid="classpath" />
 				<pathelement location="dist/bin" />
 			</classpath>
+			<!--
+			<arg value="-style" />
+			<arg value="PRETTY" />
+			-->
 			<arg value="-localWorkers" />
-			<arg value="4" />
+			<arg value="2" />
 			<arg value="${gwt.app}" />
 		</java>
 	</target>
@@ -66,49 +70,42 @@
 
 	
 	<target name="dist" depends="clean, compile-gwt">
-		<jar basedir="dist/bin" destfile="dist/${project.name}-${release.major.number}.${release.minor.number}.${release.milestone.number}-local.jar" />
-		<copy todir="dist/bin" file="build-res/settings_override.properties" />
-		<jar basedir="dist/bin" destfile="dist/${project.name}-${release.major.number}.${release.minor.number}.${release.milestone.number}-custom.jar" />
+		<copy failonerror="no" todir="dist/bin" file="build-res/settings_override.properties" />
+		<jar basedir="dist/bin" destfile="dist/${project.name}-${release.major.number}.${release.minor.number}.${release.milestone.number}.jar" />
 		<copy todir="dist/${target.webapp.name}">
 			<fileset dir="${base.project.dir}/${gwt.output.dir}" includes="**/*" excludes="WEB-INF/classes/**/*, WEB-INF/lib/**/*"/>
 			<fileset dir="${gwt.output.dir}" includes="**/*" excludes="WEB-INF/classes/**/*, WEB-INF/lib/**/*"/>
 		</copy>
+		<copy todir="dist/${target.webapp.name}/WEB-INF/lib" flatten="true">
+			<fileset dir="war/WEB-INF/lib" includes="*.zip, *.jar" excludes="**/*gwt*incubator*.jar, **/*gwt-dev*.jar, **/*gwt-user.jar, **/*googlemaps*.jar, **/gwtchismes*, **/*olor*icker*, **/*gwt-incubator*, **/*validation-api-*" />
+			<fileset dir="${base.project.dir}/war/WEB-INF/lib" includes="**/*.zip, **/*.jar" excludes="**/*gwt*incubator*.jar, **/*gwt-dev*.jar, **/*gwt-user.jar, **/*googlemaps*.jar, **/gwtchismes*, **/*olor*icker*, **/*gwt-incubator*, **/*validation-api-*" />
+		</copy>
 		<unzip dest="dist/${target.webapp.name}/WEB-INF/classes">
 			<fileset dir="dist" includes="${project.name}*.jar" />
-			<fileset dir="war/WEB-INF/lib" includes="*.zip, *.jar" excludes="**/*gwt*incubator*.jar, **/*gwt-dev*.jar, **/*gwt-user.jar, **/*googlemaps*.jar, **/gwtchismes*, **/*colorpicker*" />
-			<fileset dir="${base.project.dir}/war/WEB-INF/lib" includes="**/*.zip, **/*.jar" excludes="**/*gwt-dev*.jar, **/*gwt-user.jar, **/*googlemaps*.jar, **/gwtchismes*, **/*colorpicker*" />
 		</unzip>
-
+		
 		<unzip dest="dist">
 			<fileset file="build-res/apache-tomcat-${tomcat.version}.zip" />
 		</unzip>
-
-		<zip destfile="dist/${project.name}-local.war" basedir="dist/${target.webapp.name}" />
-		<unzip dest="dist/apache-tomcat-${tomcat.version}/webapps/${target.webapp.name}">
-			<fileset file="dist/${project.name}-local.war"/>
-		</unzip>		
-
-		<zip destfile="dist/${project.name}-tomcat-local.zip">
-		  <zipfileset prefix="${project.name}-tomcat-local" dir="dist/apache-tomcat-${tomcat.version}"/>
-		</zip>
+		<delete dir="dist/apache-tomcat-${tomcat.version}/webapps/${target.webapp.name}"/>
 		
-
-		<copy overwrite="true" todir="dist/${target.webapp.name}/WEB-INF/classes" file="build-res/settings_override.properties" />
-		<zip destfile="dist/${project.name}-custom.war" basedir="dist/${target.webapp.name}" />
+		<copy failonerror="no" overwrite="true" todir="dist/${target.webapp.name}/WEB-INF/classes" file="build-res/settings_override.properties" />
+		<zip destfile="dist/${project.name}.war" basedir="dist/${target.webapp.name}" />
 		<delete dir="dist/apache-tomcat-${tomcat.version}" />
 		<unzip dest="dist">
 			<fileset file="build-res/apache-tomcat-${tomcat.version}.zip" />
 		</unzip>
+		<delete dir="dist/apache-tomcat-${tomcat.version}/webapps/${target.webapp.name}"/>
 
 		<unzip dest="dist/apache-tomcat-${tomcat.version}/webapps/${target.webapp.name}">
-			<fileset file="dist/${project.name}-custom.war"/>
+			<fileset file="dist/${project.name}.war"/>
 		</unzip>		
 		
-		<zip destfile="dist/${project.name}-tomcat-custom.zip">
+		<zip destfile="dist/${project.name}-tomcat.zip">
 		  <zipfileset prefix="${project.name}-tomcat" dir="dist/apache-tomcat-${tomcat.version}"/>
 		</zip>		
 		
-		<copy todir="dist/bin" file="build-res/settings_override.properties" />
+		<copy failonerror="no" todir="dist/bin" file="build-res/settings_override.properties" />
 
 		
 	</target>
