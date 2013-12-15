@@ -12,7 +12,7 @@ import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.buttons.IconButton;
@@ -22,6 +22,8 @@ import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
 import org.damour.base.client.utils.CursorUtils;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -29,7 +31,6 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -62,14 +63,14 @@ public class CommentWidget extends VerticalPanel {
 
   HashMap<Integer, Page<PermissibleObject>> pageCache = new HashMap<Integer, Page<PermissibleObject>>();
 
-  private AsyncCallback<Boolean> deleteCommentCallback = new AsyncCallback<Boolean>() {
+  private MethodCallback<Boolean> deleteCommentCallback = new MethodCallback<Boolean>() {
 
-    public void onSuccess(Boolean result) {
-      BaseServiceCache.getService().getPageInfo(permissibleObject, Comment.class.getName(), pageSize, new AsyncCallback<PageInfo>() {
-        public void onFailure(Throwable caught) {
+    public void onSuccess(Method method, Boolean result) {
+      ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), pageSize, new MethodCallback<PageInfo>() {
+        public void onFailure(Method method, Throwable caught) {
         };
 
-        public void onSuccess(PageInfo pageInfo) {
+        public void onSuccess(Method method, PageInfo pageInfo) {
           numComments = pageInfo.getTotalRowCount();
           lastPageNumber = pageInfo.getLastPageNumber();
           while (pageNumber > lastPageNumber) {
@@ -81,33 +82,33 @@ public class CommentWidget extends VerticalPanel {
       });
     }
 
-    public void onFailure(Throwable caught) {
+    public void onFailure(Method method, Throwable caught) {
       MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
       dialog.center();
     }
   };
-  private AsyncCallback<Boolean> approveCallback = new AsyncCallback<Boolean>() {
+  private MethodCallback<Boolean> approveCallback = new MethodCallback<Boolean>() {
 
-    public void onSuccess(Boolean result) {
+    public void onSuccess(Method method, Boolean result) {
       workingOnComment.setApproved(true);
       loadCommentWidget(true);
     }
 
-    public void onFailure(Throwable caught) {
+    public void onFailure(Method method, Throwable caught) {
       MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
       dialog.center();
       workingOnComment.setApproved(false);
       loadCommentWidget(true);
     }
   };
-  private AsyncCallback<Boolean> submitCommentCallback = new AsyncCallback<Boolean>() {
+  private MethodCallback<Boolean> submitCommentCallback = new MethodCallback<Boolean>() {
 
-    public void onSuccess(Boolean result) {
-      BaseServiceCache.getService().getPageInfo(permissibleObject, Comment.class.getName(), pageSize, new AsyncCallback<PageInfo>() {
-        public void onFailure(Throwable caught) {
-        };
+    public void onSuccess(Method method, Boolean result) {
+      ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), pageSize, new MethodCallback<PageInfo>() {
+        public void onFailure(Method method, Throwable caught) {
+        }
 
-        public void onSuccess(PageInfo pageInfo) {
+        public void onSuccess(Method method, PageInfo pageInfo) {
           numComments = pageInfo.getTotalRowCount();
           lastPageNumber = pageInfo.getLastPageNumber();
           while (pageNumber > lastPageNumber) {
@@ -115,18 +116,18 @@ public class CommentWidget extends VerticalPanel {
           }
           pageCache.clear();
           fetchPage();
-        };
+        }
       });
     }
 
-    public void onFailure(Throwable caught) {
+    public void onFailure(Method method, Throwable caught) {
       MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
       dialog.center();
     }
   };
-  private AsyncCallback<Page<PermissibleObject>> pageCallback = new AsyncCallback<Page<PermissibleObject>>() {
+  private MethodCallback<Page<PermissibleObject>> pageCallback = new MethodCallback<Page<PermissibleObject>>() {
 
-    public void onSuccess(Page<PermissibleObject> page) {
+    public void onSuccess(Method method, Page<PermissibleObject> page) {
       pageCache.put(page.getPageNumber(), page);
       comments = page.getResults();
       if (page.getResults().size() == 0) {
@@ -137,34 +138,34 @@ public class CommentWidget extends VerticalPanel {
       prefetchPages();
     }
 
-    public void onFailure(Throwable caught) {
+    public void onFailure(Method method, Throwable caught) {
       MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
       dialog.center();
     }
   };
 
-  private AsyncCallback<List<PermissibleObject>> allCommentsCallback = new AsyncCallback<List<PermissibleObject>>() {
-    public void onSuccess(List<PermissibleObject> comments) {
+  private MethodCallback<List<PermissibleObject>> allCommentsCallback = new MethodCallback<List<PermissibleObject>>() {
+    public void onSuccess(Method method, List<PermissibleObject> comments) {
       CursorUtils.setDefaultCursor(CommentWidget.this);
       CommentWidget.this.comments = comments;
       numComments = comments.size();
       loadCommentWidget(true);
     }
 
-    public void onFailure(Throwable caught) {
+    public void onFailure(Method method, Throwable caught) {
       CursorUtils.setDefaultCursor(CommentWidget.this);
       MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
       dialog.center();
     }
   };
 
-  private AsyncCallback<Page<PermissibleObject>> preFetchPageCallback = new AsyncCallback<Page<PermissibleObject>>() {
+  private MethodCallback<Page<PermissibleObject>> preFetchPageCallback = new MethodCallback<Page<PermissibleObject>>() {
 
-    public void onSuccess(Page<PermissibleObject> page) {
+    public void onSuccess(Method method, Page<PermissibleObject> page) {
       pageCache.put(page.getPageNumber(), page);
     }
 
-    public void onFailure(Throwable caught) {
+    public void onFailure(Method method, Throwable caught) {
       MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
       dialog.center();
     }
@@ -197,16 +198,17 @@ public class CommentWidget extends VerticalPanel {
     Timer t = new Timer() {
       public void run() {
         if (comments == null) {
-          BaseServiceCache.getService().getPageInfo(permissibleObject, Comment.class.getName(), CommentWidget.this.pageSize, new AsyncCallback<PageInfo>() {
-            public void onFailure(Throwable caught) {
-            };
+          ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), CommentWidget.this.pageSize,
+              new MethodCallback<PageInfo>() {
+                public void onFailure(Method method, Throwable caught) {
+                }
 
-            public void onSuccess(PageInfo pageInfo) {
-              numComments = pageInfo.getTotalRowCount();
-              lastPageNumber = pageInfo.getLastPageNumber();
-              fetchPage();
-            };
-          });
+                public void onSuccess(Method method, PageInfo pageInfo) {
+                  numComments = pageInfo.getTotalRowCount();
+                  lastPageNumber = pageInfo.getLastPageNumber();
+                  fetchPage();
+                }
+              });
         } else {
           numComments = comments.size();
           if (CommentWidget.this.paginate) {
@@ -510,11 +512,11 @@ public class CommentWidget extends VerticalPanel {
     reloadImageButton.setTitle("Refresh comments");
     reloadImageButton.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
-        BaseServiceCache.getService().getPageInfo(permissibleObject, Comment.class.getName(), pageSize, new AsyncCallback<PageInfo>() {
-          public void onFailure(Throwable caught) {
+        ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), pageSize, new MethodCallback<PageInfo>() {
+          public void onFailure(Method method, Throwable caught) {
           };
 
-          public void onSuccess(PageInfo pageInfo) {
+          public void onSuccess(Method method, PageInfo pageInfo) {
             numComments = pageInfo.getTotalRowCount();
             lastPageNumber = pageInfo.getLastPageNumber();
             pageCache.clear();
@@ -711,8 +713,8 @@ public class CommentWidget extends VerticalPanel {
       PermissibleObjectTreeNode node = new PermissibleObjectTreeNode();
       node.setObject(comment);
       if (comment.getParentComment() == null) {
-        if (!rootNode.getChildren().containsKey(comment)) {
-          rootNode.getChildren().put(comment, node);
+        if (!rootNode.getChildren().contains(node)) {
+          rootNode.getChildren().add(node);
         }
       } else {
         // try to find parent in rootNode tree
@@ -728,7 +730,7 @@ public class CommentWidget extends VerticalPanel {
             }
           } while (parent != null);
           if (parentComments.size() == 0) {
-            rootNode.getChildren().put(comment, node);
+            rootNode.getChildren().add(node);
           } else {
             // reverse the order of the list and add/find existing parents
             Collections.reverse(parentComments);
@@ -737,20 +739,20 @@ public class CommentWidget extends VerticalPanel {
               myParentCommentNode.setObject(myParentComment);
               PermissibleObjectTreeNode parentParent = findParentCommentNode(rootNode, myParentCommentNode);
               if (parentParent == null) {
-                rootNode.getChildren().put(myParentComment, myParentCommentNode);
+                rootNode.getChildren().add(myParentCommentNode);
               } else {
-                if (!parentParent.getChildren().containsKey(myParentComment)) {
-                  parentParent.getChildren().put(myParentComment, myParentCommentNode);
+                if (!parentParent.getChildren().contains(myParentCommentNode)) {
+                  parentParent.getChildren().add(myParentCommentNode);
                 }
               }
             }
             // we better find it now
             parent = findParentCommentNode(rootNode, node);
-            parent.getChildren().put(comment, node);
+            parent.getChildren().add(node);
           }
         } else {
-          if (!parent.getChildren().containsKey(comment)) {
-            parent.getChildren().put(comment, node);
+          if (!parent.getChildren().contains(node)) {
+            parent.getChildren().add(node);
           }
         }
       }
@@ -769,11 +771,11 @@ public class CommentWidget extends VerticalPanel {
     }
 
     // let's sort the children so the list makes sense
-    List<PermissibleObject> permissibleObjects = new ArrayList<PermissibleObject>(node.getChildren().keySet());
-    Collections.sort(permissibleObjects);
+    List<PermissibleObjectTreeNode> permissibleObjectTreeNodes = new ArrayList<PermissibleObjectTreeNode>(node.getChildren());
+    Collections.sort(permissibleObjectTreeNodes);
 
-    for (PermissibleObject object : permissibleObjects) {
-      marchTree(comments, node.getChildren().get(object));
+    for (PermissibleObjectTreeNode object : permissibleObjectTreeNodes) {
+      marchTree(comments, object);
     }
   }
 
@@ -781,11 +783,12 @@ public class CommentWidget extends VerticalPanel {
     if (node.getObject().equals(rootNode.getObject())) {
       return rootNode;
     }
-    for (PermissibleObject obj : rootNode.getChildren().keySet()) {
+    for (PermissibleObjectTreeNode cnode : rootNode.getChildren()) {
+      PermissibleObject obj = cnode.getObject();
       if (obj.equals(((Comment) node.getObject()).getParentComment())) {
-        return rootNode.getChildren().get(obj);
+        return cnode;
       }
-      PermissibleObjectTreeNode possibleParent = findParentCommentNode(rootNode.getChildren().get(obj), node);
+      PermissibleObjectTreeNode possibleParent = findParentCommentNode(cnode, node);
       if (possibleParent != null) {
         return possibleParent;
       }
@@ -806,7 +809,8 @@ public class CommentWidget extends VerticalPanel {
   private void prefetchPage(int pageNumber) {
     Page<PermissibleObject> page = pageCache.get(pageNumber);
     if (page == null && pageNumber >= 0 && pageNumber <= lastPageNumber) {
-      BaseServiceCache.getService().getPage(permissibleObject, Comment.class.getName(), "id", sortDescending, pageNumber, pageSize, preFetchPageCallback);
+      ResourceCache.getPermissibleResource().getPage(permissibleObject.getId(), Comment.class.getName(), "id", sortDescending, pageNumber, pageSize,
+          preFetchPageCallback);
     }
   }
 
@@ -831,45 +835,46 @@ public class CommentWidget extends VerticalPanel {
     if (paginate) {
       Page<PermissibleObject> page = pageCache.get(pageNumber);
       if (page != null) {
-        pageCallback.onSuccess(page);
+        pageCallback.onSuccess(null, page);
       } else {
-        BaseServiceCache.getService().getPage(permissibleObject, Comment.class.getName(), "id", sortDescending, pageNumber, pageSize, pageCallback);
+        ResourceCache.getPermissibleResource().getPage(permissibleObject.getId(), Comment.class.getName(), "id", sortDescending, pageNumber, pageSize,
+            pageCallback);
       }
     } else {
       CursorUtils.setBusyCursor(CommentWidget.this);
-      BaseServiceCache.getService().getPermissibleObjects(permissibleObject, Comment.class.getName(), allCommentsCallback);
+      ResourceCache.getPermissibleResource().getPermissibleObjects(permissibleObject.getId(), Comment.class.getName(), allCommentsCallback);
     }
   }
 
   private void submitComment(final Comment comment) {
     CursorUtils.setBusyCursor(this);
-    BaseServiceCache.getService().getPageInfo(permissibleObject, Comment.class.getName(), pageSize, new AsyncCallback<PageInfo>() {
-      public void onFailure(Throwable caught) {
+    ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), pageSize, new MethodCallback<PageInfo>() {
+      public void onFailure(Method method, Throwable caught) {
         CursorUtils.setDefaultCursor(CommentWidget.this);
       }
 
-      public void onSuccess(PageInfo pageInfo) {
+      public void onSuccess(Method method, PageInfo pageInfo) {
         CursorUtils.setDefaultCursor(CommentWidget.this);
         numComments = pageInfo.getTotalRowCount();
         lastPageNumber = pageInfo.getLastPageNumber();
-        BaseServiceCache.getService().submitComment(comment, submitCommentCallback);
+        ResourceCache.getCommentResource().submitComment(comment, submitCommentCallback);
       }
     });
   }
 
   private void approveComment(Comment comment) {
-    BaseServiceCache.getService().approveComment(comment, approveCallback);
+    ResourceCache.getCommentResource().approveComment(comment, approveCallback);
   }
 
   private void deleteComment(final Comment comment) {
-    BaseServiceCache.getService().getPageInfo(permissibleObject, Comment.class.getName(), pageSize, new AsyncCallback<PageInfo>() {
-      public void onFailure(Throwable caught) {
+    ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), pageSize, new MethodCallback<PageInfo>() {
+      public void onFailure(Method method, Throwable caught) {
       };
 
-      public void onSuccess(PageInfo pageInfo) {
+      public void onSuccess(Method method, PageInfo pageInfo) {
         numComments = pageInfo.getTotalRowCount();
         lastPageNumber = pageInfo.getLastPageNumber();
-        BaseServiceCache.getService().deleteComment(comment, deleteCommentCallback);
+        ResourceCache.getCommentResource().deleteComment(comment, deleteCommentCallback);
       };
     });
   }

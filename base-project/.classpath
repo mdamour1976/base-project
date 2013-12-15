@@ -51,6 +51,9 @@
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/jersey-servlet-1.18.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/jettison-1.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/jsr311-api-1.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/reflections-0.9.9-RC1.jar"/>
+	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/guava-15.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/restygwt-mdd.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/slf4j-api-1.6.4.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/slf4j-log4j12-1.6.4.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>

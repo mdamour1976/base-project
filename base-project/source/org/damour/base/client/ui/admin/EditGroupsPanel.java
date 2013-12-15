@@ -5,12 +5,15 @@ import java.util.List;
 
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -233,11 +236,11 @@ public class EditGroupsPanel extends FlexTable implements IAdminPanel, ChangeHan
   }
 
   private void fetchGroups() {
-    final AsyncCallback<List<UserGroup>> getGroupsCallback = new AsyncCallback<List<UserGroup>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<UserGroup>> getGroupsCallback = new MethodCallback<List<UserGroup>>() {
+      public void onFailure(Method method, Throwable caught) {
       }
 
-      public void onSuccess(List<UserGroup> groups) {
+      public void onSuccess(Method method, List<UserGroup> groups) {
         EditGroupsPanel.this.groups = groups;
         populateUI();
         if (callback != null) {
@@ -245,7 +248,7 @@ public class EditGroupsPanel extends FlexTable implements IAdminPanel, ChangeHan
         }
       };
     };
-    BaseServiceCache.getService().getOwnedGroups(user, getGroupsCallback);
+    ResourceCache.getBaseResource().getOwnedGroups(user.getUsername(), getGroupsCallback);
   }
 
   public void onChange(ChangeEvent event) {

@@ -4,10 +4,11 @@ import java.util.List;
 
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.tabs.BaseTabPanel;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -38,11 +39,11 @@ public class AdministratorPanel extends VerticalPanel implements IAdminCallback 
   }
 
   public void loadObjects(final User user) {
-    final AsyncCallback<List<UserGroup>> groupsCallback = new AsyncCallback<List<UserGroup>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<UserGroup>> groupsCallback = new MethodCallback<List<UserGroup>>() {
+      public void onFailure(Method method, Throwable exception) {
       }
 
-      public void onSuccess(final List<UserGroup> newgroups) {
+      public void onSuccess(Method method, List<UserGroup> newgroups) {
         AdministratorPanel.this.groups = newgroups;
         final BaseTabPanel adminTabPanel = new BaseTabPanel();
         adminTabPanel.setWidth("100%");
@@ -65,20 +66,18 @@ public class AdministratorPanel extends VerticalPanel implements IAdminCallback 
         memoryAdminPanel = new MemoryAdminPanel();
         adminTabPanel.addTab("Memory", "Memory", false, memoryAdminPanel);
         adminTabPanel.selectTab(0);
-      };
+      }
     };
 
-    final AsyncCallback<List<User>> callback = new AsyncCallback<List<User>>() {
-      public void onFailure(Throwable caught) {
+    ResourceCache.getBaseResource().getUsers(new MethodCallback<List<User>>() {
+      public void onSuccess(Method method, List<User> users) {
+        AdministratorPanel.this.users = users;
+        ResourceCache.getBaseResource().getGroups(groupsCallback);
       }
 
-      public void onSuccess(List<User> users) {
-        AdministratorPanel.this.users = users;
-        BaseServiceCache.getService().getGroups(groupsCallback);
-      };
-    };
-    BaseServiceCache.getService().getUsers(callback);
-
+      public void onFailure(Method method, Throwable exception) {
+      }
+    });
   }
 
   public void updateUser(User updatedUser) {

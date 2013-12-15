@@ -2,7 +2,14 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.annotate.JsonTypeInfo.As;
+import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
+import org.codehaus.jackson.map.annotate.JsonTypeIdResolver;
+
 @SuppressWarnings({ "serial", "rawtypes" })
+@JsonTypeIdResolver(org.damour.base.server.resource.PermissibleObjectResolver.class)
+@JsonTypeInfo(use=Id.NAME, include=As.PROPERTY, property="@type")
 public class PermissibleObject implements Serializable, IHibernateFriendly, Comparable {
 
   public Long id;

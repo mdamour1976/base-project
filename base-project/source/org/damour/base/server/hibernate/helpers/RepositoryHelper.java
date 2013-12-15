@@ -204,7 +204,8 @@ public class RepositoryHelper {
       }
 
       PermissibleObjectTreeNode childNode = new PermissibleObjectTreeNode();
-      parentNode.getChildren().put(child, childNode);
+      parentNode.getChildren().add(childNode);
+      childNode.setObject(child);
       buildPermissibleObjectTreeNode(session, user, owner, voterGUID, childNode, child, acceptedClasses, currentDepth + 1, fetchDepth, metaDataFetchDepth);
     }
   }
@@ -297,10 +298,10 @@ public class RepositoryHelper {
   }
 
   public static void dumpTreeNode(PermissibleObjectTreeNode parent, int depth) {
-    Set<PermissibleObject> children = parent.getChildren().keySet();
+    List<PermissibleObjectTreeNode> children = parent.getChildren();
 
     if (children != null) {
-      for (PermissibleObject child : children) {
+      for (PermissibleObjectTreeNode child : children) {
         if (depth > 0) {
           System.out.print("  |");
         }
@@ -313,9 +314,8 @@ public class RepositoryHelper {
         if (depth > 0) {
           System.out.print("+-");
         }
-        System.out.println("CHILD: " + child.getName());
-        PermissibleObjectTreeNode grandChildren = parent.getChildren().get(child);
-        dumpTreeNode(grandChildren, depth + 1);
+        System.out.println("CHILD: " + child.getObject().getName());
+        dumpTreeNode(child, depth + 1);
       }
     }
   }

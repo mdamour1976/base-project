@@ -3,15 +3,16 @@ package org.damour.base.client.ui.admin;
 import java.util.List;
 
 import org.damour.base.client.objects.Referral;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.scrolltable.ScrollTable;
 import org.damour.base.client.utils.ParameterParser;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.URL;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -48,11 +49,11 @@ public class ReferralPanel extends VerticalPanel {
   }
 
   private void fetchReferrals(final ScrollTable table) {
-    BaseServiceCache.getService().getReferrals(null, new AsyncCallback<List<Referral>>() {
-      public void onFailure(Throwable caught) {
+    ResourceCache.getBaseResource().getReferrals(new MethodCallback<List<Referral>>() {
+      public void onFailure(Method method, Throwable caught) {
       }
 
-      public void onSuccess(List<Referral> referrals) {
+      public void onSuccess(Method method, List<Referral> referrals) {
         table.removeAllRows();
         int row = 0;
         for (Referral referral : referrals) {

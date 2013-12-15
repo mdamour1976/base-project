@@ -24,17 +24,12 @@ import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.GroupMembership;
-import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.IAnonymousPermissibleObject;
-import org.damour.base.client.objects.MemoryStats;
-import org.damour.base.client.objects.Page;
-import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.Permission.PERM;
-import org.damour.base.client.objects.Referral;
 import org.damour.base.client.objects.RepositoryTreeNode;
 import org.damour.base.client.objects.Tag;
 import org.damour.base.client.objects.TagMembership;
@@ -49,7 +44,6 @@ import org.damour.base.server.hibernate.ReflectionCache;
 import org.damour.base.server.hibernate.helpers.AdvisoryHelper;
 import org.damour.base.server.hibernate.helpers.CommentHelper;
 import org.damour.base.server.hibernate.helpers.FolderHelper;
-import org.damour.base.server.hibernate.helpers.PageHelper;
 import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.RepositoryHelper;
@@ -60,8 +54,6 @@ import org.damour.base.server.hibernate.helpers.UserHelper;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.stat.SecondLevelCacheStatistics;
-import org.hibernate.stat.Statistics;
 
 import com.andrewtimberlake.captcha.Captcha;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -96,7 +88,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     } catch (Throwable t) {
     }
     try {
-      session.set(null);    
+      session.set(null);
     } catch (Throwable t) {
     }
     Logger.log(serializedResponse);
@@ -108,7 +100,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     } catch (Throwable t) {
     }
     try {
-      session.set(null);    
+      session.set(null);
     } catch (Throwable t) {
     }
     Logger.log(e);
@@ -132,10 +124,10 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         // https://graph.facebook.com/username?access_token=password
         URL url = new URL("https://graph.facebook.com/" + username + "?access_token=" + password);
 
-        JsonParserFactory factory=JsonParserFactory.getInstance();
-        JSONParser parser=factory.newJsonParser();
-        Map<?, ?> json=parser.parseJson(IOUtils.toString(url.openStream()));    
-        
+        JsonParserFactory factory = JsonParserFactory.getInstance();
+        JSONParser parser = factory.newJsonParser();
+        Map<?, ?> json = parser.parseJson(IOUtils.toString(url.openStream()));
+
         String id = (String) json.get("id");
         String fbusername = (String) json.get("username");
         String email = StringEscapeUtils.unescapeJava((String) json.get("email"));
@@ -213,7 +205,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     return user;
   }
 
-  private void destroyAuthCookies(HttpServletRequest request, HttpServletResponse response) {
+  public static void destroyAuthCookies(HttpServletRequest request, HttpServletResponse response) {
     Cookie userCookie = new Cookie("user", "");
     userCookie.setMaxAge(0);
     userCookie.setPath("/");
@@ -224,15 +216,15 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     response.addCookie(userAuthCookie);
   }
 
-  private void destroyAllCookies(HttpServletRequest request, HttpServletResponse response) {
-    for (Cookie cookie : getThreadLocalRequest().getCookies()) {
+  public static void destroyAllCookies(HttpServletRequest request, HttpServletResponse response) {
+    for (Cookie cookie : request.getCookies()) {
       cookie.setMaxAge(0);
       cookie.setPath("/");
-      getThreadLocalResponse().addCookie(cookie);
+      response.addCookie(cookie);
     }
   }
 
-  public User getAuthenticatedUser(org.hibernate.Session session, HttpServletRequest request, HttpServletResponse response) {
+  public static User getAuthenticatedUser(org.hibernate.Session session, HttpServletRequest request, HttpServletResponse response) {
     Cookie cookies[] = request.getCookies();
     Cookie userCookie = null;
     Cookie userAuthCookie = null;
@@ -258,27 +250,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     return getAuthenticatedUser(session, getThreadLocalRequest(), getThreadLocalResponse());
   }
 
-  public User getAuthenticatedUser() throws LoginException {
-    Cookie cookies[] = getThreadLocalRequest().getCookies();
-    Cookie userCookie = null;
-    Cookie userAuthCookie = null;
-    for (int i = 0; cookies != null && i < cookies.length; i++) {
-      if (cookies[i].getName().equals("user") && !cookies[i].getValue().equals("")) {
-        userCookie = cookies[i];
-      } else if (cookies[i].getName().equals("auth") && !cookies[i].getValue().equals("")) {
-        userAuthCookie = cookies[i];
-      }
-    }
-    if (userCookie == null || userAuthCookie == null) {
-      throw new LoginException("Could not get authenticated user.");
-    }
-    User user = getAuthenticatedUser(session.get());
-    if (user == null) {
-      destroyAuthCookies(getThreadLocalRequest(), getThreadLocalResponse());
-      throw new LoginException("Could not get authenticated user.");
-    }
-    return user;
-  }
 
   public void logout() throws SimpleMessageException {
     destroyAllCookies(getThreadLocalRequest(), getThreadLocalResponse());
@@ -287,8 +258,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
   // create or edit account
   public User createOrEditAccount(User inUser, String password, String captchaText) throws SimpleMessageException {
     return createOrEditAccount(inUser, password, captchaText, false);
-  }  
-  
+  }
+
   // create or edit account
   private User createOrEditAccount(User inUser, String password, String captchaText, boolean ignoreCaptcha) throws SimpleMessageException {
     Transaction tx = session.get().beginTransaction();
@@ -446,68 +417,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       throw new SimpleMessageException("Could not get login hint.");
     }
     return user.getPasswordHint();
-  }
-
-  public List<String> getUsernames() throws SimpleMessageException {
-    // this is a non-admin function
-    return SecurityHelper.getUsernames(session.get());
-  }
-
-  public List<User> getUsers() throws SimpleMessageException {
-    return SecurityHelper.getUsers(session.get());
-  }
-
-  public List<UserGroup> getGroups(User user) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    // the admin & actual user can list all groups for the user
-    if (authUser != null && (authUser.isAdministrator() || authUser.equals(user))) {
-      return SecurityHelper.getUserGroups(session.get(), user);
-    }
-    // everyone else can only see visible groups for the user
-    return SecurityHelper.getVisibleUserGroups(session.get(), user);
-  }
-
-  public List<UserGroup> getOwnedGroups(User user) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    // if we are the admin, and we are asking to list owned admin groups,
-    // we show all groups to the admin
-    if (authUser != null && authUser.isAdministrator()) {
-      return SecurityHelper.getUserGroups(session.get());
-    }
-    // the actual user can list all owned groups for the user
-    if (authUser != null && authUser.equals(user)) {
-      return SecurityHelper.getOwnedUserGroups(session.get(), user);
-    }
-    // if we are not the admin or the actual user, we can only list the visible groups
-    // to unknown people
-    return SecurityHelper.getOwnedVisibleUserGroups(session.get(), user);
-  }
-
-  public List<UserGroup> getGroups() throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    // the admin can list all groups
-    if (authUser != null && authUser.isAdministrator()) {
-      return SecurityHelper.getUserGroups(session.get());
-    }
-    return SecurityHelper.getVisibleUserGroups(session.get());
-  }
-
-  public List<User> getUsers(UserGroup group) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    group = (UserGroup) session.get().load(UserGroup.class, group.getId());
-    // only the group owner, group members and administrator can see the users in a group
-    if (authUser.isAdministrator() || authUser.equals(group.getOwner())) {
-      return SecurityHelper.getUsersInUserGroup(session.get(), group);
-    }
-    // now check the groups for the user against the group
-    List<GroupMembership> memberships = SecurityHelper.getGroupMemberships(session.get(), authUser);
-    if (memberships.contains(group)) {
-      return SecurityHelper.getUsersInUserGroup(session.get(), group);
-    }
-    throw new SimpleMessageException("User is not authorized to list users in group.");
   }
 
   public GroupMembership addUserToGroup(User user, UserGroup group) throws SimpleMessageException {
@@ -712,80 +621,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
   }
 
-  public List<HibernateStat> getHibernateStats() throws SimpleMessageException {
-    List<HibernateStat> statsList = new ArrayList<HibernateStat>();
-
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null || !authUser.isAdministrator()) {
-      return statsList;
-    }
-    
-    Statistics stats = HibernateUtil.getInstance().getSessionFactory().getStatistics();
-
-    String regionNames[] = stats.getSecondLevelCacheRegionNames();
-    for (String regionName : regionNames) {
-      SecondLevelCacheStatistics regionStat = stats.getSecondLevelCacheStatistics(regionName);
-
-      HibernateStat newstat = new HibernateStat();
-      newstat.setRegionName(regionName);
-      newstat.setCachePuts(regionStat.getPutCount());
-      newstat.setCacheHits(regionStat.getHitCount());
-      newstat.setCacheMisses(regionStat.getMissCount());
-      newstat.setMemoryUsed(regionStat.getSizeInMemory());
-      newstat.setNumObjectsInMemory(regionStat.getElementCountInMemory());
-      newstat.setNumObjectsOnDisk(regionStat.getElementCountOnDisk());
-      statsList.add(newstat);
-    }
-
-    return statsList;
-  }
-
-  public void resetHibernate() throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser != null && authUser.isAdministrator()) {
-      HibernateUtil.resetHibernate();
-    }
-  }
-
-  public void evictClassFromCache(String className) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser != null && authUser.isAdministrator()) {
-      try {
-        HibernateUtil.getInstance().getSessionFactory().getCache().evictEntityRegion(className);
-        Logger.log("Evicted: " + className);
-      } catch (Throwable t) {
-        Logger.log(t);
-      }
-    }
-  }
-
-  public MemoryStats getMemoryStats() throws SimpleMessageException {
-    MemoryStats stats = new MemoryStats();
-    stats.setMaxMemory(Runtime.getRuntime().maxMemory());
-    stats.setTotalMemory(Runtime.getRuntime().totalMemory());
-    stats.setFreeMemory(Runtime.getRuntime().freeMemory());
-    return stats;
-  }
-
-  public MemoryStats requestGarbageCollection() throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser != null && authUser.isAdministrator()) {
-      try {
-        System.gc();
-      } catch (Throwable t) {
-        Logger.log(t);
-      }
-    }
-    return getMemoryStats();
-  }
-
   public Date getServerStartupDate() throws SimpleMessageException {
     return new Date(BaseSystem.getStartupDate());
-  }
-
-  public void ping() {
-    // NOOP
-    Logger.log("Ping received from: " + getThreadLocalRequest().getRemoteAddr());
   }
 
   public String executeHQL(String query, boolean executeUpdate) {
@@ -833,7 +670,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to get rating on this content.");
       }
       // find rating based on remote address if needed
-      return RatingHelper.getUserRating(session.get(), permissibleObject, authUser, getVoterGUID());
+      return RatingHelper.getUserRating(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
     } catch (Throwable t) {
       Logger.log(t);
       throw new SimpleMessageException(t.getMessage());
@@ -853,7 +690,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to set rating on this content.");
       }
 
-      UserRating userRating = RatingHelper.getUserRating(session.get(), permissibleObject, authUser, getVoterGUID());
+      UserRating userRating = RatingHelper.getUserRating(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
       // check if rating already exists
       if (userRating != null) {
         // TODO: consider changing the vote
@@ -872,7 +709,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       userRating.setPermissibleObject(permissibleObject);
       userRating.setRating(rating);
       userRating.setVoter(authUser);
-      userRating.setVoterGUID(getVoterGUID());
+      userRating.setVoterGUID(getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
 
       session.get().save(userRating);
       tx.commit();
@@ -898,7 +735,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to get thumbs on this content.");
       }
       // find thumb based on remote address if needed
-      return ThumbHelper.getUserThumb(session.get(), permissibleObject, authUser, getVoterGUID());
+      return ThumbHelper.getUserThumb(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
     } catch (Throwable t) {
       Logger.log(t);
       throw new SimpleMessageException(t.getMessage());
@@ -918,7 +755,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to set thumbs on this content.");
       }
 
-      UserThumb userThumb = ThumbHelper.getUserThumb(session.get(), permissibleObject, authUser, getVoterGUID());
+      UserThumb userThumb = ThumbHelper.getUserThumb(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
       // check if thumb already exists
       if (userThumb != null) {
         // TODO: consider changing the vote
@@ -937,7 +774,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       userThumb.setPermissibleObject(permissibleObject);
       userThumb.setLikeThumb(like);
       userThumb.setVoter(authUser);
-      userThumb.setVoterGUID(getVoterGUID());
+      userThumb.setVoterGUID(getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
 
       session.get().save(userThumb);
       tx.commit();
@@ -1088,8 +925,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
   }
 
-  private String getVoterGUID() {
-    Cookie cookies[] = getThreadLocalRequest().getCookies();
+  public static String getVoterGUID(HttpServletRequest request, HttpServletResponse response) {
+    Cookie cookies[] = request.getCookies();
     String voterGUID = UUID.randomUUID().toString();
     boolean hasVoterGUID = false;
     if (cookies != null) {
@@ -1105,7 +942,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       Cookie voterGUIDCookie = new Cookie("voterGUID", voterGUID);
       voterGUIDCookie.setPath("/");
       voterGUIDCookie.setMaxAge(COOKIE_TIMEOUT);
-      getThreadLocalResponse().addCookie(voterGUIDCookie);
+      response.addCookie(voterGUIDCookie);
     }
     return voterGUID;
   }
@@ -1116,7 +953,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
     PermissibleObject object = null;
     User authUser = getAuthenticatedUser(session.get());
-    object = RatingHelper.getNextUnratedPermissibleObject(session.get(), objectType, authUser, getVoterGUID());
+    object = RatingHelper.getNextUnratedPermissibleObject(session.get(), objectType, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
     return object;
   }
 
@@ -1132,7 +969,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to get advisory on this content.");
       }
       // find rating based on remote address if needed
-      return AdvisoryHelper.getUserAdvisory(session.get(), permissibleObject, authUser, getVoterGUID());
+      return AdvisoryHelper.getUserAdvisory(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
     } catch (Throwable t) {
       Logger.log(t);
       throw new SimpleMessageException(t.getMessage());
@@ -1153,7 +990,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       }
 
       // check if rating already exists
-      UserAdvisory userAdvisory = AdvisoryHelper.getUserAdvisory(session.get(), permissibleObject, authUser, getVoterGUID());
+      UserAdvisory userAdvisory = AdvisoryHelper.getUserAdvisory(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
       if (userAdvisory != null) {
         throw new SimpleMessageException("Already voted.");
       }
@@ -1169,104 +1006,11 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       userAdvisory.setPermissibleObject(permissibleObject);
       userAdvisory.setRating(advisory);
       userAdvisory.setVoter(authUser);
-      userAdvisory.setVoterGUID(getVoterGUID());
+      userAdvisory.setVoterGUID(getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
 
       session.get().save(userAdvisory);
       tx.commit();
       return userAdvisory;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public Boolean submitComment(Comment comment) throws SimpleMessageException {
-    if (comment == null) {
-      throw new SimpleMessageException("Comment not supplied.");
-    }
-    if (comment.getParent() == null) {
-      throw new SimpleMessageException("PermissibleObject not supplied with comment.");
-    }
-    User authUser = getAuthenticatedUser(session.get());
-    Transaction tx = session.get().beginTransaction();
-    try {
-      PermissibleObject parentPermissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, comment.getParent().getId());
-      parentPermissibleObject.setNumComments(parentPermissibleObject.getNumComments() + 1);
-      comment.setParent(parentPermissibleObject);
-      if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, comment.getParent(), PERM.READ)) {
-        throw new SimpleMessageException("User is not authorized to make comments on this content.");
-      }
-      if (!comment.getParent().isAllowComments()) {
-        throw new SimpleMessageException("Comments are not allowed on this content.");
-      }
-      // the comment is approved if we are not moderating or if the commenter is the file owner
-      comment.setApproved(!comment.getParent().isModerateComments() || comment.getParent().getOwner().equals(authUser));
-      comment.setAuthorIP(getThreadLocalRequest().getRemoteAddr());
-      session.get().save(comment);
-      session.get().save(parentPermissibleObject);
-      tx.commit();
-      return true;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public Boolean approveComment(Comment comment) throws SimpleMessageException {
-    if (comment == null) {
-      throw new SimpleMessageException("Comment not supplied.");
-    }
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException(".");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      comment = ((Comment) session.get().load(Comment.class, comment.getId()));
-      if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, comment.getParent(), PERM.WRITE)) {
-        throw new SimpleMessageException("User is not authorized to approve comments for this content.");
-      }
-      comment.setApproved(true);
-      session.get().save(comment);
-      tx.commit();
-      return true;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public Boolean deleteComment(Comment comment) throws SimpleMessageException {
-    if (comment == null) {
-      throw new SimpleMessageException("Comment not supplied.");
-    }
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      comment = ((Comment) session.get().load(Comment.class, comment.getId()));
-      boolean isAuthor = comment.getAuthor() != null && comment.getAuthor().equals(authUser);
-      if (!isAuthor && !SecurityHelper.doesUserHavePermission(session.get(), authUser, comment.getParent(), PERM.WRITE)) {
-        throw new SimpleMessageException("User is not authorized to delete comments for this content.");
-      }
-      // we can't delete this comment until we delete all the child comments
-      CommentHelper.deleteComment(session.get(), comment);
-      tx.commit();
-      return true;
     } catch (Throwable t) {
       Logger.log(t);
       try {
@@ -1454,36 +1198,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       return PermissibleObjectHelper.getMyPermissibleObjects(session.get(), authUser, parent, clazz);
     } catch (ClassNotFoundException cnfe) {
       throw new SimpleMessageException(cnfe.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> getPermissibleObjects(PermissibleObject parent, String objectType) throws SimpleMessageException {
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      ArrayList<PermissibleObject> objects = new ArrayList<PermissibleObject>();
-      Class<?> clazz = Class.forName(objectType);
-      RepositoryHelper.getPermissibleObjects(session.get(), authUser, objects, parent, clazz);
-      return objects;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public PermissibleObjectTreeNode getPermissibleObjectTree(PermissibleObject parent, User owner, List<String> acceptedClasses, int fetchDepth,
-      int metaDataFetchDepth) throws SimpleMessageException {
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      PermissibleObjectTreeNode root = new PermissibleObjectTreeNode();
-      if (parent != null) {
-        parent = getPermissibleObject(parent.getId());
-      }
-      RepositoryHelper.buildPermissibleObjectTreeNode(session.get(), authUser, owner, getVoterGUID(), root, parent, acceptedClasses, 0, fetchDepth,
-          metaDataFetchDepth);
-      return root;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
     }
   }
 
@@ -1776,74 +1490,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     return permissibleObject;
   }
 
-  public Referral submitReferral(Referral referral) throws SimpleMessageException {
-    if (referral == null) {
-      throw new SimpleMessageException("Referral provided is null");
-    }
-
-    List<Referral> referrals = session.get().createQuery("from " + Referral.class.getSimpleName() + " where referralURL = '" + referral.getReferralURL() + "'")
-        .setMaxResults(1).setCacheable(true).list();
-    if (referrals.size() > 0) {
-      referral = referrals.get(0);
-      referral.counter++;
-    } else {
-      referral.counter = 1L;
-    }
-    referral.recentDate = System.currentTimeMillis();
-
-    if (StringUtils.isEmpty(referral.getReferralURL())) {
-      throw new SimpleMessageException("Referral does not contain referral url");
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      session.get().save(referral);
-      tx.commit();
-      return referral;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-
-  }
-
-  public List<Referral> getReferrals(PermissibleObject subject) throws SimpleMessageException {
-    List<Referral> referrals = null;
-    if (subject == null) {
-      referrals = session.get().createQuery("from " + Referral.class.getSimpleName()).setCacheable(true).list();
-    } else {
-      referrals = session.get().createQuery("from " + Referral.class.getSimpleName() + " where subject.id = " + subject.getId()).setCacheable(true).list();
-    }
-    return referrals;
-  }
-
-  public Page<PermissibleObject> getPage(PermissibleObject parent, String pageClassType, String sortField, boolean sortDescending, int pageNumber, int pageSize)
-      throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    try {
-      Class<?> clazz = Class.forName(pageClassType);
-      return PageHelper.getPage(session.get(), parent, clazz, authUser, sortField, sortDescending, pageNumber, pageSize);
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public PageInfo getPageInfo(PermissibleObject parent, String pageClassType, int pageSize) throws SimpleMessageException {
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      Class<?> clazz = Class.forName(pageClassType);
-      return PageHelper.getPageInfo(session.get(), parent, clazz, authUser, pageSize);
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
   public FileUploadStatus getFileUploadStatus() throws SimpleMessageException {
     User authUser = getAuthenticatedUser(session.get());
     if (authUser == null) {
@@ -1867,7 +1513,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     // return all permissible objects which match the name/description
     try {
       Class<?> clazz = Class.forName(searchObjectType);
-      return PermissibleObjectHelper.search(session.get(), user, getVoterGUID(), clazz, query, sortField, sortDescending, searchNames, searchDescriptions,
+      return PermissibleObjectHelper.search(session.get(), user, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz, query, sortField, sortDescending, searchNames, searchDescriptions,
           searchKeywords, useExactPhrase);
     } catch (Throwable t) {
       throw new SimpleMessageException(t.getMessage());
@@ -2052,7 +1698,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
   public void sendEmail(PermissibleObject permissibleObject, final String subject, final String message, String fromAddress, String fromName, String toAddresses) {
     User user = null;
     try {
-      user = getAuthenticatedUser();
+      user = getAuthenticatedUser(session.get());
     } catch (Throwable t) {
     }
     if (user != null) {

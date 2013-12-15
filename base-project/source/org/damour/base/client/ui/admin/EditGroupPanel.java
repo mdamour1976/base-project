@@ -4,10 +4,13 @@ import java.util.List;
 
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -35,7 +38,8 @@ public class EditGroupPanel extends FlexTable {
   CheckBox lockGroupCheckBox = new CheckBox("Lock Group");
   CheckBox visibleCheckBox = new CheckBox("Visible");
 
-  public EditGroupPanel(IAdminCallback adminCallback, final IGenericCallback<UserGroup> callback, final List<User> users, final UserGroup group, boolean showApply, boolean showUsers) {
+  public EditGroupPanel(IAdminCallback adminCallback, final IGenericCallback<UserGroup> callback, final List<User> users, final UserGroup group,
+      boolean showApply, boolean showUsers) {
     this.callback = callback;
     this.users = users;
     this.group = group;
@@ -45,7 +49,7 @@ public class EditGroupPanel extends FlexTable {
     autoJoinCheckBox.setTitle("Allow users to join this group without your permission");
     lockGroupCheckBox.setTitle("Prevent users from joining and requesting to join this group");
     visibleCheckBox.setTitle("Hide this group from other users (keep it private)");
-    
+
     if (users == null && showUsers) {
       fetchUsers();
     } else {
@@ -73,7 +77,7 @@ public class EditGroupPanel extends FlexTable {
 
     Button applyButton = new Button("Apply");
     applyButton.addClickHandler(new ClickHandler() {
-      
+
       public void onClick(ClickEvent event) {
         apply();
       }
@@ -86,7 +90,7 @@ public class EditGroupPanel extends FlexTable {
     setWidget(row, 1, nameTextBox);
     setWidget(++row, 0, new Label("Description"));
     setWidget(row, 1, descriptionTextBox);
-    
+
     if (showUsers) {
       setWidget(++row, 0, new Label("Owner"));
       setWidget(row, 1, ownerListBox);
@@ -105,19 +109,19 @@ public class EditGroupPanel extends FlexTable {
   }
 
   private void fetchUsers() {
-    final AsyncCallback<List<User>> getUsersCallback = new AsyncCallback<List<User>>() {
-      public void onFailure(Throwable caught) {
-      }
-
-      public void onSuccess(List<User> users) {
+    MethodCallback<List<User>> getUsersCallback = new MethodCallback<List<User>>() {
+      public void onSuccess(Method method, List<User> users) {
         EditGroupPanel.this.users = users;
         populateUI();
         if (adminCallback != null) {
           adminCallback.usersFetched(users);
         }
-      };
+      }
+
+      public void onFailure(Method method, Throwable exception) {
+      }
     };
-    BaseServiceCache.getService().getUsers(getUsersCallback);
+    ResourceCache.getBaseResource().getUsers(getUsersCallback);
   }
 
   public boolean apply() {

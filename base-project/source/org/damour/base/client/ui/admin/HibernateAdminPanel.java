@@ -3,14 +3,15 @@ package org.damour.base.client.ui.admin;
 import java.util.List;
 
 import org.damour.base.client.objects.HibernateStat;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.Button;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -112,16 +113,16 @@ public class HibernateAdminPanel extends VerticalPanel {
   }
 
   private void evictClassFromCache(String className) {
-    final AsyncCallback<List<HibernateStat>> callback = new AsyncCallback<List<HibernateStat>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<HibernateStat>> callback = new MethodCallback<List<HibernateStat>>() {
+      public void onFailure(Method method, Throwable caught) {
         Window.alert(caught.getMessage());
       }
 
-      public void onSuccess(List<HibernateStat> stats) {
+      public void onSuccess(Method method, List<HibernateStat> stats) {
         fetchHibernateStats();
       };
     };
-    BaseServiceCache.getService().evictClassFromCache(className, callback);
+    ResourceCache.getBaseResource().evictClassFromCache(className, callback);
   }
 
   private void fetchHibernateStats() {
@@ -134,29 +135,29 @@ public class HibernateAdminPanel extends VerticalPanel {
       statsTable.setWidget(row, 6, new Label("."));
       statsTable.setWidget(row, 7, new Label("."));
     }
-    final AsyncCallback<List<HibernateStat>> callback = new AsyncCallback<List<HibernateStat>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<HibernateStat>> callback = new MethodCallback<List<HibernateStat>>() {
+      public void onFailure(Method methhod, Throwable caught) {
         Window.alert(caught.getMessage());
       }
 
-      public void onSuccess(List<HibernateStat> stats) {
+      public void onSuccess(Method method, List<HibernateStat> stats) {
         populateUI(stats);
       };
     };
-    BaseServiceCache.getService().getHibernateStats(callback);
+    ResourceCache.getBaseResource().getHibernateStats(callback);
   }
 
   private void resetHibernate() {
-    final AsyncCallback<List<HibernateStat>> callback = new AsyncCallback<List<HibernateStat>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<HibernateStat>> callback = new MethodCallback<List<HibernateStat>>() {
+      public void onFailure(Method method, Throwable caught) {
         Window.alert(caught.getMessage());
       }
 
-      public void onSuccess(List<HibernateStat> stats) {
+      public void onSuccess(Method method, List<HibernateStat> stats) {
         fetchHibernateStats();
       };
     };
-    BaseServiceCache.getService().resetHibernate(callback);
+    ResourceCache.getBaseResource().resetHibernate(callback);
   }
 
 }

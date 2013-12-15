@@ -7,6 +7,7 @@ import java.util.List;
 import org.damour.base.client.BaseApplication;
 import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.User;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.GlassPanel;
 import org.damour.base.client.ui.buttons.Button;
@@ -18,6 +19,8 @@ import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
 import org.damour.base.client.ui.password.SecurePasswordVerification;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -719,8 +722,8 @@ public class AuthenticationHandler {
   }
 
   public void handleUserAuthentication(final boolean forcePrompt) {
-    final AsyncCallback<User> isAuthenticatedCallback = new AsyncCallback<User>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<User> isAuthenticatedCallback = new MethodCallback<User>() {
+      public void onFailure(Method method, Throwable caught) {
         if (forcePrompt) {
           // try to login and get data
           showLoginDialog(true);
@@ -737,7 +740,7 @@ public class AuthenticationHandler {
         }
       }
 
-      public void onSuccess(User user) {
+      public void onSuccess(Method method, User user) {
         AuthenticationHandler.this.user = user;
         if (user == null && forcePrompt) {
           // try to login and get data
@@ -747,7 +750,7 @@ public class AuthenticationHandler {
         }
       };
     };
-    BaseServiceCache.getService().getAuthenticatedUser(isAuthenticatedCallback);
+    ResourceCache.getBaseResource().getAuthenticatedUser(isAuthenticatedCallback);
   }
 
   // LoginListener events

@@ -1,14 +1,15 @@
 package org.damour.base.client.ui.admin;
 
 import org.damour.base.client.objects.MemoryStats;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.Button;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -87,29 +88,29 @@ public class MemoryAdminPanel extends VerticalPanel {
       statsTable.setWidget(row, 3, new Label("."));
       statsTable.setWidget(row, 4, new Label("."));
     }
-    final AsyncCallback<MemoryStats> callback = new AsyncCallback<MemoryStats>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<MemoryStats> callback = new MethodCallback<MemoryStats>() {
+      public void onFailure(Method method, Throwable caught) {
         Window.alert(caught.getMessage());
       }
 
-      public void onSuccess(MemoryStats stats) {
+      public void onSuccess(Method method, MemoryStats stats) {
         populateUI(stats);
       };
     };
-    BaseServiceCache.getService().getMemoryStats(callback);
+    ResourceCache.getBaseResource().getMemoryStats(callback);
   }
 
   private void requestGarbageCollection() {
-    final AsyncCallback<MemoryStats> callback = new AsyncCallback<MemoryStats>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<MemoryStats> callback = new MethodCallback<MemoryStats>() {
+      public void onFailure(Method method, Throwable caught) {
         Window.alert(caught.getMessage());
       }
 
-      public void onSuccess(MemoryStats stats) {
+      public void onSuccess(Method method, MemoryStats stats) {
         populateUI(stats);
       };
     };
-    BaseServiceCache.getService().requestGarbageCollection(callback);
+    ResourceCache.getBaseResource().requestGarbageCollection(callback);
   }
 
 }

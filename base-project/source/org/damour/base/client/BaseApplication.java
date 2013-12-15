@@ -7,11 +7,14 @@ import org.damour.base.client.localization.IResourceBundleLoadCallback;
 import org.damour.base.client.localization.ResourceBundle;
 import org.damour.base.client.objects.Referral;
 import org.damour.base.client.objects.User;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -68,7 +71,7 @@ public class BaseApplication implements EntryPoint, StartupListener {
     } else if (Window.Navigator.getUserAgent().toLowerCase().indexOf("msie") != -1) {
       RootPanel.getBodyElement().addClassName("IE");
     }
-    
+
     if (!attemptToLoadModule()) {
       return;
     }
@@ -95,13 +98,13 @@ public class BaseApplication implements EntryPoint, StartupListener {
           referral.referralURL = Window.Location.getHref();
         }
         referral.url = Window.Location.getHref();
-        BaseServiceCache.getServiceUnsafe().submitReferral(referral, new AsyncCallback<Referral>() {
+        ResourceCache.getBaseResource().submitReferral(referral, new MethodCallback<Referral>() {
 
-          public void onSuccess(Referral result) {
+          public void onSuccess(Method method, Referral result) {
             BaseApplication.referral = result;
           }
 
-          public void onFailure(Throwable caught) {
+          public void onFailure(Method method, Throwable caught) {
           }
         });
       }

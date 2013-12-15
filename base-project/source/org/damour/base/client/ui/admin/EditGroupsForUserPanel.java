@@ -6,10 +6,13 @@ import java.util.List;
 import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -54,7 +57,7 @@ public class EditGroupsForUserPanel extends FlexTable implements ChangeHandler {
     addButton.setText(" > ");
     addButton.setTitle("Add Group Membership");
     addButton.addClickHandler(new ClickHandler() {
-      
+
       public void onClick(ClickEvent event) {
         addGroupMembership();
       }
@@ -163,18 +166,18 @@ public class EditGroupsForUserPanel extends FlexTable implements ChangeHandler {
   }
 
   private void fetchGroupsForUser() {
-    final AsyncCallback<List<UserGroup>> getGroupsForUserCallback = new AsyncCallback<List<UserGroup>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<UserGroup>> getGroupsForUserCallback = new MethodCallback<List<UserGroup>>() {
+      public void onFailure(Method method, Throwable exception) {
       }
 
-      public void onSuccess(List<UserGroup> groupsForUser) {
+      public void onSuccess(Method method, List<UserGroup> groupsForUser) {
         EditGroupsForUserPanel.this.groupsForUser = groupsForUser;
         if (allGroups == null) {
-          final AsyncCallback<List<UserGroup>> getGroupsCallback = new AsyncCallback<List<UserGroup>>() {
-            public void onFailure(Throwable caught) {
+          final MethodCallback<List<UserGroup>> getGroupsCallback = new MethodCallback<List<UserGroup>>() {
+            public void onFailure(Method method, Throwable caught) {
             }
 
-            public void onSuccess(List<UserGroup> groups) {
+            public void onSuccess(Method method, List<UserGroup> groups) {
               allGroups = groups;
               populateUI();
               if (callback != null) {
@@ -184,13 +187,13 @@ public class EditGroupsForUserPanel extends FlexTable implements ChangeHandler {
               }
             };
           };
-          BaseServiceCache.getService().getGroups(getGroupsCallback);
+          ResourceCache.getBaseResource().getGroups(getGroupsCallback);
         } else {
           populateUI();
         }
       };
     };
-    BaseServiceCache.getService().getGroups(user, getGroupsForUserCallback);
+    ResourceCache.getBaseResource().getGroups(user.getUsername(), getGroupsForUserCallback);
   }
 
   public void onChange(ChangeEvent event) {

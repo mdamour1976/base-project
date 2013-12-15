@@ -6,10 +6,13 @@ import java.util.List;
 import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -161,13 +164,13 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
   }
 
   public void fetchGroupMembers() {
-    final AsyncCallback<List<User>> getGroupMemsCallback = new AsyncCallback<List<User>>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<List<User>> getGroupMemsCallback = new MethodCallback<List<User>>() {
+      public void onFailure(Method method, Throwable caught) {
         MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), true, true, true);
         dialog.center();
       }
 
-      public void onSuccess(List<User> members) {
+      public void onSuccess(Method method, List<User> members) {
         EditGroupMembersPanel.this.members = members;
         if (members == null) {
           MessageDialogBox dialog = new MessageDialogBox("Error", "Could not get users in group.", true, true, true);
@@ -181,23 +184,23 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
         }
       };
     };
-    BaseServiceCache.getService().getUsers(group, getGroupMemsCallback);
+    ResourceCache.getBaseResource().getUsers(group, getGroupMemsCallback);
   }
 
   private void fetchUsers() {
-    final AsyncCallback<List<User>> getUsersCallback = new AsyncCallback<List<User>>() {
-      public void onFailure(Throwable caught) {
-      }
-
-      public void onSuccess(List<User> users) {
+    MethodCallback<List<User>> getUsersCallback = new MethodCallback<List<User>>() {
+      public void onSuccess(Method method, List<User> users) {
         EditGroupMembersPanel.this.allUsers = users;
         populateUI();
         if (adminCallback != null) {
           adminCallback.usersFetched(users);
         }
-      };
+      }
+
+      public void onFailure(Method method, Throwable exception) {
+      }
     };
-    BaseServiceCache.getService().getUsers(getUsersCallback);
+    ResourceCache.getBaseResource().getUsers(getUsersCallback);
   }
 
   public void onChange(ChangeEvent event) {

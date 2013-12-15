@@ -8,6 +8,7 @@ import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.SecurityPrincipal;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.admin.commands.CreateGroupCommand;
@@ -15,6 +16,8 @@ import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -70,28 +73,28 @@ public class PermissionsPanel extends VerticalPanel {
         addPrincipalListBox.setVisibleItemCount(12);
         addPermissionPanel.add(addPrincipalListBox);
         if (showUserPerms) {
-          AsyncCallback<List<User>> getUsersCallback = new AsyncCallback<List<User>>() {
-            public void onFailure(Throwable caught) {
-              Window.alert(caught.getMessage());
-            }
-
-            public void onSuccess(List<User> users) {
+          MethodCallback<List<User>> getUsersCallback = new MethodCallback<List<User>>() {
+            public void onSuccess(Method method, List<User> users) {
               fetchedUsers.clear();
               for (User user : users) {
                 addPrincipalListBox.addItem(user.getUsername());
                 fetchedUsers.put(user.getUsername(), user);
               }
             }
+
+            public void onFailure(Method method, Throwable exception) {
+              Window.alert(exception.getMessage());
+            }
           };
-          BaseServiceCache.getService().getUsers(getUsersCallback);
+          ResourceCache.getBaseResource().getUsers(getUsersCallback);
         }
         if (showGroupPerms) {
-          AsyncCallback<List<UserGroup>> getGroupsCallback = new AsyncCallback<List<UserGroup>>() {
-            public void onFailure(Throwable caught) {
-              Window.alert(caught.getMessage());
+          MethodCallback<List<UserGroup>> getGroupsCallback = new MethodCallback<List<UserGroup>>() {
+            public void onFailure(Method method, Throwable exception) {
+              Window.alert(exception.getMessage());
             }
 
-            public void onSuccess(List<UserGroup> groups) {
+            public void onSuccess(Method method, List<UserGroup> groups) {
               fetchedGroups.clear();
               for (UserGroup group : groups) {
                 addPrincipalListBox.addItem(group.getName());
@@ -99,7 +102,7 @@ public class PermissionsPanel extends VerticalPanel {
               }
             }
           };
-          BaseServiceCache.getService().getGroups(AuthenticationHandler.getInstance().getUser(), getGroupsCallback);
+          ResourceCache.getBaseResource().getGroups(AuthenticationHandler.getInstance().getUser().getUsername(), getGroupsCallback);
         }
 
         PromptDialogBox dialog = new PromptDialogBox("Add New Permission", "OK", null, "Cancel", false, true);

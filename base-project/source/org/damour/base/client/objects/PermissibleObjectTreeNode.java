@@ -1,25 +1,26 @@
 package org.damour.base.client.objects;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
-public class PermissibleObjectTreeNode implements Serializable {
+public class PermissibleObjectTreeNode implements Serializable, Comparable<PermissibleObjectTreeNode> {
 
-  public PermissibleObject object = null;
-  public UserRating userRating = null;
-  public UserAdvisory userAdvisory = null;
-  public UserThumb userThumb = null;
+  public PermissibleObject object;
+  public UserRating userRating;
+  public UserAdvisory userAdvisory;
+  public UserThumb userThumb;
 
-  public HashMap<PermissibleObject, PermissibleObjectTreeNode> children = new HashMap<PermissibleObject, PermissibleObjectTreeNode>();
+  public List<PermissibleObjectTreeNode> children = new ArrayList<PermissibleObjectTreeNode>();
 
   public PermissibleObjectTreeNode() {
   }
 
-  public HashMap<PermissibleObject, PermissibleObjectTreeNode> getChildren() {
+  public List<PermissibleObjectTreeNode> getChildren() {
     return children;
   }
 
-  public void setChildren(HashMap<PermissibleObject, PermissibleObjectTreeNode> children) {
+  public void setChildren(List<PermissibleObjectTreeNode> children) {
     this.children = children;
   }
 
@@ -53,5 +54,12 @@ public class PermissibleObjectTreeNode implements Serializable {
 
   public void setUserThumb(UserThumb userThumb) {
     this.userThumb = userThumb;
+  }
+
+  public int compareTo(PermissibleObjectTreeNode o) {
+    if (getObject() == null || o.getObject() == null) {
+      return 1;
+    }
+    return getObject().compareTo(o.getObject());
   }
 }

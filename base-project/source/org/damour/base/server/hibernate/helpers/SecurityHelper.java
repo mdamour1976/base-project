@@ -53,7 +53,7 @@ public class SecurityHelper {
     // select distinct userGroup from GroupMembership where user.id = user.id
     return session
         .createQuery(
-            "select distinct userGroup from " + GroupMembership.class.getSimpleName() + " groupMem where groupMem.visible = true and groupMem.user.id = "
+            "select distinct userGroup from " + GroupMembership.class.getSimpleName() + " groupMem where groupMem.userGroup.visible = true and groupMem.user.id = "
                 + user.id).setCacheable(true).list();
   }
 
