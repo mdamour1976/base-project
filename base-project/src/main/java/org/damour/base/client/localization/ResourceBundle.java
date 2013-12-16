@@ -116,7 +116,7 @@ public class ResourceBundle {
     }
     if (!path.startsWith("/")) {
       // relative path, we must adjust to module relative url
-      path = "/" + GWT.getModuleBaseURL() + "/" + path;
+      path = GWT.getModuleBaseURL() + path;
     }
     
     this.path = path;
