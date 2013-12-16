@@ -70,8 +70,8 @@
 		</style>
 
 
-	    <script language='javascript' src='../soundmanager/soundmanager2.js' type="text/javascript"></script>
-	    <script language='javascript' src='../buzz/buzz.js' type="text/javascript"></script>
+	    <script language='javascript' src='soundmanager/soundmanager2.js' type="text/javascript"></script>
+	    <script language='javascript' src='buzz/buzz.js' type="text/javascript"></script>
 	</head>
 	
 	<body>
@@ -97,7 +97,7 @@
 	
 	<script type="text/javascript">
 		soundManager.flashVersion = 9;
-		soundManager.url = '../soundmanager/'; // directory where SM2 .SWFs live
+		soundManager.url = 'soundmanager/'; // directory where SM2 .SWFs live
 		soundManager.debugMode = false;
 		soundManager.onload = function() {
 			// SM2 has loaded - now you can create and play sounds!
