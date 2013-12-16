@@ -17,6 +17,6 @@
 	<stylesheet src="base.css" />
 
 	<!-- Specify the app entry point class. -->
-	<!-- <entry-point class='org.damour.base.client.BaseApplicationUI'/> -->
+	<entry-point class='org.damour.base.client.BaseApplicationUI'/>
 
 </module>
