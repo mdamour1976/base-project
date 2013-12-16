@@ -114,7 +114,7 @@ public class ResourceBundle {
     if (!StringUtils.isEmpty(path) && !path.endsWith("/")) {
       path = path + "/";
     }
-    if (!path.startsWith("/")) {
+    if (!path.startsWith("/") && !path.startsWith("http")) {
       // relative path, we must adjust to module relative url
       path = GWT.getModuleBaseURL() + path;
     }
