@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 
 import org.damour.base.client.objects.IHibernateFriendly;
 import org.damour.base.client.utils.StringUtils;
@@ -143,14 +144,14 @@ public class HibernateUtil {
                 // every minute
                 Thread.sleep(60000);
               } catch (Exception e) {
-              }              
-              
+              }
+
               counter++;
               if (counter % 240 == 0) {
                 // reset the hibernate cache every 4 hours
                 HibernateUtil.resetHibernate();
               }
-              
+
               System.gc();
               long total = Runtime.getRuntime().totalMemory();
               long free = Runtime.getRuntime().freeMemory();
@@ -225,11 +226,14 @@ public class HibernateUtil {
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.jdbc.use_streams_for_binary").setText("true");
 
         // setup out provider for ehcache
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.cache.provider_class").setText("net.sf.ehcache.hibernate.SingletonEhCacheProvider");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.cache.region.factory_class").setText("net.sf.ehcache.hibernate.SingletonEhCacheRegionFactory");
-        
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.cache.provider_class")
+            .setText("net.sf.ehcache.hibernate.SingletonEhCacheProvider");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.cache.region.factory_class")
+            .setText("net.sf.ehcache.hibernate.SingletonEhCacheRegionFactory");
+
         // add c3p0 configuration
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.connection.provider_class").setText("org.hibernate.connection.C3P0ConnectionProvider");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.connection.provider_class")
+            .setText("org.hibernate.connection.C3P0ConnectionProvider");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.idle_test_period").setText("3600");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.timeout").setText("7200");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.min_size").setText("1");
@@ -237,8 +241,8 @@ public class HibernateUtil {
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.max_statements").setText("0");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.acquire_increment").setText("1");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.preferredTestQuery").setText("select 1+1");
-        //sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.testConnectionOnCheckout").setText("true");
-        
+        // sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.testConnectionOnCheckout").setText("true");
+
         // generate ddl and update database (if configured)
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.hbm2ddl.auto").setText(hbm2ddlMode);
         // setup config
@@ -293,10 +297,8 @@ public class HibernateUtil {
     return executeQuery(session, query, true);
   }
 
-  private org.safehaus.uuid.UUIDGenerator guidGenerator = org.safehaus.uuid.UUIDGenerator.getInstance();
-
   public String generateGUID() {
-    return guidGenerator.generateTimeBasedUUID().toString();
+    return UUID.randomUUID().toString();
   }
 
   public String getUsername() {

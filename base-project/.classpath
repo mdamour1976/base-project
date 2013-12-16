@@ -17,7 +17,6 @@
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/imap.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/jaxen-1.1.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/jhlabs-filters.jar"/>
-	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/jug-lgpl-2.0.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/mail.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/mailapi.jar"/>
 	<classpathentry exported="true" kind="lib" path="war/WEB-INF/lib/pop3.jar"/>
