@@ -4,10 +4,9 @@ import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
+import org.damour.base.server.MD5;
 import org.damour.base.server.hibernate.IDefaultData;
 import org.hibernate.Session;
-
-import com.twmacinta.util.MD5;
 
 public class DefaultData implements IDefaultData {
 
@@ -16,9 +15,7 @@ public class DefaultData implements IDefaultData {
     if (admin == null) {
       admin = new User();
       admin.setUsername("admin");
-      MD5 md5 = new MD5();
-      md5.Update("p@$$w0rd");
-      admin.setPasswordHash(md5.asHex());
+      admin.setPasswordHash(MD5.md5("p@$$w0rd"));
       admin.setFirstname("Admin");
       admin.setLastname("Istrator");
       admin.setPasswordHint("default");
@@ -47,9 +44,7 @@ public class DefaultData implements IDefaultData {
     if (anonymous == null) {
       anonymous = new User();
       anonymous.setUsername("anonymous");
-      MD5 md5 = new MD5();
-      md5.Update("s,!5C6xAwM");
-      anonymous.setPasswordHash(md5.asHex());
+      anonymous.setPasswordHash(MD5.md5("s,!5C6xAwM"));
       anonymous.setFirstname("anonymous");
       anonymous.setLastname("anonymous");
       anonymous.setPasswordHint("default");

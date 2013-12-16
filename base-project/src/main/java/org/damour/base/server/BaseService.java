@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
@@ -15,11 +14,13 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONValue;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.damour.base.client.exceptions.LoginException;
 import org.damour.base.client.exceptions.SimpleMessageException;
-import org.damour.base.client.objects.Comment;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
@@ -42,7 +43,6 @@ import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.ReflectionCache;
 import org.damour.base.server.hibernate.helpers.AdvisoryHelper;
-import org.damour.base.server.hibernate.helpers.CommentHelper;
 import org.damour.base.server.hibernate.helpers.FolderHelper;
 import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
@@ -57,9 +57,6 @@ import org.hibernate.Transaction;
 
 import com.andrewtimberlake.captcha.Captcha;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import com.json.parsers.JSONParser;
-import com.json.parsers.JsonParserFactory;
-import com.twmacinta.util.MD5;
 
 public class BaseService extends RemoteServiceServlet implements org.damour.base.client.service.BaseService {
 
@@ -124,9 +121,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         // https://graph.facebook.com/username?access_token=password
         URL url = new URL("https://graph.facebook.com/" + username + "?access_token=" + password);
 
-        JsonParserFactory factory = JsonParserFactory.getInstance();
-        JSONParser parser = factory.newJsonParser();
-        Map<?, ?> json = parser.parseJson(IOUtils.toString(url.openStream()));
+        JSONObject json = (JSONObject) JSONValue.parseStrict(IOUtils.toString(url.openStream()));
 
         String id = (String) json.get("id");
         String fbusername = (String) json.get("username");
@@ -179,9 +174,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       throws SimpleMessageException {
     username = username.toLowerCase();
     User user = UserHelper.getUser(session, username);
-    MD5 md5 = new MD5();
-    md5.Update(password);
-    String passwordHash = md5.asHex();
+
+    String passwordHash = MD5.md5(password);
     if (user != null && isAccountValidated(user) && ((internal && password.equals(user.getPasswordHash())) || user.getPasswordHash().equals(passwordHash))) {
       Cookie userCookie = new Cookie("user", user.getUsername());
       userCookie.setPath("/");
@@ -250,7 +244,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     return getAuthenticatedUser(session, getThreadLocalRequest(), getThreadLocalResponse());
   }
 
-
   public void logout() throws SimpleMessageException {
     destroyAllCookies(getThreadLocalRequest(), getThreadLocalResponse());
   }
@@ -290,9 +283,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         User newUser = new User();
         newUser.setUsername(inUser.getUsername().toLowerCase());
         if (password != null && !"".equals(password)) {
-          MD5 md5 = new MD5();
-          md5.Update(password);
-          newUser.setPasswordHash(md5.asHex());
+          newUser.setPasswordHash(MD5.md5(password));
         }
         if (authUser != null && authUser.isAdministrator()) {
           newUser.setAdministrator(inUser.isAdministrator());
@@ -339,15 +330,15 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
           // send user a validation email, where, upon clicking the link, their account will be validated
           // the validation code in the URL will simply be a hash of their email address
           MD5 md5 = new MD5();
-          md5.Update(newUser.getEmail());
-          md5.Update(newUser.getPasswordHash());
+          md5.update(newUser.getEmail());
+          md5.update(newUser.getPasswordHash());
 
           String portStr = "";
           if (getThreadLocalRequest().getLocalPort() != 80) {
             portStr = ":" + getThreadLocalRequest().getLocalPort();
           }
           String url = getThreadLocalRequest().getScheme() + "://" + getThreadLocalRequest().getServerName() + portStr + "/?u=" + newUser.getUsername() + "&v="
-              + md5.asHex();
+              + md5.digest();
 
           String text = "Thank you for signing up with " + BaseSystem.getDomainName()
               + ".<BR><BR>Please confirm your account by clicking the following link:<BR><BR>";
@@ -366,8 +357,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         // -we are editing our own account
         if (password != null && !"".equals(password)) {
           MD5 md5 = new MD5();
-          md5.Update(password);
-          dbUser.setPasswordHash(md5.asHex());
+          md5.update(password);
+          dbUser.setPasswordHash(md5.digest());
         }
         if (authUser.isAdministrator()) {
           dbUser.setAdministrator(inUser.isAdministrator());
@@ -690,7 +681,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to set rating on this content.");
       }
 
-      UserRating userRating = RatingHelper.getUserRating(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
+      UserRating userRating = RatingHelper.getUserRating(session.get(), permissibleObject, authUser,
+          getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
       // check if rating already exists
       if (userRating != null) {
         // TODO: consider changing the vote
@@ -755,7 +747,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         throw new SimpleMessageException("User is not authorized to set thumbs on this content.");
       }
 
-      UserThumb userThumb = ThumbHelper.getUserThumb(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
+      UserThumb userThumb = ThumbHelper.getUserThumb(session.get(), permissibleObject, authUser,
+          getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
       // check if thumb already exists
       if (userThumb != null) {
         // TODO: consider changing the vote
@@ -990,7 +983,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       }
 
       // check if rating already exists
-      UserAdvisory userAdvisory = AdvisoryHelper.getUserAdvisory(session.get(), permissibleObject, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
+      UserAdvisory userAdvisory = AdvisoryHelper.getUserAdvisory(session.get(), permissibleObject, authUser,
+          getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
       if (userAdvisory != null) {
         throw new SimpleMessageException("Already voted.");
       }
@@ -1513,8 +1507,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     // return all permissible objects which match the name/description
     try {
       Class<?> clazz = Class.forName(searchObjectType);
-      return PermissibleObjectHelper.search(session.get(), user, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz, query, sortField, sortDescending, searchNames, searchDescriptions,
-          searchKeywords, useExactPhrase);
+      return PermissibleObjectHelper.search(session.get(), user, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz, query, sortField,
+          sortDescending, searchNames, searchDescriptions, searchKeywords, useExactPhrase);
     } catch (Throwable t) {
       throw new SimpleMessageException(t.getMessage());
     }
@@ -1748,9 +1742,9 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       User user = UserHelper.getUser(session.get(), username);
       if (user != null && !user.isValidated()) {
         MD5 md5 = new MD5();
-        md5.Update(user.getEmail());
-        md5.Update(user.getPasswordHash());
-        if (validationCode.equals(md5.asHex())) {
+        md5.update(user.getEmail());
+        md5.update(user.getPasswordHash());
+        if (validationCode.equals(md5.digest())) {
           // validation successful
           user.setValidated(true);
           login(session.get(), getThreadLocalRequest(), getThreadLocalResponse(), username, user.getPasswordHash(), true);

@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.damour.base.client.objects.Folder;
@@ -16,8 +18,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.Test;
-
-import com.twmacinta.util.MD5;
 
 public class SecurityHelperTest {
 
@@ -411,14 +411,17 @@ public class SecurityHelperTest {
   }
 
   @Test
-  public void passwordHashTest() {
+  public void passwordHashTest() throws NoSuchAlgorithmException {
     String password = "t@k30ff";
-    MD5 md5 = new MD5();
-    md5.Update(password);
-    String hash1 = md5.asHex();
-    md5 = new MD5();
-    md5.Update(password);
-    String hash2 = md5.asHex();
+    MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+    digest.update(password.getBytes());
+    String hash1 = new String(digest.digest());
+    
+    System.out.println(hash1);
+    
+    digest = java.security.MessageDigest.getInstance("MD5");
+    digest.update(password.getBytes());
+    String hash2 = digest.toString();
     assertEquals(hash1, hash2);
     System.out.println(hash1);
   }
