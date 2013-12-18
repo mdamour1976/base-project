@@ -5,14 +5,89 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.damour</groupId>
   <artifactId>base-project</artifactId>
-  <packaging>jar</packaging>
+  <packaging>war</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>Base-Project</name>
   <url>https://github.com/mdamour1976/base-project</url>
 
   <properties>
     <gwt.version>2.5.1</gwt.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Central Repository</name>
+      <url>http://repo.maven.apache.org/maven2</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>thirdparty-releases</id>
+      <name>JBoss Thirdparty Releases</name>
+      <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <webResources>
+            <resource>
+              <!-- this is relative to the pom.xml directory -->
+              <directory>src/main/webapp</directory>
+            </resource>
+            <resource>
+              <!-- this is relative to the pom.xml directory -->
+              <directory>src/main/java/org/damour/base/public</directory>
+            </resource>
+          </webResources>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>gwt-maven-plugin</artifactId>
+        <version>2.5.1</version>
+        <executions>
+          <execution>
+            <configuration>
+              <module>org.damour.base.BaseApplication</module>
+            </configuration>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <extraJvmArgs>-XX:MaxPermSize=512m -Xmx1024m</extraJvmArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.tomcat.maven</groupId>
+          <artifactId>tomcat7-maven-plugin</artifactId>
+          <version>2.2</version>
+      <configuration>
+      <!-- http port -->
+      <port>9090</port>
+      <!-- application path always starts with /-->
+      <path>/base-project</path>
+      <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
+      </configuration>
+        </plugin>
+
+
+
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
@@ -23,27 +98,55 @@
     </dependency>
 
     <dependency>
-      <groupId>com.google.gwt</groupId>
-      <artifactId>gwt-dev</artifactId>
-      <version>${gwt.version}</version>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>1.1.0.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <version>1.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-user</artifactId>
       <version>${gwt.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-servlet</artifactId>
       <version>${gwt.version}</version>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
       <groupId>com.google.gwt</groupId>
       <artifactId>gwt-codeserver</artifactId>
       <version>${gwt.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.auroris</groupId>
+      <artifactId>gwt-colorpicker</artifactId>
+      <version>2.1</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -52,13 +155,111 @@
       <version>3.6.9.Final</version>
     </dependency>
 
+<dependency>
+	<groupId>org.hibernate</groupId>
+	<artifactId>hibernate-c3p0</artifactId>
+	<version>3.6.9.Final</version>
+</dependency>
+            
+
+<dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-validator-annotation-processor</artifactId>
+        <version>4.1.0.Final</version>
+</dependency>
+
+
+
     <dependency>
       <groupId>org.fusesource.restygwt</groupId>
       <artifactId>restygwt</artifactId>
-      <version>1.3</version>
+      <version>1.4-SNAPSHOT</version>
     </dependency>
 
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.7</version>
+    </dependency>
 
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-core</artifactId>
+      <version>1.18</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>1.18</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-servlet</artifactId>
+      <version>1.18</version>
+    </dependency>
+
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.27</version>
+    </dependency>
+
+    <dependency>
+      <groupId>fast-md5</groupId>
+      <artifactId>fast-md5</artifactId>
+      <version>2.5</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.minidev</groupId>
+      <artifactId>json-smart</artifactId>
+      <version>1.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-xc</artifactId>
+      <version>1.9.13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-jaxrs</artifactId>
+      <version>1.9.13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.andrewtimberlake</groupId>
+      <artifactId>captcha</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>15.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.reflections</groupId>
+      <artifactId>reflections</artifactId>
+      <version>0.9.9-RC1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>c3p0</groupId>
+      <artifactId>c3p0</artifactId>
+      <version>0.9.1.2</version>
+    </dependency>
+
+<dependency>
+	<groupId>net.sf.ehcache</groupId>
+	<artifactId>ehcache-core</artifactId>
+	<version>2.5.0</version>
+</dependency>
+            
 
   </dependencies>
 </project>
