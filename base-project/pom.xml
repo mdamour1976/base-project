@@ -33,6 +33,9 @@
   </repositories>
 
   <build>
+
+    <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/classes</outputDirectory>
+
     <plugins>
 
       <plugin>
@@ -69,6 +72,8 @@
         </executions>
         <configuration>
           <extraJvmArgs>-XX:MaxPermSize=512m -Xmx1024m</extraJvmArgs>
+          <runTarget>base.jsp</runTarget>
+          <webappDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</webappDirectory>
         </configuration>
       </plugin>
       <plugin>
@@ -79,7 +84,7 @@
       <!-- http port -->
       <port>9090</port>
       <!-- application path always starts with /-->
-      <path>/base-project</path>
+      <path>/</path>
       <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
       </configuration>
         </plugin>
@@ -234,6 +239,12 @@
       <groupId>com.andrewtimberlake</groupId>
       <artifactId>captcha</artifactId>
       <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.jhlabs</groupId>
+      <artifactId>filters</artifactId>
+      <version>2.0.235-1</version>
     </dependency>
 
     <dependency>
