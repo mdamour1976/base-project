@@ -1,6 +1,7 @@
 package org.damour.base.server;
 
 import java.security.MessageDigest;
+import org.apache.commons.codec.binary.Base64;
 
 public class MD5 {
 
@@ -19,7 +20,7 @@ public class MD5 {
   }
     
   public String digest() {
-    String hash = new String(digest.digest());
+    String hash = new String(Base64.encodeBase64(digest.digest()));
     return hash;
   }
   
