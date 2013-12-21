@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -33,11 +32,8 @@
   </repositories>
 
   <build>
-
     <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/classes</outputDirectory>
-
     <plugins>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -53,20 +49,16 @@
               <directory>src/main/java/org/damour/base/seed/public</directory>
             </resource>
           </webResources>
-
-            <overlays>
-                <overlay>
-                    <groupId>org.damour</groupId>
-                    <artifactId>base-project</artifactId>
-                </overlay>
+          <overlays>
+            <overlay>
+              <groupId>org.damour</groupId>
+              <artifactId>base-project</artifactId>
+            </overlay>
             <overlay>
               <!-- empty groupId/artifactId represents the current build -->
             </overlay>
-
-            </overlays>
-
-        <dependentWarExcludes>baseproject*,WEB-INF/lib/*</dependentWarExcludes>
-
+          </overlays>
+          <dependentWarExcludes>baseproject*,WEB-INF/lib/*</dependentWarExcludes>
         </configuration>
       </plugin>
 
@@ -92,33 +84,32 @@
       </plugin>
 
       <plugin>
-          <groupId>org.apache.tomcat.maven</groupId>
-          <artifactId>tomcat7-maven-plugin</artifactId>
-          <version>2.1</version>
-    <executions>
-        <execution>
+        <groupId>org.apache.tomcat.maven</groupId>
+        <artifactId>tomcat7-maven-plugin</artifactId>
+        <version>2.1</version>
+        <executions>
+          <execution>
             <id>tomcat-run</id>
             <goals>
-                <goal>exec-war-only</goal>
+              <goal>exec-war-only</goal>
             </goals>
             <phase>package</phase>
             <configuration>
-                <path>/standalone</path>
-                <enableNaming>false</enableNaming>
-                <finalName>standalone.jar</finalName>
-                <charset>utf-8</charset>
+              <path>/standalone</path>
+              <enableNaming>false</enableNaming>
+              <finalName>standalone.jar</finalName>
+              <charset>utf-8</charset>
             </configuration>
-        </execution>
-    </executions>
-      <configuration>
-      <!-- http port -->
-      <port>9090</port>
-      <!-- application path always starts with /-->
-      <path>/</path>
-      <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
-      </configuration>
-        </plugin>
-
+          </execution>
+        </executions>
+        <configuration>
+          <!-- http port -->
+          <port>9090</port>
+          <!-- application path always starts with / -->
+          <path>/</path>
+          <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -179,6 +170,5 @@
       <type>jar</type>
       <classifier>sources</classifier>
     </dependency>
-
   </dependencies>
 </project>

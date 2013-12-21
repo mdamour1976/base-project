@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -33,11 +32,8 @@
   </repositories>
 
   <build>
-
     <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/classes</outputDirectory>
-
     <plugins>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -76,69 +72,69 @@
           <webappDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</webappDirectory>
         </configuration>
       </plugin>
+
       <plugin>
-          <groupId>org.apache.tomcat.maven</groupId>
-          <artifactId>tomcat7-maven-plugin</artifactId>
-          <version>2.2</version>
-      <configuration>
-      <!-- http port -->
-      <port>9090</port>
-      <!-- application path always starts with /-->
-      <path>/</path>
-      <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
-      </configuration>
-        </plugin>
+        <groupId>org.apache.tomcat.maven</groupId>
+        <artifactId>tomcat7-maven-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <!-- http port -->
+          <port>9090</port>
+          <!-- application path always starts with / -->
+          <path>/</path>
+          <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
+        </configuration>
+      </plugin>
 
-<plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-source-plugin</artifactId>
-  <executions>
-    <execution>
-      <id>attach-sources</id>
-      <goals>
-        <goal>jar</goal>
-      </goals>
-    </execution>
-  </executions>
-</plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-jar-plugin</artifactId>
-    <executions>
-        <execution>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
             <id>make-a-jar</id>
             <phase>compile</phase>
             <goals>
-                <goal>jar</goal>
+              <goal>jar</goal>
             </goals>
-        </execution>
-    </executions>
-</plugin>
+          </execution>
+        </executions>
+      </plugin>
 
-<plugin>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>build-helper-maven-plugin</artifactId>
-    <version>1.7</version>
-    <executions>
-        <execution>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
             <id>attach-artifacts</id>
             <phase>package</phase>
             <goals>
-                <goal>attach-artifact</goal>
+              <goal>attach-artifact</goal>
             </goals>
             <configuration>
-                <artifacts>
-                    <artifact>
-                        <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
-                        <type>jar</type>                           
-                    </artifact>
-                </artifacts>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
+                  <type>jar</type>
+                </artifact>
+              </artifacts>
             </configuration>
-        </execution>
-    </executions>
-</plugin>
-
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -208,20 +204,17 @@
       <version>3.6.9.Final</version>
     </dependency>
 
-<dependency>
-	<groupId>org.hibernate</groupId>
-	<artifactId>hibernate-c3p0</artifactId>
-	<version>3.6.9.Final</version>
-</dependency>
-            
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-c3p0</artifactId>
+      <version>3.6.9.Final</version>
+    </dependency>
 
-<dependency>
-        <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-validator-annotation-processor</artifactId>
-        <version>4.1.0.Final</version>
-</dependency>
-
-
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-validator-annotation-processor</artifactId>
+      <version>4.1.0.Final</version>
+    </dependency>
 
     <dependency>
       <groupId>org.fusesource.restygwt</groupId>
@@ -313,12 +306,12 @@
       <version>0.9.1.2</version>
     </dependency>
 
-<dependency>
-	<groupId>net.sf.ehcache</groupId>
-	<artifactId>ehcache-core</artifactId>
-	<version>2.5.0</version>
-</dependency>
-            
+    <dependency>
+      <groupId>net.sf.ehcache</groupId>
+      <artifactId>ehcache-core</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -336,6 +329,5 @@
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
     </dependency>
-
   </dependencies>
 </project>
