@@ -1,2 +1,4 @@
 /dist
+/target
+/.extract
 /gwt-unitCache

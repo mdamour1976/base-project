@@ -5,6 +5,10 @@ import org.damour.base.client.ui.toolbar.ToolBar;
 
 public class SeedApplication extends BaseApplicationUI {
 
+  public String getModuleName() {
+    return "seed";
+  }
+
   public void loadApplication() {
     getApplicationContentDeck().add(new Launcher(getAuthenticatedUser()));
     getApplicationContentDeck().showWidget(0);

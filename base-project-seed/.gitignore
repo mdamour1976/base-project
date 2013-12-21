@@ -2,3 +2,5 @@
 /gwt-unitCache
 /dist
 /war
+/target
+/.extract

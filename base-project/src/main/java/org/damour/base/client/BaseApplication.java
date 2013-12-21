@@ -41,6 +41,15 @@ public class BaseApplication implements EntryPoint, StartupListener {
 
   private static Referral referral = null;
 
+  public String getModuleName() {
+    return "baseproject";
+  }
+
+  public static native String getApplicationName()
+  /*-{
+    return window.top.applicationName;
+  }-*/;
+
   public static native void setApplicationInitialized()
   /*-{
     window.top.applicationInitialized = true;
@@ -61,7 +70,7 @@ public class BaseApplication implements EntryPoint, StartupListener {
    * @return whether or not to load the module
    */
   public boolean attemptToLoadModule() {
-    return !isApplicationInitialized();
+    return (!isApplicationInitialized()) && getModuleName().equalsIgnoreCase(getApplicationName());
   }
 
   public void onModuleLoad() {
