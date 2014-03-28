@@ -10,7 +10,7 @@
   <url>https://github.com/mdamour1976/base-project</url>
 
   <properties>
-    <gwt.version>2.5.1</gwt.version>
+    <gwt.version>2.6.0</gwt.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -221,7 +221,7 @@
     <dependency>
       <groupId>org.fusesource.restygwt</groupId>
       <artifactId>restygwt</artifactId>
-      <version>1.4-SNAPSHOT</version>
+      <version>1.4</version>
     </dependency>
 
     <dependency>
