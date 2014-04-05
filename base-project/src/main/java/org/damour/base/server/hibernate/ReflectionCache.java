@@ -8,9 +8,9 @@ import java.util.List;
 
 public class ReflectionCache {
 
-  private static HashMap<Class, List<Field>> classFieldMap = new HashMap<Class, List<Field>>();
+  private static HashMap<Class<?>, List<Field>> classFieldMap = new HashMap<Class<?>, List<Field>>();
 
-  public static List<Field> getFields(Class clazz) {
+  public static List<Field> getFields(Class<?> clazz) {
     List<Field> fields = classFieldMap.get(clazz);
     if (fields == null) {
       fields = new ArrayList<Field>();

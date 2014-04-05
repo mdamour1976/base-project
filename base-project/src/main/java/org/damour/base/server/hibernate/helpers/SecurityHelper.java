@@ -7,16 +7,16 @@ import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.Permission;
+import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.SecurityPrincipal;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
-import org.damour.base.client.objects.Permission.PERM;
 import org.hibernate.Session;
 
 public class SecurityHelper {
 
   public static void deletePermissions(Session session, PermissibleObject object) {
-    session.createQuery("delete from " + Permission.class.getSimpleName() + " where permissibleObject.id = " + object.id).setCacheable(true).executeUpdate();
+    session.createQuery("delete from " + Permission.class.getSimpleName() + " where permissibleObject.id = " + object.id).executeUpdate();
   }
 
   public static List<Permission> getPermissions(Session session, SecurityPrincipal principal, PermissibleObject object) {
@@ -53,8 +53,8 @@ public class SecurityHelper {
     // select distinct userGroup from GroupMembership where user.id = user.id
     return session
         .createQuery(
-            "select distinct userGroup from " + GroupMembership.class.getSimpleName() + " groupMem where groupMem.userGroup.visible = true and groupMem.user.id = "
-                + user.id).setCacheable(true).list();
+            "select distinct userGroup from " + GroupMembership.class.getSimpleName()
+                + " groupMem where groupMem.userGroup.visible = true and groupMem.user.id = " + user.id).setCacheable(true).list();
   }
 
   public static List<UserGroup> getOwnedUserGroups(Session session, User user) {
@@ -103,37 +103,26 @@ public class SecurityHelper {
 
   public static Folder getFolder(Session session, Folder parentFolder, String folderName) {
     if (parentFolder == null) {
-      List<Folder> folders = session.createQuery("from " + Folder.class.getSimpleName() + " where parentFolder is null and name = '" + folderName + "'")
-          .setCacheable(true).list();
-      if (folders != null && folders.size() > 0) {
-        return folders.get(0);
-      }
-      return null;
+      Folder folder = (Folder) session.createQuery("from " + Folder.class.getSimpleName() + " where parentFolder is null and name = '" + folderName + "'")
+          .setCacheable(true).uniqueResult();
+      return folder;
     }
-    List<Folder> folders = session.createQuery("from " + Folder.class.getSimpleName() + " where parentFolder.id = " + parentFolder.id).setCacheable(true)
-        .list();
-    if (folders != null && folders.size() > 0) {
-      return folders.get(0);
-    }
-    return null;
+    Folder folder = (Folder) session.createQuery("from " + Folder.class.getSimpleName() + " where parentFolder.id = " + parentFolder.id).setCacheable(true)
+        .uniqueResult();
+    return folder;
   }
 
   public static GroupMembership getGroupMembership(Session session, User user, UserGroup group) {
-    List<GroupMembership> memberships = session
+    GroupMembership membership = (GroupMembership) session
         .createQuery("from " + GroupMembership.class.getSimpleName() + " where userGroup.id = " + group.id + " and user.id = " + user.id).setCacheable(true)
-        .list();
-    if (memberships != null && memberships.size() > 0) {
-      return memberships.get(0);
-    }
-    return null;
+        .uniqueResult();
+    return membership;
   }
 
   public static UserGroup getUserGroup(Session session, String groupName) {
-    List<UserGroup> groups = session.createQuery("from " + UserGroup.class.getSimpleName() + " where name = '" + groupName + "'").setCacheable(true).list();
-    if (groups != null && groups.size() > 0) {
-      return groups.get(0);
-    }
-    return null;
+    UserGroup group = (UserGroup) session.createQuery("from " + UserGroup.class.getSimpleName() + " where name = '" + groupName + "'").setCacheable(true)
+        .uniqueResult();
+    return group;
   }
 
   public static void deleteUserGroup(Session session, UserGroup group) {

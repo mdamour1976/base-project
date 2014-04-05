@@ -1,7 +1,6 @@
 package org.damour.base.server.hibernate.helpers;
 
 import java.util.List;
-import java.util.Set;
 
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
@@ -15,6 +14,7 @@ import org.hibernate.Session;
 
 public class RepositoryHelper {
 
+  @SuppressWarnings("unchecked")
   public static void buildRepositoryTreeNode(Session session, User user, RepositoryTreeNode parentNode, Folder parentFolder) {
     if (!SecurityHelper.doesUserHavePermission(session, user, parentFolder, PERM.READ)) {
       return;
@@ -85,12 +85,18 @@ public class RepositoryHelper {
     }
     for (Folder folder : folders) {
       RepositoryTreeNode childNode = new RepositoryTreeNode();
-      parentNode.getFolders().put(folder, childNode);
+      childNode.setFile(folder);
+      parentNode.getChildren().add(childNode);
       buildRepositoryTreeNode(session, user, childNode, folder);
     }
-    parentNode.setFiles(files);
+    for (File file : files) {
+      RepositoryTreeNode childNode = new RepositoryTreeNode();
+      childNode.setFile(file);
+      parentNode.getChildren().add(childNode);
+    }
   }
 
+  @SuppressWarnings("unchecked")
   public static void buildPermissibleObjectTreeNode(Session session, User user, User owner, String voterGUID, PermissibleObjectTreeNode parentNode,
       PermissibleObject parent, List<String> acceptedClasses, int currentDepth, int fetchDepth, int metaDataFetchDepth) {
 
@@ -226,8 +232,9 @@ public class RepositoryHelper {
     return query;
   }
 
+  @SuppressWarnings("unchecked")
   public static void getPermissibleObjects(Session session, User user, List<PermissibleObject> permissibleObjectList, PermissibleObject parent,
-      Class instanceType) {
+      Class<?> instanceType) {
     if (!SecurityHelper.doesUserHavePermission(session, user, parent, PERM.READ)) {
       return;
     }
@@ -273,27 +280,22 @@ public class RepositoryHelper {
   }
 
   public static void dumpTreeNode(RepositoryTreeNode parent, int depth) {
-    Set<Folder> folders = parent.getFolders().keySet();
-    List<File> files = parent.getFiles();
+    List<RepositoryTreeNode> children = parent.getChildren();
 
-    if (folders != null) {
-      for (Folder folder : folders) {
+    if (children != null) {
+      for (RepositoryTreeNode child  : children) {
         for (int i = 0; i < depth; i++) {
           System.out.print("   ");
         }
-        System.out.println("FOLDER: " + folder.getName());
-      }
-    }
-    if (files != null) {
-      for (File file : files) {
-        for (int i = 0; i < depth; i++) {
-          System.out.print("   ");
+        if (child.getFile() instanceof File) {
+          System.out.println("FILE: " + child.getFile().getName());
+        } else {
+          System.out.println("FOLDER: " + child.getFile().getName());
         }
-        System.out.println("FILE: " + file.getName());
       }
     }
-    for (RepositoryTreeNode childNode : parent.getFolders().values()) {
-      dumpTreeNode(childNode, depth + 1);
+    for (RepositoryTreeNode child  : children) {
+      dumpTreeNode(child, depth + 1);
     }
   }
 

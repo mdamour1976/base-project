@@ -7,8 +7,8 @@ import org.damour.base.client.localization.IResourceBundleLoadCallback;
 import org.damour.base.client.localization.ResourceBundle;
 import org.damour.base.client.objects.Referral;
 import org.damour.base.client.objects.User;
-import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
@@ -21,7 +21,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -107,7 +106,7 @@ public class BaseApplication implements EntryPoint, StartupListener {
           referral.referralURL = Window.Location.getHref();
         }
         referral.url = Window.Location.getHref();
-        ResourceCache.getBaseResource().submitReferral(referral, new MethodCallback<Referral>() {
+        ResourceCache.getReferralResource().submitReferral(referral, new MethodCallback<Referral>() {
 
           public void onSuccess(Method method, Referral result) {
             BaseApplication.referral = result;
@@ -131,12 +130,13 @@ public class BaseApplication implements EntryPoint, StartupListener {
           public void loadModule() {
             String username = Window.Location.getParameter("u");
             String validationCode = Window.Location.getParameter("v");
-            BaseServiceCache.getService().submitAccountValidation(username, validationCode, new AsyncCallback<User>() {
-              public void onFailure(Throwable caught) {
-                MessageDialogBox.alert(caught.getMessage());
+            ResourceCache.getUserResource().submitAccountValidation(username, validationCode, new MethodCallback<User>() {
+
+              public void onFailure(Method method, Throwable exception) {
+                MessageDialogBox.alert(exception.getMessage());
               }
 
-              public void onSuccess(User user) {
+              public void onSuccess(Method method, User user) {
                 if (user != null && user.isValidated()) {
                   AuthenticationHandler.getInstance().setUser(user);
                   AuthenticationHandler.getInstance().handleUserAuthentication(false);

@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.damour.base.client.BaseApplication;
 import org.damour.base.client.images.BaseImageBundle;
+import org.damour.base.client.objects.StringWrapper;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.service.ResourceCache;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.GlassPanel;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.buttons.IconButton;
@@ -29,7 +29,6 @@ import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
@@ -249,25 +248,26 @@ public class AuthenticationHandler {
   }
 
   public void getPasswordHint(final String username) {
-    final AsyncCallback<String> callback = new AsyncCallback<String>() {
-      public void onFailure(Throwable caught) {
-        final MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), caught.getMessage(), true, true, true);
+    final MethodCallback<StringWrapper> callback = new MethodCallback<StringWrapper>() {
+
+      public void onFailure(Method method, Throwable exception) {
+        final MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
         dialog.center();
       }
 
-      public void onSuccess(String hint) {
+      public void onSuccess(Method method, StringWrapper hint) {
         if (hint == null) {
           MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), "Could not retrieve password hint.", true,
               true, true);
           dialog.center();
         } else {
           MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("passwordHint", "Password Hint"), BaseApplication
-              .getMessages().getString("yourPasswordHintIs", "Your password hint is: <b>{0}</b>", hint), true, true, true);
+              .getMessages().getString("yourPasswordHintIs", "Your password hint is: <b>{0}</b>", hint.toString()), true, true, true);
           dialog.center();
         }
       };
     };
-    BaseServiceCache.getService().getLoginHint(username, callback);
+    ResourceCache.getUserResource().getLoginHint(username, callback);
   }
 
   public void showNewAccountDialog(final boolean showLoginIfCancelPressed) {
@@ -597,9 +597,9 @@ public class AuthenticationHandler {
   }
 
   public void login(final String username, final String password, final boolean facebook) {
-    final AsyncCallback<User> loginCallback = new AsyncCallback<User>() {
-      public void onFailure(Throwable caught) {
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), caught.getMessage(), true, true, true);
+    final MethodCallback<User> loginCallback = new MethodCallback<User>() {
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
         dialog.setCallback(new IDialogCallback() {
           public void okPressed() {
             loginDialog.center();
@@ -611,8 +611,8 @@ public class AuthenticationHandler {
         dialog.center();
       }
 
-      public void onSuccess(User user) {
-        AuthenticationHandler.this.user = user;
+      public void onSuccess(Method method, User response) {
+        AuthenticationHandler.this.user = response;
         if (user == null) {
           MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString(
               "invalidUsernameOrPassword", "Invalid Username or Password."), true, true, true);
@@ -623,15 +623,16 @@ public class AuthenticationHandler {
         }
       };
     };
-    BaseServiceCache.getService().login(username, password, facebook, loginCallback);
+    ResourceCache.getUserResource().login(username, password, facebook, loginCallback);
   }
 
   public void createNewAccount(final String username, final String firstname, final String lastname, final String password, final String passwordHint,
       final String email, final long birthday) {
-    final AsyncCallback<User> loginCallback = new AsyncCallback<User>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<User> loginCallback = new MethodCallback<User>() {
+
+      public void onFailure(Method method, Throwable exception) {
         MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString(
-            "couldNotCreateAccount", "Could not create new account. {0}", caught.getMessage()), true, true, true);
+            "couldNotCreateAccount", "Could not create new account. {0}", exception.getMessage()), true, true, true);
         dialog.setCallback(new IDialogCallback() {
           public void okPressed() {
             accountDialog.center();
@@ -643,8 +644,8 @@ public class AuthenticationHandler {
         dialog.center();
       }
 
-      public void onSuccess(User user) {
-        AuthenticationHandler.this.user = user;
+      public void onSuccess(Method method, User response) {
+        AuthenticationHandler.this.user = response;
         if (user == null) {
           MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString(
               "couldNotCreateAccount", "Could not create new account.  Try entering a different username."), true, true, true);
@@ -669,13 +670,13 @@ public class AuthenticationHandler {
     user.setPasswordHint(passwordHint);
     user.setEmail(email);
     user.setBirthday(birthday);
-    BaseServiceCache.getService().createOrEditAccount(user, password, captchaValidationTextBox.getText().toUpperCase(), loginCallback);
+    ResourceCache.getUserResource().createOrEditAccount(user, password, captchaValidationTextBox.getText().toUpperCase(), loginCallback);
   }
 
   public void editAccount(User user, String password) {
-    final AsyncCallback<User> loginCallback = new AsyncCallback<User>() {
-      public void onFailure(Throwable caught) {
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), caught.getMessage(), true, true, true);
+    final MethodCallback<User> loginCallback = new MethodCallback<User>() {
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
         dialog.setCallback(new IDialogCallback() {
           public void okPressed() {
             accountDialog.center();
@@ -687,7 +688,7 @@ public class AuthenticationHandler {
         dialog.center();
       }
 
-      public void onSuccess(User user) {
+      public void onSuccess(Method method, User user) {
         AuthenticationHandler.this.user = user;
         if (user == null) {
           MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString(
@@ -700,25 +701,25 @@ public class AuthenticationHandler {
       };
     };
 
-    BaseServiceCache.getService().createOrEditAccount(user, password, null, loginCallback);
+    ResourceCache.getUserResource().createOrEditAccount(user, password, null, loginCallback);
   }
 
   public void logout() {
     GlassPanel.setVisible(true);
 
-    final AsyncCallback<Void> loginCallback = new AsyncCallback<Void>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<Boolean> loginCallback = new MethodCallback<Boolean>() {
+      public void onFailure(Method method, Throwable exception) {
         GlassPanel.setVisible(false);
         Window.open("/", "_top", "");
       }
 
-      public void onSuccess(Void nothing) {
+      public void onSuccess(Method method, Boolean response) {
         GlassPanel.setVisible(false);
         AuthenticationHandler.this.user = null;
         fireLoggedOut();
       };
     };
-    BaseServiceCache.getService().logout(loginCallback);
+    ResourceCache.getUserResource().logout(loginCallback);
   }
 
   public void handleUserAuthentication(final boolean forcePrompt) {
@@ -750,7 +751,7 @@ public class AuthenticationHandler {
         }
       };
     };
-    ResourceCache.getBaseResource().getAuthenticatedUser(isAuthenticatedCallback);
+    ResourceCache.getUserResource().getAuthenticatedUser(isAuthenticatedCallback);
   }
 
   // LoginListener events

@@ -1,5 +1,6 @@
 package org.damour.base.client.ui.repository;
 
+import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.service.BaseServiceCache;
@@ -30,9 +31,12 @@ public class CreateNewFolderCommand implements Command {
     dialogBox.setCallback(new IDialogCallback() {
       public void okPressed() {
         PermissibleObject parentFolder = null;
-        if (repositoryTree.getLastItem() != null && repositoryTree.getLastItem().getUserObject() instanceof PermissibleObject) {
+        if (repositoryTree.getLastItem() != null && repositoryTree.getLastItem().getUserObject() instanceof File) {
           PermissibleObject permissibleObject = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
           parentFolder = permissibleObject.getParent();
+        } else if (repositoryTree.getLastItem() != null && repositoryTree.getLastItem().getUserObject() instanceof Folder) {
+          PermissibleObject permissibleObject = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
+          parentFolder = permissibleObject;
         }
         AsyncCallback<Folder> callback = new AsyncCallback<Folder>() {
           public void onFailure(Throwable caught) {

@@ -86,7 +86,7 @@ public class PermissionsPanel extends VerticalPanel {
               Window.alert(exception.getMessage());
             }
           };
-          ResourceCache.getBaseResource().getUsers(getUsersCallback);
+          ResourceCache.getUserResource().getUsers(getUsersCallback);
         }
         if (showGroupPerms) {
           MethodCallback<List<UserGroup>> getGroupsCallback = new MethodCallback<List<UserGroup>>() {
@@ -102,7 +102,7 @@ public class PermissionsPanel extends VerticalPanel {
               }
             }
           };
-          ResourceCache.getBaseResource().getGroups(AuthenticationHandler.getInstance().getUser().getUsername(), getGroupsCallback);
+          ResourceCache.getGroupResource().getGroups(AuthenticationHandler.getInstance().getUser().getUsername(), getGroupsCallback);
         }
 
         PromptDialogBox dialog = new PromptDialogBox("Add New Permission", "OK", null, "Cancel", false, true);

@@ -12,12 +12,16 @@ import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.Photo;
 import org.damour.base.client.objects.RepositoryTreeNode;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.ToolTip;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
@@ -97,92 +101,114 @@ public class RepositoryTree extends Tree implements TreeListener {
       }
     }
     // add folders
-    List<Folder> folders = new ArrayList<Folder>(repositoryTreeNode.getFolders().keySet());
-    Collections.sort(folders, new FolderAlphaComparator(sortAToZ));
-    for (Folder folder : folders) {
-      Label label = new Label(folder.getName());
-      TreeItem folderItem = new TreeItem(label);
-      if (!showHiddenFiles && folder.isHidden()) {
-        folderItem.setVisible(false);
-      }
-      folderItem.setUserObject(folder);
-      if (parentItem != null) {
-        parentItem.addItem(folderItem);
-      } else if (createRootItem) {
-        rootItem.addItem(folderItem);
-      } else {
-        addItem(folderItem);
-      }
-      RepositoryTreeNode treeNode = repositoryTreeNode.getFolders().get(folder);
-      if (showOnlyFolders && treeNode.getFolders().size() == 0) {
-        TreeItem hiddenItem = new TreeItem();
-        folderItem.addItem(hiddenItem);
-        String tooltip = folder.getDescription();
-        new ToolTip(label, null, tooltip);
-        hiddenItem.setVisible(false);
-      } else if (treeNode.getFiles().size() == 0 && treeNode.getFolders().size() == 0) {
-        TreeItem hiddenItem = new TreeItem();
-        folderItem.addItem(hiddenItem);
-        String tooltip = folder.getDescription() + " (empty)";
-        new ToolTip(label, null, tooltip);
-        hiddenItem.setVisible(false);
-      } else {
-        String tooltip = folder.getDescription();
-        new ToolTip(label, null, tooltip);
-        buildRepositoryTree(treeNode, folderItem);
+    List<RepositoryTreeNode> children = repositoryTreeNode.getChildren();
+    Collections.sort(children, new FolderAlphaComparator(sortAToZ));
+    for (RepositoryTreeNode child : children) {
+      if (child.getFile() instanceof Folder) {
+        Folder folder = (Folder) child.getFile();
+        Label label = new Label(folder.getName());
+        TreeItem folderItem = new TreeItem(label);
+        if (!showHiddenFiles && folder.isHidden()) {
+          folderItem.setVisible(false);
+        }
+        folderItem.setUserObject(folder);
+        if (parentItem != null) {
+          parentItem.addItem(folderItem);
+        } else if (createRootItem) {
+          rootItem.addItem(folderItem);
+        } else {
+          addItem(folderItem);
+        }
+        boolean hasFiles = false;
+        boolean hasFolders = false;
+        for (RepositoryTreeNode node : child.getChildren()) {
+          if (node.getFile() instanceof File) {
+            hasFiles = true;
+            break;
+          }
+        }
+        for (RepositoryTreeNode node : child.getChildren()) {
+          if (node.getFile() instanceof Folder) {
+            hasFolders = true;
+            break;
+          }
+        }
+
+        if (showOnlyFolders && child.getChildren().size() == 0) {
+          TreeItem hiddenItem = new TreeItem();
+          folderItem.addItem(hiddenItem);
+          String tooltip = folder.getDescription();
+          new ToolTip(label, null, tooltip);
+          hiddenItem.setVisible(false);
+        } else if (!hasFiles && !hasFolders) {
+          TreeItem hiddenItem = new TreeItem();
+          folderItem.addItem(hiddenItem);
+          String tooltip = folder.getDescription() + " (empty)";
+          new ToolTip(label, null, tooltip);
+          hiddenItem.setVisible(false);
+        } else {
+          String tooltip = folder.getDescription();
+          new ToolTip(label, null, tooltip);
+          buildRepositoryTree(child, folderItem);
+        }
       }
     }
     if (showOnlyFolders) {
       return;
     }
     // add files
-    Collections.sort(repositoryTreeNode.getFiles(), new FileAlphaComparator(sortAToZ));
-    for (File file : repositoryTreeNode.getFiles()) {
-      Label treeItemLabel = new Label(file.getName());
-      TreeItem fileItem = new TreeItem(treeItemLabel);
-      if (!showHiddenFiles && file.isHidden()) {
-        fileItem.setVisible(false);
-      }
-      NumberFormat formatter = NumberFormat.getFormat("#,###");
-      String tooltip = "";
-      tooltip += "Description: " + file.getDescription();
-      tooltip += "<BR>";
-      tooltip += "Type: " + file.getContentType();
-      tooltip += "<BR>";
-      tooltip += "Date Created: " + (new Date(file.getCreationDate()).toLocaleString());
-      tooltip += "<BR>";
-      tooltip += "Last Modified: " + (new Date(file.getLastModifiedDate()).toLocaleString());
-      tooltip += "<BR>";
-      tooltip += "Owner: " + file.getOwner().getUsername();
-      tooltip += "<BR>";
-      tooltip += "Size: " + formatter.format(file.getSize()) + " bytes";
-
-      String thumbnailImageURL = null;
-      if (file instanceof Photo) {
-        Photo photo = (Photo) file;
-        if (photo.getThumbnailImage() != null) {
-          thumbnailImageURL = BaseApplication.getSettings().getString("GetFileService", BaseApplication.GET_FILE_SERVICE_PATH) + photo.getThumbnailImage().getId() + "_inline_" + photo.getName();
+    for (RepositoryTreeNode child : children) {
+      if (child.getFile() instanceof File) {
+        File file = (File) child.getFile();
+        Label treeItemLabel = new Label(file.getName());
+        TreeItem fileItem = new TreeItem(treeItemLabel);
+        if (!showHiddenFiles && file.isHidden()) {
+          fileItem.setVisible(false);
         }
-      }
-      new ToolTip(treeItemLabel, thumbnailImageURL, tooltip);
-      fileItem.setUserObject(file);
-      if (parentItem != null) {
-        parentItem.addItem(fileItem);
-      } else if (createRootItem) {
-        rootItem.addItem(fileItem);
-      } else {
-        addItem(fileItem);
+        NumberFormat formatter = NumberFormat.getFormat("#,###");
+        String tooltip = "";
+        tooltip += "Description: " + file.getDescription();
+        tooltip += "<BR>";
+        tooltip += "Type: " + file.getContentType();
+        tooltip += "<BR>";
+        tooltip += "Date Created: " + DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG).format(new Date(file.getCreationDate()));
+        tooltip += "<BR>";
+        tooltip += "Last Modified: " + DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG).format(new Date(file.getLastModifiedDate()));
+        tooltip += "<BR>";
+        tooltip += "Owner: " + file.getOwner().getUsername();
+        tooltip += "<BR>";
+        tooltip += "Size: " + formatter.format(file.getSize()) + " bytes";
+
+        String thumbnailImageURL = null;
+        if (file instanceof Photo) {
+          Photo photo = (Photo) file;
+          if (photo.getThumbnailImage() != null) {
+            thumbnailImageURL = BaseApplication.getSettings().getString("GetFileService", BaseApplication.GET_FILE_SERVICE_PATH)
+                + photo.getThumbnailImage().getId() + "_inline_" + photo.getName();
+          }
+        }
+        new ToolTip(treeItemLabel, thumbnailImageURL, tooltip);
+        fileItem.setUserObject(file);
+        if (parentItem != null) {
+          parentItem.addItem(fileItem);
+        } else if (createRootItem) {
+          rootItem.addItem(fileItem);
+        } else {
+          addItem(fileItem);
+        }
       }
     }
   }
 
   public void fetchRepositoryTree(final IRepositoryCallback repositoryCallback) {
-    AsyncCallback<RepositoryTreeNode> callback = new AsyncCallback<RepositoryTreeNode>() {
-      public void onFailure(Throwable caught) {
+    MethodCallback<RepositoryTreeNode> callback = new MethodCallback<RepositoryTreeNode>() {
+
+      public void onFailure(Method method, Throwable exception) {
+        Window.alert(exception.getMessage());
       }
 
-      public void onSuccess(final RepositoryTreeNode result) {
-        RepositoryTree.this.repositoryTree = result;
+      public void onSuccess(Method method, RepositoryTreeNode response) {
+        RepositoryTree.this.repositoryTree = response;
         setAnimationEnabled(false);
         buildRepositoryTreeAndRestoreState(repositoryTree, null);
         setAnimationEnabled(true);
@@ -191,7 +217,7 @@ public class RepositoryTree extends Tree implements TreeListener {
         }
       }
     };
-    BaseServiceCache.getService().getRepositoryTree(callback);
+    ResourceCache.getPermissibleResource().getRepositoryTree(callback);
   }
 
   public void onTreeItemSelected(TreeItem item) {

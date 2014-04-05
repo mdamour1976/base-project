@@ -9,7 +9,7 @@ import org.codehaus.jackson.map.annotate.JsonTypeIdResolver;
 
 @SuppressWarnings({ "serial", "rawtypes" })
 @JsonTypeIdResolver(org.damour.base.server.resource.PermissibleObjectResolver.class)
-@JsonTypeInfo(use=Id.NAME, include=As.PROPERTY, property="@type")
+@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "@type")
 public class PermissibleObject implements Serializable, IHibernateFriendly, Comparable {
 
   public Long id;
@@ -408,14 +408,15 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     target.globalExecute = source.globalExecute;
   }
 
-  public String toString() {
-    String toString = "id:" + getId() + " parentId:" + (getParent() != null ? getParent().getId() : "-") + " class:"
-        + getClass().getName().substring(getClass().getName().lastIndexOf(".") + 1) + " name:" + getName() + " owner:" + getOwner().getUsername();
-    return toString;
-  }
+//  public String toString() {
+//    String toString = "id:" + getId() + " parentId:" + (getParent() != null ? getParent().getId() : "-") + " class:"
+//        + getClass().getName().substring(getClass().getName().lastIndexOf(".") + 1) + " name:" + getName() + " owner:"
+//        + (getOwner() != null ? getOwner().getUsername() : "-");
+//    return toString;
+//  }
 
   public int getFieldLength(String fieldName) {
     return -1;
   }
-  
+
 }

@@ -1,6 +1,5 @@
 package org.damour.base.server.hibernate.helpers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.damour.base.client.objects.PermissibleObject;
@@ -38,18 +37,15 @@ public class TagHelper {
   }
 
   public static TagMembership getTagMembership(Session session, Tag tag, PermissibleObject permissibleObject) {
-    List<TagMembership> tagMems = new ArrayList<TagMembership>();
+    TagMembership tagMem = null;
     if (tag == null) {
-      tagMems = session.createQuery("from " + TagMembership.class.getSimpleName() + " where tag is null and permissibleObject.id = " + permissibleObject.id)
-          .list();
+      tagMem = (TagMembership) session.createQuery(
+          "from " + TagMembership.class.getSimpleName() + " where tag is null and permissibleObject.id = " + permissibleObject.id).uniqueResult();
     } else {
-      tagMems = session.createQuery(
-          "from " + TagMembership.class.getSimpleName() + " where tag.id = " + tag.id + " and permissibleObject.id = " + permissibleObject.id).list();
+      tagMem = (TagMembership) session.createQuery(
+          "from " + TagMembership.class.getSimpleName() + " where tag.id = " + tag.id + " and permissibleObject.id = " + permissibleObject.id).uniqueResult();
     }
-    if (tagMems != null && tagMems.size() > 0) {
-      return tagMems.get(0);
-    }
-    return null;
+    return tagMem;
   }
 
   public static void deleteTag(Session session, Tag tag) {
@@ -65,10 +61,6 @@ public class TagHelper {
       deleteTag(session, subTag);
     }
     session.delete(tag);
-  }
-
-  public static void main(String args[]) {
-
   }
 
 }

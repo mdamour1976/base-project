@@ -12,6 +12,7 @@ import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.PermissibleObjectTreeRequest;
+import org.damour.base.client.objects.RepositoryTreeNode;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
@@ -20,7 +21,7 @@ public interface PermissibleResource extends RestService {
 
   @GET
   @Path("/{id}")
-  void getPermissibleObject(@PathParam("id") String id, MethodCallback<PermissibleObject> callback);
+  void getPermissibleObject(@PathParam("id") Long id, MethodCallback<PermissibleObject> callback);
 
   @POST
   @Path("/tree")
@@ -40,5 +41,10 @@ public interface PermissibleResource extends RestService {
   @Path("/page/{id}/{pageClassType}/{pageSize}")
   void getPageInfo(@PathParam("id") Long id, @PathParam("pageClassType") String pageClassType, @PathParam("pageSize") int pageSize,
       MethodCallback<PageInfo> callback);
+
+  // file/content/permissions methods
+  @GET
+  @Path("/filetree")
+  void getRepositoryTree(MethodCallback<RepositoryTreeNode> callback);
 
 }

@@ -8,6 +8,7 @@ import org.damour.base.client.ui.repository.properties.PropertiesPanel;
 import org.damour.base.client.ui.repository.properties.PropertiesPanel.VIEW;
 
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ManageObjectPropertiesCommand implements Command {
@@ -52,7 +53,7 @@ public class ManageObjectPropertiesCommand implements Command {
         dialogBox.center();
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      Window.alert("" + e);
     }
   }
 

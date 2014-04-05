@@ -14,37 +14,26 @@ public class RatingHelper {
       return null;
     }
     if (voter != null) {
-      @SuppressWarnings("unchecked")
-      List<UserRating> ratings = session
+      UserRating rating = (UserRating) session
           .createQuery("from " + UserRating.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voter.id = " + voter.id)
-          .setCacheable(true).list();
-      if (ratings != null && ratings.size() > 0) {
-        return ratings.get(0);
-      }
-      return null;
+          .setCacheable(true).uniqueResult();
+      return rating;
     }
-    @SuppressWarnings("unchecked")
-    List<UserRating> ratings = session
+    UserRating rating = (UserRating) session
         .createQuery(
             "from " + UserRating.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voterGUID = '" + voterGUID + "'")
-        .setCacheable(true).list();
-    if (ratings != null && ratings.size() > 0) {
-      return ratings.get(0);
-    }
-
-    return null;
+        .setCacheable(true).uniqueResult();
+    return rating;
   }
 
   public static List<UserRating> getUserRatings(Session session, PermissibleObject permissibleObject) {
-    @SuppressWarnings("unchecked")
     List<UserRating> ratings = session.createQuery("from " + UserRating.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id)
         .setCacheable(true).list();
     return ratings;
   }
 
-  @SuppressWarnings("unchecked")
   public static PermissibleObject getNextUnratedPermissibleObject(Session session, String objectType, User voter, String voterGUID) {
-    List<PermissibleObject> objects = null;
+    PermissibleObject object = null;
     Class<?> clazz = PermissibleObject.class;
     try {
       clazz = Class.forName(objectType);
@@ -54,18 +43,15 @@ public class RatingHelper {
       String query = "from " + clazz.getSimpleName() + " where id not in (select rating.permissibleObject.id from " + UserRating.class.getSimpleName()
           + " rating where rating.voter.id = " + voter.getId() + ")";
       System.out.println(query);
-      objects = session.createQuery(query).setCacheable(true).setMaxResults(1).list();
+      object = (PermissibleObject) session.createQuery(query).setCacheable(true).uniqueResult();
     } else {
       // go based on voterIP
-      objects = session
+      object = (PermissibleObject) session
           .createQuery(
               "from " + clazz.getSimpleName() + " where id not in (select permissibleObject.id from " + UserRating.class.getSimpleName()
-                  + " where voterGUID = '" + voterGUID + "')").setCacheable(true).setMaxResults(1).list();
+                  + " where voterGUID = '" + voterGUID + "')").setCacheable(true).uniqueResult();
     }
 
-    if (objects != null && objects.size() > 0) {
-      return objects.get(0);
-    }
-    return null;
+    return object;
   }
 }

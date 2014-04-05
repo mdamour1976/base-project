@@ -44,7 +44,7 @@ public class HibernateUtil {
   private Document mappingDocument = DocumentHelper.createDocument();
   private Element mappingRoot = null;
   private String tablePrefix = "";
-  private boolean showSQL = true;
+  private boolean showSQL = false;
   private boolean useGeneratedKeys = true;
   private boolean useReflectionOptimizer = true;
   private String hbm2ddlMode = "update";
@@ -216,6 +216,7 @@ public class HibernateUtil {
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.jdbc.use_get_generated_keys").setText("" + getUseGeneratedKeys());
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.bytecode.use_reflection_optimizer")
             .setText("" + getUseReflectionOptimizer());
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.connection.isolation").setText("2");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.jdbc.batch_size").setText("25");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.dialect").setText(getDialect());
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.generate_statistics").setText("" + isGenerateStatistics());
@@ -234,14 +235,13 @@ public class HibernateUtil {
         // add c3p0 configuration
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.connection.provider_class")
             .setText("org.hibernate.connection.C3P0ConnectionProvider");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.idle_test_period").setText("3600");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.timeout").setText("7200");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.min_size").setText("1");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.max_size").setText("10");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.min_size").setText("5");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.max_size").setText("20");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.acquire_increment").setText("5");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.timeout").setText("300");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.max_statements").setText("0");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.acquire_increment").setText("1");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.preferredTestQuery").setText("select 1+1");
-        // sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.testConnectionOnCheckout").setText("true");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.idle_test_period").setText("120");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.numHelperThreads").setText("6");
 
         // generate ddl and update database (if configured)
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.hbm2ddl.auto").setText(hbm2ddlMode);

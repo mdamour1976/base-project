@@ -7,7 +7,6 @@ import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.service.ResourceCache;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
@@ -18,7 +17,6 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
@@ -57,13 +55,13 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
         final int index = membersListBox.getSelectedIndex();
         final String username = membersListBox.getItemText(index);
         final User user = userMap.get(username);
-        final AsyncCallback<Void> deleteUserCallback = new AsyncCallback<Void>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), true, true, true);
+        final MethodCallback<Void> deleteUserCallback = new MethodCallback<Void>() {
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox dialog = new MessageDialogBox("Error", exception.getMessage(), true, true, true);
             dialog.center();
           }
 
-          public void onSuccess(Void nothing) {
+          public void onSuccess(Method method, Void response) {
             members.remove(user);
             populateUI();
             try {
@@ -81,7 +79,7 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
             });
           };
         };
-        BaseServiceCache.getService().deleteUser(user, group, deleteUserCallback);
+        ResourceCache.getGroupResource().deleteUser(user.getId(), group.getId(), deleteUserCallback);
       }
     });
     removeButton.setText(" < ");
@@ -94,13 +92,14 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
         final int index = allUsersListBox.getSelectedIndex();
         final String username = allUsersListBox.getItemText(index);
         final User user = userMap.get(username);
-        final AsyncCallback<GroupMembership> addUserCallback = new AsyncCallback<GroupMembership>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), true, true, true);
+        final MethodCallback<GroupMembership> addUserCallback = new MethodCallback<GroupMembership>() {
+
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox dialog = new MessageDialogBox("Error", exception.getMessage(), true, true, true);
             dialog.center();
           }
 
-          public void onSuccess(GroupMembership membership) {
+          public void onSuccess(Method method, GroupMembership response) {
             members.add(user);
             populateUI();
             try {
@@ -118,7 +117,7 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
             });
           };
         };
-        BaseServiceCache.getService().addUserToGroup(user, group, addUserCallback);
+        ResourceCache.getGroupResource().addUserToGroup(user.getId(), group.getId(), addUserCallback);
       }
     });
 
@@ -184,7 +183,7 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
         }
       };
     };
-    ResourceCache.getBaseResource().getUsers(group, getGroupMemsCallback);
+    ResourceCache.getGroupResource().getUsers(group.getId(), getGroupMemsCallback);
   }
 
   private void fetchUsers() {
@@ -200,7 +199,7 @@ public class EditGroupMembersPanel extends FlexTable implements ChangeHandler {
       public void onFailure(Method method, Throwable exception) {
       }
     };
-    ResourceCache.getBaseResource().getUsers(getUsersCallback);
+    ResourceCache.getUserResource().getUsers(getUsersCallback);
   }
 
   public void onChange(ChangeEvent event) {

@@ -9,20 +9,25 @@ import java.util.StringTokenizer;
 import org.damour.base.client.objects.Comment;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
+import org.damour.base.client.objects.PhotoThumbnail;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserAdvisory;
 import org.damour.base.client.objects.UserRating;
 import org.damour.base.client.objects.UserThumb;
 import org.damour.base.client.utils.StringUtils;
+import org.damour.base.server.Logger;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.ReflectionCache;
 import org.hibernate.Session;
 
 public class PermissibleObjectHelper {
   public static void deletePermissibleObject(Session session, PermissibleObject permissibleObject) {
+
     if (permissibleObject == null) {
       return;
     }
+
+    Logger.log("DELETING: " + permissibleObject.getName());
 
     // we will need to delete all FileComment, FileUserAdvisory and FileUserRating
     if (permissibleObject.getNumComments() > 0) {
@@ -62,12 +67,13 @@ public class PermissibleObjectHelper {
     }
 
     // ok finally we can delete the file
-    session.delete(permissibleObject);   
+    session.delete(permissibleObject);
     session.flush();
-    
+
     List<Field> fields = ReflectionCache.getFields(permissibleObject.getClass());
     for (Field field : fields) {
-      if (!field.getName().startsWith("parent") && PermissibleObject.class.isAssignableFrom(field.getType())) {
+      if (!field.getName().startsWith("parent") && !PhotoThumbnail.class.isAssignableFrom(field.getType())
+          && PermissibleObject.class.isAssignableFrom(field.getType())) {
         try {
           Object obj = field.get(permissibleObject);
           deletePermissibleObject(session, (PermissibleObject) obj);
@@ -76,15 +82,14 @@ public class PermissibleObjectHelper {
         }
       }
     }
-    
 
   }
 
   public static List<PermissibleObject> getChildren(Session session, PermissibleObject parent) {
     if (parent == null) {
-      return session.createQuery("from PermissibleObject where parent is null").list();
+      return session.createQuery("from PermissibleObject where parent is null order by id asc").list();
     } else {
-      return session.createQuery("from PermissibleObject where parent.id = " + parent.id).list();
+      return session.createQuery("from PermissibleObject where parent.id = " + parent.id + " order by id asc").list();
     }
   }
 

@@ -122,7 +122,6 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
       public void onClick(ClickEvent event) {
         RenameObjectCommand cmd = new RenameObjectCommand((PermissibleObject) repositoryTree.getLastItem().getUserObject(), FileManagerPanel.this);
         cmd.execute();
-
       }
     });
     toolbar.add(renameImageButton);

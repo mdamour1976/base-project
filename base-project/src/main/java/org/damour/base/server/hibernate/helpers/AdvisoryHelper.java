@@ -14,22 +14,21 @@ public class AdvisoryHelper {
       return null;
     }
     if (voter != null) {
-      List<UserAdvisory> ratings = session.createQuery("from " + UserAdvisory.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voter.id = " + voter.id).setCacheable(true).list();
-      if (ratings != null && ratings.size() > 0) {
-        return ratings.get(0);
-      }
-      return null;
+      UserAdvisory rating = (UserAdvisory) session
+          .createQuery("from " + UserAdvisory.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voter.id = " + voter.id)
+          .setCacheable(true).uniqueResult();
+      return rating;
     }
-    List<UserAdvisory> ratings = session.createQuery("from " + UserAdvisory.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voterGUID = '" + voterGUID + "'").setCacheable(true).list();
-    if (ratings != null && ratings.size() > 0) {
-      return ratings.get(0);
-    }
-
-    return null;
+    UserAdvisory rating = (UserAdvisory) session
+        .createQuery(
+            "from " + UserAdvisory.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voterGUID = '" + voterGUID + "'")
+        .setCacheable(true).uniqueResult();
+    return rating;
   }
 
   public static List<UserAdvisory> getUserAdvisories(Session session, PermissibleObject permissibleObject) {
-    List<UserAdvisory> ratings = session.createQuery("from " + UserAdvisory.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id).setCacheable(true).list();
+    List<UserAdvisory> ratings = session.createQuery("from " + UserAdvisory.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id)
+        .setCacheable(true).list();
     return ratings;
   }
 

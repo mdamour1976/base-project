@@ -1,31 +1,32 @@
 package org.damour.base.client.objects;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RepositoryTreeNode implements Serializable {
 
-  public List<File> files;
-  public HashMap<Folder, RepositoryTreeNode> folders = new HashMap<Folder, RepositoryTreeNode>();
+  public List<RepositoryTreeNode> children = new ArrayList<RepositoryTreeNode>();
+  // either a File or Folder
+  public PermissibleObject file;
 
   public RepositoryTreeNode() {
   }
 
-  public List<File> getFiles() {
-    return files;
+  public List<RepositoryTreeNode> getChildren() {
+    return children;
   }
 
-  public void setFiles(List<File> files) {
-    this.files = files;
+  public void setChildren(List<RepositoryTreeNode> children) {
+    this.children = children;
   }
 
-  public HashMap<Folder, RepositoryTreeNode> getFolders() {
-    return folders;
+  public PermissibleObject getFile() {
+    return file;
   }
 
-  public void setFolders(HashMap<Folder, RepositoryTreeNode> folders) {
-    this.folders = folders;
+  public void setFile(PermissibleObject file) {
+    this.file = file;
   }
 
 }

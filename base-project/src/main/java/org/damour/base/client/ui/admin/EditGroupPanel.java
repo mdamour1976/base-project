@@ -5,7 +5,6 @@ import java.util.List;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.service.ResourceCache;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
@@ -14,7 +13,6 @@ import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
@@ -121,7 +119,7 @@ public class EditGroupPanel extends FlexTable {
       public void onFailure(Method method, Throwable exception) {
       }
     };
-    ResourceCache.getBaseResource().getUsers(getUsersCallback);
+    ResourceCache.getUserResource().getUsers(getUsersCallback);
   }
 
   public boolean apply() {
@@ -144,13 +142,14 @@ public class EditGroupPanel extends FlexTable {
     group.setLocked(lockGroupCheckBox.getValue());
     group.setVisible(visibleCheckBox.getValue());
 
-    final AsyncCallback<UserGroup> updateGroupCallback = new AsyncCallback<UserGroup>() {
-      public void onFailure(Throwable caught) {
-        MessageDialogBox dialog = new MessageDialogBox("Error", "Could not save group: " + caught.getMessage(), true, true, true);
+    final MethodCallback<UserGroup> updateGroupCallback = new MethodCallback<UserGroup>() {
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox("Error", "Could not save group: " + exception.getMessage(), true, true, true);
         dialog.center();
       }
 
-      public void onSuccess(UserGroup group) {
+      public void onSuccess(Method method, UserGroup group) {
+        EditGroupPanel.this.group = group;
         if (group == null) {
           MessageDialogBox dialog = new MessageDialogBox("Error", "Could not save group.", true, true, true);
           dialog.center();
@@ -160,7 +159,7 @@ public class EditGroupPanel extends FlexTable {
       };
     };
 
-    BaseServiceCache.getService().createOrEditGroup(group, updateGroupCallback);
+    ResourceCache.getGroupResource().createOrEditGroup(group, updateGroupCallback);
     return true;
   }
 

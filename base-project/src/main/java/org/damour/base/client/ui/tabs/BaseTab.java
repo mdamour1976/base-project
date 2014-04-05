@@ -105,9 +105,9 @@ public class BaseTab extends SimplePanel {
   public void onBrowserEvent(Event event) {
     if ((DOM.eventGetType(event) & Event.ONDBLCLICK) == Event.ONDBLCLICK) {
       onDoubleClick(event);
-    } else if (DOM.eventGetButton(event) == Event.BUTTON_RIGHT) {
+    } else if (event.getButton() == Event.BUTTON_RIGHT) {
       onRightClick(event);
-    } else if (DOM.eventGetButton(event) == Event.BUTTON_LEFT) {
+    } else if (event.getButton() == Event.BUTTON_LEFT) {
       if (event.getEventTarget().toString().toLowerCase().indexOf("image") == -1) {
         fireTabSelected();
       }

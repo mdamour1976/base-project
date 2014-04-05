@@ -1,9 +1,7 @@
 package org.damour.base.server;
 
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -14,29 +12,17 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONValue;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.damour.base.client.exceptions.LoginException;
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
-import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.IAnonymousPermissibleObject;
-import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.Permission.PERM;
-import org.damour.base.client.objects.RepositoryTreeNode;
-import org.damour.base.client.objects.Tag;
-import org.damour.base.client.objects.TagMembership;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserAdvisory;
-import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.objects.UserRating;
 import org.damour.base.client.objects.UserThumb;
 import org.damour.base.client.utils.StringUtils;
@@ -46,22 +32,18 @@ import org.damour.base.server.hibernate.helpers.AdvisoryHelper;
 import org.damour.base.server.hibernate.helpers.FolderHelper;
 import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
-import org.damour.base.server.hibernate.helpers.RepositoryHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
-import org.damour.base.server.hibernate.helpers.TagHelper;
 import org.damour.base.server.hibernate.helpers.ThumbHelper;
 import org.damour.base.server.hibernate.helpers.UserHelper;
-import org.hibernate.HibernateException;
+import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import com.andrewtimberlake.captcha.Captcha;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 public class BaseService extends RemoteServiceServlet implements org.damour.base.client.service.BaseService {
 
   public static HashMap<User, FileUploadStatus> fileUploadStatusMap = new HashMap<User, FileUploadStatus>();
-  public static final int COOKIE_TIMEOUT = 31556926; // 1 year in seconds
 
   private ThreadLocal<Session> session = new ThreadLocal<Session>();
 
@@ -104,557 +86,11 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     super.doUnexpectedFailure(e);
   }
 
-  public User login(HttpServletRequest request, HttpServletResponse response, String username, String password) {
-    try {
-      return login(session.get(), request, response, username, password, false);
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException("Could not login.  Invalid username or password.");
-    }
-  }
-
-  public User login(String username, String password, boolean facebook) throws SimpleMessageException {
-    try {
-      if (facebook) {
-        // this is a facebook api call
-        // let's check if the accessToken (password) is valid
-        // https://graph.facebook.com/username?access_token=password
-        URL url = new URL("https://graph.facebook.com/" + username + "?access_token=" + password);
-
-        JSONObject json = (JSONObject) JSONValue.parseStrict(IOUtils.toString(url.openStream()));
-
-        String id = (String) json.get("id");
-        String fbusername = (String) json.get("username");
-        String email = StringEscapeUtils.unescapeJava((String) json.get("email"));
-        String first = (String) json.get("first_name");
-        String last = (String) json.get("last_name");
-
-        if (!StringUtils.isEmpty(id)) {
-          try {
-            User user = UserHelper.getUser(session.get(), email);
-            if (user != null) {
-              return login(session.get(), getThreadLocalRequest(), getThreadLocalResponse(), user.getUsername(), user.getPasswordHash(), true);
-            }
-          } catch (Throwable t) {
-          }
-          // we do not have this user, add them
-          User user = new User();
-          user.setAdministrator(false);
-          user.setBirthday(System.currentTimeMillis());
-          user.setEmail(email);
-          user.setFacebook(true);
-          user.setFirstname(first);
-          user.setLastname(last);
-          user.setPasswordHash(password);
-          user.setPasswordHint("You logged in via Facebook");
-          user.setSignupDate(System.currentTimeMillis());
-          user.setUsername("fb_" + fbusername);
-          user.setValidated(false);
-          return createOrEditAccount(user, password, null, true);
-        }
-      }
-      return login(session.get(), getThreadLocalRequest(), getThreadLocalResponse(), username, password, false);
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  private boolean isAccountValidated(User user) {
-    if (!BaseSystem.requireAccountValidation()) {
-      return true;
-    }
-    if (user == null) {
-      return false;
-    }
-    return user.isValidated();
-  }
-
-  private User login(org.hibernate.Session session, HttpServletRequest request, HttpServletResponse response, String username, String password, boolean internal)
-      throws SimpleMessageException {
-    username = username.toLowerCase();
-    User user = UserHelper.getUser(session, username);
-
-    String passwordHash = MD5.md5(password);
-    if (user != null && isAccountValidated(user) && ((internal && password.equals(user.getPasswordHash())) || user.getPasswordHash().equals(passwordHash))) {
-      Cookie userCookie = new Cookie("user", user.getUsername());
-      userCookie.setPath("/");
-      userCookie.setMaxAge(COOKIE_TIMEOUT);
-      Cookie userAuthCookie = new Cookie("auth", internal ? password : passwordHash);
-      userAuthCookie.setPath("/");
-      userAuthCookie.setMaxAge(COOKIE_TIMEOUT);
-      Cookie voterCookie = new Cookie("voterGUID", UUID.randomUUID().toString());
-      voterCookie.setPath("/");
-      voterCookie.setMaxAge(COOKIE_TIMEOUT);
-      response.addCookie(userCookie);
-      response.addCookie(userAuthCookie);
-      response.addCookie(voterCookie);
-    } else {
-      destroyAuthCookies(request, response);
-      if (user != null && !isAccountValidated(user)) {
-        throw new SimpleMessageException("Could not login.  Account is not validated.");
-      }
-      throw new SimpleMessageException("Could not login.  Invalid username or password.");
-    }
-    return user;
-  }
-
-  public static void destroyAuthCookies(HttpServletRequest request, HttpServletResponse response) {
-    Cookie userCookie = new Cookie("user", "");
-    userCookie.setMaxAge(0);
-    userCookie.setPath("/");
-    Cookie userAuthCookie = new Cookie("auth", "");
-    userAuthCookie.setMaxAge(0);
-    userAuthCookie.setPath("/");
-    response.addCookie(userCookie);
-    response.addCookie(userAuthCookie);
-  }
-
-  public static void destroyAllCookies(HttpServletRequest request, HttpServletResponse response) {
-    for (Cookie cookie : request.getCookies()) {
-      cookie.setMaxAge(0);
-      cookie.setPath("/");
-      response.addCookie(cookie);
-    }
-  }
-
-  public static User getAuthenticatedUser(org.hibernate.Session session, HttpServletRequest request, HttpServletResponse response) {
-    Cookie cookies[] = request.getCookies();
-    Cookie userCookie = null;
-    Cookie userAuthCookie = null;
-    for (int i = 0; cookies != null && i < cookies.length; i++) {
-      if (cookies[i].getName().equals("user") && !cookies[i].getValue().equals("")) {
-        userCookie = cookies[i];
-      } else if (cookies[i].getName().equals("auth") && !cookies[i].getValue().equals("")) {
-        userAuthCookie = cookies[i];
-      }
-    }
-    if (userCookie == null || userAuthCookie == null) {
-      return null;
-    }
-    String username = userCookie.getValue().toLowerCase();
-    User user = UserHelper.getUser(session, username);
-    if (user != null && userAuthCookie.getValue().equals(user.getPasswordHash())) {
-      return user;
-    }
-    return null;
-  }
-
-  protected User getAuthenticatedUser(org.hibernate.Session session) throws LoginException {
-    return getAuthenticatedUser(session, getThreadLocalRequest(), getThreadLocalResponse());
-  }
-
-  public void logout() throws SimpleMessageException {
-    destroyAllCookies(getThreadLocalRequest(), getThreadLocalResponse());
-  }
-
-  // create or edit account
-  public User createOrEditAccount(User inUser, String password, String captchaText) throws SimpleMessageException {
-    return createOrEditAccount(inUser, password, captchaText, false);
-  }
-
-  // create or edit account
-  private User createOrEditAccount(User inUser, String password, String captchaText, boolean ignoreCaptcha) throws SimpleMessageException {
-    Transaction tx = session.get().beginTransaction();
-    try {
-      User possibleAuthUser = getAuthenticatedUser(session.get());
-      User authUser = null;
-      if (possibleAuthUser instanceof User) {
-        authUser = (User) possibleAuthUser;
-      }
-
-      User dbUser = null;
-      try {
-        dbUser = (User) session.get().load(User.class, inUser.getId());
-      } catch (Exception e) {
-      }
-
-      if (dbUser == null) {
-        // new account, it did NOT exist
-        // validate captcha first
-        if (StringUtils.isEmpty(captchaText)) {
-          captchaText = "INVALID!";
-        }
-        Captcha captcha = (Captcha) getThreadLocalRequest().getSession().getAttribute("captcha");
-        if (captcha != null && !captcha.isValid(captchaText)) {
-          throw new SimpleMessageException("CAPTCHA validation failed");
-        }
-
-        User newUser = new User();
-        newUser.setUsername(inUser.getUsername().toLowerCase());
-        if (password != null && !"".equals(password)) {
-          newUser.setPasswordHash(MD5.md5(password));
-        }
-        if (authUser != null && authUser.isAdministrator()) {
-          newUser.setAdministrator(inUser.isAdministrator());
-        }
-        newUser.setFirstname(inUser.getFirstname());
-        newUser.setLastname(inUser.getLastname());
-        newUser.setEmail(inUser.getEmail());
-        newUser.setBirthday(inUser.getBirthday());
-        newUser.setPasswordHint(inUser.getPasswordHint());
-        newUser.setFacebook(inUser.isFacebook());
-        newUser.setSignupDate(System.currentTimeMillis());
-
-        newUser.setValidated(!BaseSystem.requireAccountValidation());
-        if (authUser != null && authUser.isAdministrator()) {
-          // admin can automatically create/validate accounts
-          newUser.setValidated(true);
-        }
-
-        session.get().save(newUser);
-
-        UserGroup userGroup = new UserGroup();
-        userGroup.setName(newUser.getUsername());
-        userGroup.setVisible(true);
-        userGroup.setAutoJoin(false);
-        userGroup.setLocked(false);
-        userGroup.setOwner(newUser);
-
-        session.get().save(userGroup);
-
-        GroupMembership groupMembership = new GroupMembership();
-        groupMembership.setUser(newUser);
-        groupMembership.setUserGroup(userGroup);
-        session.get().save(groupMembership);
-
-        tx.commit();
-
-        // if a new user is creating a new account, login if new user account is validated
-        if (authUser == null && isAccountValidated(newUser)) {
-          destroyAuthCookies(getThreadLocalRequest(), getThreadLocalResponse());
-          if (login(session.get(), getThreadLocalRequest(), getThreadLocalResponse(), newUser.getUsername(), newUser.getPasswordHash(), true) != null) {
-            return newUser;
-          }
-        } else if (authUser == null && !isAccountValidated(newUser)) {
-          // send user a validation email, where, upon clicking the link, their account will be validated
-          // the validation code in the URL will simply be a hash of their email address
-          MD5 md5 = new MD5();
-          md5.update(newUser.getEmail());
-          md5.update(newUser.getPasswordHash());
-
-          String portStr = "";
-          if (getThreadLocalRequest().getLocalPort() != 80) {
-            portStr = ":" + getThreadLocalRequest().getLocalPort();
-          }
-          String url = getThreadLocalRequest().getScheme() + "://" + getThreadLocalRequest().getServerName() + portStr + "/?u=" + newUser.getUsername() + "&v="
-              + md5.digest();
-
-          String text = "Thank you for signing up with " + BaseSystem.getDomainName()
-              + ".<BR><BR>Please confirm your account by clicking the following link:<BR><BR>";
-          text += "<A HREF=\"";
-          text += url;
-          text += "\">" + url + "</A>";
-          BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), BaseSystem.getDomainName() + " validator",
-              newUser.getEmail(), BaseSystem.getDomainName() + " account validation", text);
-        }
-        return newUser;
-      } else if (authUser != null && (authUser.isAdministrator() || authUser.getId().equals(dbUser.getId()))) {
-        // edit an existing account
-        // the following conditions must be met to be here:
-        // -authentication
-        // -we are the administrator
-        // -we are editing our own account
-        if (password != null && !"".equals(password)) {
-          MD5 md5 = new MD5();
-          md5.update(password);
-          dbUser.setPasswordHash(md5.digest());
-        }
-        if (authUser.isAdministrator()) {
-          dbUser.setAdministrator(inUser.isAdministrator());
-        }
-        dbUser.setUsername(inUser.getUsername());
-        dbUser.setFirstname(inUser.getFirstname());
-        dbUser.setLastname(inUser.getLastname());
-        dbUser.setEmail(inUser.getEmail());
-        dbUser.setBirthday(inUser.getBirthday());
-        dbUser.setPasswordHint(inUser.getPasswordHint());
-
-        // only admin can validate directly
-        if (authUser.isAdministrator()) {
-          dbUser.setValidated(inUser.isValidated());
-        }
-
-        session.get().save(dbUser);
-        tx.commit();
-
-        // if we are editing our own account, then re-authenticate
-        if (authUser.getId().equals(dbUser.getId())) {
-          destroyAuthCookies(getThreadLocalRequest(), getThreadLocalResponse());
-          if (login(session.get(), getThreadLocalRequest(), getThreadLocalResponse(), dbUser.getUsername(), dbUser.getPasswordHash(), true) != null) {
-            return dbUser;
-          }
-        }
-        return dbUser;
-      }
-      throw new SimpleMessageException("Could not edit account.");
-    } catch (Exception ex) {
-      Logger.log(ex);
-      try {
-        tx.rollback();
-      } catch (Exception exx) {
-      }
-      if (ex.getCause() != null) {
-        throw new SimpleMessageException(ex.getCause().getMessage());
-      } else {
-        throw new SimpleMessageException(ex.getMessage());
-      }
-    }
-  }
-
-  public String getLoginHint(String username) throws SimpleMessageException {
-    User user = UserHelper.getUser(session.get(), username.toLowerCase());
-    if (user == null) {
-      throw new SimpleMessageException("Could not get login hint.");
-    }
-    return user.getPasswordHint();
-  }
-
-  public GroupMembership addUserToGroup(User user, UserGroup group) throws SimpleMessageException {
-    Transaction tx = null;
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      if (authUser == null) {
-        throw new SimpleMessageException("Could not join group, attempt to join with unauthorized client.");
-      }
-      group = (UserGroup) session.get().load(UserGroup.class, group.getId());
-      user = (User) session.get().load(User.class, user.getId());
-
-      if (group == null || user == null) {
-        throw new SimpleMessageException("Could not join group, user and group not found.");
-      }
-
-      // the group owner and an administrator may add users to groups without obeying the 'lock'
-      if (group.isLocked() && !authUser.isAdministrator() && !group.getOwner().getId().equals(authUser.getId())) {
-        throw new SimpleMessageException("This group is currently not accepting new members.");
-      }
-
-      if (authUser.isAdministrator() || group.isAutoJoin() || group.getOwner().getId().equals(authUser.getId())) {
-        tx = session.get().beginTransaction();
-        GroupMembership groupMembership = new GroupMembership();
-        groupMembership.setUser(user);
-        groupMembership.setUserGroup(group);
-        session.get().save(groupMembership);
-        tx.commit();
-        return groupMembership;
-      } else if (!group.isAutoJoin()) {
-        tx = session.get().beginTransaction();
-        PendingGroupMembership groupMembership = new PendingGroupMembership();
-        groupMembership.setUser(user);
-        groupMembership.setUserGroup(group);
-        session.get().save(groupMembership);
-        tx.commit();
-        // send email to group owner
-        BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), BaseSystem.getAdminEmailAddress(),
-            group.getOwner().getEmail(), "Group join request from " + user.getUsername(),
-            "[" + BaseSystem.getDomainName() + "] " + user.getUsername() + " has requested permission to join your group " + group.getName());
-        throw new SimpleMessageException("Could not join group, request submitted to group owner.");
-      }
-      throw new SimpleMessageException("Could not join group.");
-    } catch (org.hibernate.exception.ConstraintViolationException e) {
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException("Could not join group, user already a member or add request pending.");
-    }
-  }
-
-  public List<PendingGroupMembership> getPendingGroupMemberships(User user) throws SimpleMessageException {
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      if (authUser == null) {
-        throw new SimpleMessageException("Could not join group, attempt to join with unauthorized client.");
-      }
-      user = (User) session.get().load(User.class, user.getId());
-
-      if (user == null) {
-        throw new SimpleMessageException("Could not get pending groups for supplied user.");
-      }
-
-      if (authUser.isAdministrator() || user.getId().equals(authUser.getId())) {
-        // remember, administrator owns all
-        return SecurityHelper.getPendingGroupMemberships(session.get(), user);
-      } else {
-        throw new SimpleMessageException("Could not get pending group memberships.");
-      }
-
-    } catch (Throwable t) {
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PendingGroupMembership> submitPendingGroupMembershipApproval(User user, Set<PendingGroupMembership> members, boolean approve)
-      throws SimpleMessageException {
-
-    if (members == null || members.size() == 0) {
-      throw new SimpleMessageException("List of members provided was empty.");
-    }
-
-    if (user == null) {
-      throw new SimpleMessageException("User not supplied.");
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      if (authUser == null) {
-        throw new SimpleMessageException("Cannot approve or deny requests without authentication.");
-      }
-
-      // only the authenticated: admin or user themselves
-      if (authUser.isAdministrator() || user.getId().equals(authUser.getId())) {
-        for (PendingGroupMembership pendingGroupMembership : members) {
-          // if we are the admin or to be sure that the user actually owns the group for this pending request
-          if (authUser.isAdministrator() || user.getId().equals(pendingGroupMembership.getUserGroup().getOwner().getId())) {
-            // approve/deny request
-            if (approve) {
-              GroupMembership realGroupMembership = new GroupMembership();
-              realGroupMembership.setUser(pendingGroupMembership.getUser());
-              realGroupMembership.setUserGroup(pendingGroupMembership.getUserGroup());
-              session.get().save(realGroupMembership);
-            }
-            session.get().delete(pendingGroupMembership);
-          }
-        }
-        tx.commit();
-        // send back the new list
-        return SecurityHelper.getPendingGroupMemberships(session.get(), user);
-      } else {
-        throw new SimpleMessageException("Cannot approve or deny requests without proper authentication.");
-      }
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public UserGroup createOrEditGroup(UserGroup group) throws SimpleMessageException {
-    Transaction tx = session.get().beginTransaction();
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      if (authUser != null && (authUser.isAdministrator() || authUser.getId().equals(group.getOwner().getId()))) {
-        try {
-          User owner = (User) session.get().load(User.class, group.getOwner().getId());
-          group.setOwner(owner);
-        } catch (HibernateException e) {
-        }
-
-        if (group.getId() == null) {
-          // new group
-          // before we save, let's make sure the user doesn't already have a group by this name
-          List<UserGroup> existingGroups = SecurityHelper.getOwnedUserGroups(session.get(), group.getOwner());
-          for (UserGroup existingGroup : existingGroups) {
-            if (existingGroup.getName().equalsIgnoreCase(group.getName())) {
-              throw new SimpleMessageException("A group already exists with this name.");
-            }
-          }
-          session.get().save(group);
-          // default is to create membership for the owner
-          GroupMembership groupMembership = new GroupMembership();
-          groupMembership.setUser(group.getOwner());
-          groupMembership.setUserGroup(group);
-          session.get().save(groupMembership);
-        } else {
-          // let's make sure that if we are changing the group name that
-          // the only group with this name (for the group owner) is this group
-          session.get().saveOrUpdate(group);
-        }
-
-        tx.commit();
-        return group;
-      }
-      return null;
-    } catch (Throwable t) {
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public void deleteUser(User user, UserGroup group) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("Could not remove user from group, attempt made with unauthorized client.");
-    }
-    group = (UserGroup) session.get().load(UserGroup.class, group.getId());
-    user = (User) session.get().load(User.class, user.getId());
-
-    if (group == null || user == null) {
-      throw new SimpleMessageException("Could not remove user from group, user or group not found.");
-    }
-
-    if (authUser.isAdministrator() || group.isAutoJoin() || group.getOwner().getId().equals(authUser.getId())) {
-      Transaction tx = session.get().beginTransaction();
-      GroupMembership groupMembership = SecurityHelper.getGroupMembership(session.get(), user, group);
-      if (groupMembership != null) {
-        session.get().delete(groupMembership);
-      }
-      tx.commit();
-    }
-  }
-
-  public void deleteGroup(UserGroup group) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser != null && (authUser.isAdministrator() || group.getOwner().getId().equals(authUser.getId()))) {
-      Transaction tx = session.get().beginTransaction();
-      group = (UserGroup) session.get().load(UserGroup.class, group.getId());
-      SecurityHelper.deleteUserGroup(session.get(), group);
-      tx.commit();
-    } else {
-      throw new SimpleMessageException("Could not delete group, insufficient privilidges.");
-    }
-  }
-
-  public Date getServerStartupDate() throws SimpleMessageException {
-    return new Date(BaseSystem.getStartupDate());
-  }
-
-  public String executeHQL(String query, boolean executeUpdate) {
-    if (StringUtils.isEmpty(query)) {
-      throw new SimpleMessageException("Query not supplied.");
-    }
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null || !authUser.isAdministrator()) {
-      throw new SimpleMessageException("Insufficient authorization.");
-    }
-    Transaction tx = null;
-    try {
-      tx = session.get().beginTransaction();
-      String result;
-      if (executeUpdate) {
-        result = "Rows affected: " + session.get().createQuery(query).executeUpdate();
-      } else {
-        List<?> list = session.get().createQuery(query).list();
-        result = "Objects returned: " + list.size() + "\r\n";
-        for (int i = 0; i < list.size(); i++) {
-          result += "Obj[" + i + "]: " + list.get(i).toString() + "\r\n";
-        }
-      }
-
-      tx.commit();
-      return result;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
   public UserRating getUserRating(PermissibleObject permissibleObject) throws SimpleMessageException {
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
       if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
@@ -672,7 +108,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     Transaction tx = session.get().beginTransaction();
     try {
       permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
@@ -720,7 +156,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
       if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
@@ -738,7 +174,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     Transaction tx = session.get().beginTransaction();
     try {
       permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
@@ -786,7 +222,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (classType == null) {
       throw new SimpleMessageException("classType not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
@@ -808,7 +244,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (classType == null) {
       throw new SimpleMessageException("classType not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
@@ -831,7 +267,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (classType == null) {
       throw new SimpleMessageException("classType not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
@@ -854,7 +290,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (classType == null) {
       throw new SimpleMessageException("classType not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
@@ -876,7 +312,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (classType == null) {
       throw new SimpleMessageException("classType not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
@@ -899,7 +335,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (classType == null) {
       throw new SimpleMessageException("classType not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
@@ -934,7 +370,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (!hasVoterGUID) {
       Cookie voterGUIDCookie = new Cookie("voterGUID", voterGUID);
       voterGUIDCookie.setPath("/");
-      voterGUIDCookie.setMaxAge(COOKIE_TIMEOUT);
+      voterGUIDCookie.setMaxAge(UserResource.COOKIE_TIMEOUT);
       response.addCookie(voterGUIDCookie);
     }
     return voterGUID;
@@ -945,7 +381,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       throw new SimpleMessageException("Type not supplied.");
     }
     PermissibleObject object = null;
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     object = RatingHelper.getNextUnratedPermissibleObject(session.get(), objectType, authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()));
     return object;
   }
@@ -954,7 +390,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
 
@@ -973,7 +409,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     Transaction tx = session.get().beginTransaction();
     try {
       permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
@@ -1019,7 +455,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (id == null) {
       throw new SimpleMessageException("Id not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     try {
       PermissibleObject permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, id);
       if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
@@ -1032,23 +468,11 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
   }
 
-  public RepositoryTreeNode getRepositoryTree() throws SimpleMessageException {
-    try {
-      User authUser = getAuthenticatedUser(session.get());
-      RepositoryTreeNode root = new RepositoryTreeNode();
-      RepositoryHelper.buildRepositoryTreeNode(session.get(), authUser, root, null);
-      return root;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
   public PermissibleObject savePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException {
     if (permissibleObject == null) {
       throw new SimpleMessageException("Object not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null && permissibleObject instanceof IAnonymousPermissibleObject) {
       authUser = UserHelper.getUser(session.get(), "anonymous");
     }
@@ -1130,7 +554,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("Object not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1167,7 +591,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObjects == null) {
       throw new SimpleMessageException("Objects not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1182,7 +606,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
   }
 
   public List<PermissibleObject> getMyPermissibleObjects(PermissibleObject parent, String objectType) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1199,7 +623,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (newFolder == null) {
       throw new SimpleMessageException("Folder not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1242,7 +666,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (file == null) {
       throw new SimpleMessageException("File not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1269,7 +693,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (folder == null) {
       throw new SimpleMessageException("Folder not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1296,7 +720,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1316,7 +740,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissibleObject == null) {
       throw new SimpleMessageException("PermissibleObject not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1389,7 +813,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     if (permissions == null) {
       throw new SimpleMessageException("Permissions not supplied.");
     }
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1485,7 +909,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
   }
 
   public FileUploadStatus getFileUploadStatus() throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {
       throw new SimpleMessageException("User is not authenticated.");
     }
@@ -1503,196 +927,22 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
 
   public List<PermissibleObjectTreeNode> searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending,
       String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase) throws SimpleMessageException {
-    User user = getAuthenticatedUser(session.get());
+    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     // return all permissible objects which match the name/description
     try {
       Class<?> clazz = Class.forName(searchObjectType);
-      return PermissibleObjectHelper.search(session.get(), user, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz, query, sortField,
+      return PermissibleObjectHelper.search(session.get(), authUser, getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz, query, sortField,
           sortDescending, searchNames, searchDescriptions, searchKeywords, useExactPhrase);
     } catch (Throwable t) {
       throw new SimpleMessageException(t.getMessage());
     }
   }
 
-  public List<PermissibleObject> getTaggedPermissibleObjects(Tag tag) throws SimpleMessageException {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  public void createTag(String tagName, String tagDescription, Tag parentTag) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-
-    if (StringUtils.isEmpty(tagName)) {
-      throw new SimpleMessageException("Tag name not provided.");
-    }
-
-    Tag hibParentTag = null;
-    if (parentTag != null) {
-      hibParentTag = ((Tag) session.get().load(Tag.class, parentTag.getId()));
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      Tag tag = new Tag();
-      tag.setName(tagName);
-      tag.setDescription(tagDescription);
-      tag.setParentTag(hibParentTag);
-      session.get().save(tag);
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public void deleteTag(final Tag tag) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-
-    if (tag == null) {
-      throw new SimpleMessageException("Tag not provided.");
-    }
-
-    Tag hibTag = ((Tag) session.get().load(Tag.class, tag.getId()));
-    if (hibTag == null) {
-      throw new SimpleMessageException("Tag not found: " + tag);
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      TagHelper.deleteTag(session.get(), hibTag);
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<Tag> getTags() throws SimpleMessageException {
-    // anyone can get tags
-    return TagHelper.getTags(session.get());
-  }
-
-  public void addToTag(final Tag tag, final PermissibleObject permissibleObject) throws SimpleMessageException {
-    TagMembership tagMembership = new TagMembership();
-    tagMembership.setTag(tag);
-    tagMembership.setPermissibleObject(permissibleObject);
-    addToTag(tagMembership);
-  }
-
-  public void addToTag(final TagMembership tagMembership) throws SimpleMessageException {
-    if (tagMembership == null) {
-      throw new SimpleMessageException("TagMembership not provided.");
-    }
-
-    if (tagMembership.getTag() == null) {
-      throw new SimpleMessageException("Tag not provided.");
-    }
-
-    if (tagMembership.getPermissibleObject() == null) {
-      throw new SimpleMessageException("PermissibleObject not provided.");
-    }
-
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-
-    // assumption is that the membership does not exist but the category / permissible object do
-    // they must be loaded
-    Tag hibTag = ((Tag) session.get().load(Tag.class, tagMembership.getTag().getId()));
-    if (hibTag == null) {
-      throw new SimpleMessageException("Tag not found: " + tagMembership.getTag().getId());
-    }
-
-    PermissibleObject hibPermissibleObject = ((PermissibleObject) session.get().load(PermissibleObject.class, tagMembership.getPermissibleObject().getId()));
-    if (hibPermissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not found: " + tagMembership.getPermissibleObject());
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      tagMembership.setTag(hibTag);
-      tagMembership.setPermissibleObject(hibPermissibleObject);
-      session.get().save(tagMembership);
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<Tag> getTags(PermissibleObject permissibleObject) throws SimpleMessageException {
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not provided.");
-    }
-    return TagHelper.getTags(session.get(), permissibleObject);
-  }
-
-  public void removeTagMembership(final TagMembership tagMembership) throws SimpleMessageException {
-    removeFromTag(tagMembership.getTag(), tagMembership.getPermissibleObject());
-  }
-
-  public void removeFromTag(final Tag tag, final PermissibleObject permissibleObject) throws SimpleMessageException {
-    User authUser = getAuthenticatedUser(session.get());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-
-    if (tag == null) {
-      throw new SimpleMessageException("Tag not provided.");
-    }
-
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not provided.");
-    }
-
-    Tag hibTag = ((Tag) session.get().load(Tag.class, tag.getId()));
-    if (hibTag == null) {
-      throw new SimpleMessageException("Category not found: " + tag);
-    }
-
-    PermissibleObject hibPermissibleObject = ((PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId()));
-    if (hibPermissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not found: " + permissibleObject);
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      TagMembership cm = TagHelper.getTagMembership(session.get(), hibTag, permissibleObject);
-      session.get().delete(cm);
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
 
   public void sendEmail(PermissibleObject permissibleObject, final String subject, final String message, String fromAddress, String fromName, String toAddresses) {
     User user = null;
     try {
-      user = getAuthenticatedUser(session.get());
+      user = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     } catch (Throwable t) {
     }
     if (user != null) {
@@ -1734,37 +984,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     text += "Comments: " + comments + "<BR>";
     return BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), contactName,
         BaseSystem.getAdminEmailAddress(), contactName + " has submitted feedback for " + BaseSystem.getDomainName(), text);
-  }
-
-  public User submitAccountValidation(String username, String validationCode) throws SimpleMessageException {
-    Transaction tx = session.get().beginTransaction();
-    try {
-      User user = UserHelper.getUser(session.get(), username);
-      if (user != null && !user.isValidated()) {
-        MD5 md5 = new MD5();
-        md5.update(user.getEmail());
-        md5.update(user.getPasswordHash());
-        if (validationCode.equals(md5.digest())) {
-          // validation successful
-          user.setValidated(true);
-          login(session.get(), getThreadLocalRequest(), getThreadLocalResponse(), username, user.getPasswordHash(), true);
-          tx.commit();
-        } else {
-          throw new SimpleMessageException("Account could not be activated, validation code does not match our records.");
-        }
-      } else {
-        throw new SimpleMessageException("Account does not exist or is already validated.");
-      }
-      return user;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    } finally {
-      try {
-        tx.rollback();
-      } catch (Throwable t) {
-      }
-    }
   }
 
 }

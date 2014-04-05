@@ -49,7 +49,7 @@ public class ReferralPanel extends VerticalPanel {
   }
 
   private void fetchReferrals(final ScrollTable table) {
-    ResourceCache.getBaseResource().getReferrals(new MethodCallback<List<Referral>>() {
+    ResourceCache.getReferralResource().getReferrals(new MethodCallback<List<Referral>>() {
       public void onFailure(Method method, Throwable caught) {
       }
 

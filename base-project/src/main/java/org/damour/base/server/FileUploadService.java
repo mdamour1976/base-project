@@ -39,12 +39,13 @@ import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileData;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
+import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.Photo;
 import org.damour.base.client.objects.PhotoThumbnail;
 import org.damour.base.client.objects.User;
-import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
+import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -52,36 +53,33 @@ import com.mysql.jdbc.ServerPreparedStatement;
 
 public class FileUploadService extends HttpServlet {
 
-  private static BaseService baseService = new BaseService();
-
   public FileUploadService() {
     super();
   }
 
   protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
     Session session = HibernateUtil.getInstance().getSession();
-    User owner = baseService.getAuthenticatedUser(session, request, response);
-    if (owner == null) {
-      response.sendError(HttpServletResponse.SC_FORBIDDEN);
-      response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-      response.flushBuffer();
-      Logger.log("Unauthorized upload requested: " + request.getRemoteAddr());
-      return;
-    }
-
-    List<FileItem> fileItems = Collections.emptyList();
+    Transaction tx = null;
     try {
-      fileItems = getFileItems(request, owner);
-    } catch (Throwable t) {
-      Logger.log(t);
-      return;
-    }
-    final FileUploadStatus status = BaseService.fileUploadStatusMap.get(owner);
-    status.setStatus(FileUploadStatus.CREATING_FILE);
+      User owner = (new UserResource()).getAuthenticatedUser(session, request, response);
+      if (owner == null) {
+        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.flushBuffer();
+        Logger.log("Unauthorized upload requested: " + request.getRemoteAddr());
+        return;
+      }
 
-    Transaction tx = session.beginTransaction();
+      List<FileItem> fileItems = Collections.emptyList();
+      try {
+        fileItems = getFileItems(request, owner);
+      } catch (Throwable t) {
+        Logger.log(t);
+        return;
+      }
+      final FileUploadStatus status = BaseService.fileUploadStatusMap.get(owner);
+      status.setStatus(FileUploadStatus.CREATING_FILE);
 
-    try {
       for (final FileItem item : fileItems) {
 
         File fileObject = null;
@@ -167,7 +165,7 @@ public class FileUploadService extends HttpServlet {
             previewFile.setName(createFileName("", name, "_preview"));
             previewFile.setDescription("Preview image for " + name);
             session.save(previewFile);
-            
+
             PhotoThumbnail slideFile = new PhotoThumbnail();
             slideFile.setHidden(true);
             slideFile.setOwner(owner);
@@ -176,12 +174,10 @@ public class FileUploadService extends HttpServlet {
             slideFile.setDescription("Slideshow image for " + name);
             session.save(slideFile);
 
-            
             photo.setThumbnailImage(thumbFile);
             photo.setSlideshowImage(slideFile);
             photo.setPreviewImage(previewFile);
 
-            
             ByteArrayInputStream pngIn = new ByteArrayInputStream(pngOut.toByteArray());
 
             ByteArrayOutputStream thumbOutStream = new ByteArrayOutputStream();
@@ -218,8 +214,8 @@ public class FileUploadService extends HttpServlet {
             previewFile.setHeight(convertedPreviewImage.getHeight());
             writer.setOutput(new MemoryCacheImageOutputStream(previewOutStream));
             IIOImage previewimage = new IIOImage(convertedPreviewImage, null, null);
-            writer.write(null, previewimage, iwp);            
-            
+            writer.write(null, previewimage, iwp);
+
             thumbFile.setContentType("image/jpeg");
             slideFile.setContentType("image/jpeg");
             previewFile.setContentType("image/jpeg");
@@ -249,7 +245,7 @@ public class FileUploadService extends HttpServlet {
         }
         Cookie cookie = new Cookie(item.getFieldName(), fileObject.getId().toString());
         cookie.setPath("/");
-        cookie.setMaxAge(BaseService.COOKIE_TIMEOUT);
+        cookie.setMaxAge(UserResource.COOKIE_TIMEOUT);
         response.addCookie(cookie);
         response.setStatus(HttpServletResponse.SC_OK);
         response.getOutputStream().close();
@@ -284,7 +280,8 @@ public class FileUploadService extends HttpServlet {
       dbprops.setProperty("password", HibernateUtil.getInstance().getPassword());
 
       conn = (Connection) DriverManager.getConnection(HibernateUtil.getInstance().getConnectString(), dbprops);
-      String insert_data = "insert into " + HibernateUtil.getInstance().getTablePrefix() + FileData.class.getSimpleName().toLowerCase() + " (permissibleObject, data) values (?, ?)";
+      String insert_data = "insert into " + HibernateUtil.getInstance().getTablePrefix() + FileData.class.getSimpleName().toLowerCase()
+          + " (permissibleObject, data) values (?, ?)";
       conn.setAutoCommit(false);
       if (conn instanceof com.mysql.jdbc.Connection) {
         // this gets around mysql limits (blob send check size)
@@ -294,7 +291,7 @@ public class FileUploadService extends HttpServlet {
       } else {
         ps = conn.prepareStatement(insert_data);
         try {
-          ps.setBinaryStream(2, inputStream, (int)fileObj.getSize());
+          ps.setBinaryStream(2, inputStream, (int) fileObj.getSize());
         } catch (Throwable t) {
           ps.setBytes(2, IOUtils.toByteArray(inputStream));
         }

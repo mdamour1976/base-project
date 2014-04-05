@@ -1,25 +1,16 @@
 package org.damour.base.client.service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
-import org.damour.base.client.objects.Comment;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
-import org.damour.base.client.objects.GroupMembership;
-import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
-import org.damour.base.client.objects.RepositoryTreeNode;
-import org.damour.base.client.objects.Tag;
-import org.damour.base.client.objects.TagMembership;
-import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserAdvisory;
-import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.objects.UserRating;
 import org.damour.base.client.objects.UserThumb;
 
@@ -27,26 +18,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface BaseServiceAsync {
   
-  public void createOrEditAccount(User user, String password, String captchaText, AsyncCallback<User> callback);
-  public void login(String username, String password, boolean facebook, AsyncCallback<User> callback);
-  public void logout(AsyncCallback<Void> callback);
-  public void getLoginHint(String username, AsyncCallback<String> callback);
-  public void submitAccountValidation(String username, String validationCode, AsyncCallback<User> callback);
-  
-  // hibernate admin methods
-  public void getServerStartupDate(AsyncCallback<Date> callback);
-  public void executeHQL(String query, boolean executeUpdate, AsyncCallback<String> callback);
-  
-  // users/group admin methods
-  public void addUserToGroup(User user, UserGroup group, AsyncCallback<GroupMembership> callback);
-  public void createOrEditGroup(UserGroup group, AsyncCallback<UserGroup> callback);
-  public void deleteUser(User user, UserGroup group, AsyncCallback<Void> callback);
-  public void deleteGroup(UserGroup group, AsyncCallback<Void> callback);  
-  public void getPendingGroupMemberships(User user, AsyncCallback<List<PendingGroupMembership>> callback);
-  public void submitPendingGroupMembershipApproval(User user, Set<PendingGroupMembership> memberships, boolean approve, AsyncCallback<List<PendingGroupMembership>> callback);
-
   // file/content/permissions methods
-  public void getRepositoryTree(AsyncCallback<RepositoryTreeNode> callback);
   public void savePermissibleObject(PermissibleObject permissibleObject, AsyncCallback<PermissibleObject> callback);
   public void savePermissibleObjects(List<PermissibleObject> permissibleObjects, AsyncCallback<List<PermissibleObject>> callback);
   public void deletePermissibleObject(PermissibleObject permissibleObject, AsyncCallback<Void> callback);
@@ -67,17 +39,6 @@ public interface BaseServiceAsync {
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public void echoPermissibleObject(PermissibleObject permissibleObject, AsyncCallback<PermissibleObject> callback);
 
-  // tag methods
-  public void getTags(AsyncCallback<List<Tag>> callback);
-  public void getTags(PermissibleObject permissibleObject, AsyncCallback<List<Tag>> callback);
-  public void getTaggedPermissibleObjects(Tag tag, AsyncCallback<List<PermissibleObject>> callback);
-  public void createTag(String tagName, String tagDescription, Tag parentTag, AsyncCallback<Void> callback);
-  public void deleteTag(Tag tag, AsyncCallback<Void> callback);
-  public void removeFromTag(Tag tag, PermissibleObject permissibleObject, AsyncCallback<Void> callback);
-  public void removeTagMembership(TagMembership tagMembership, AsyncCallback<Void> callback);
-  public void addToTag(Tag tag, PermissibleObject permissibleObject, AsyncCallback<Void> callback);
-  public void addToTag(TagMembership tagMembership, AsyncCallback<Void> callback);
-  
   // content rating, advisory and thumbs
   public void setUserRating(PermissibleObject permissibleObject, int rating, AsyncCallback<UserRating> callback);
   public void getUserRating(PermissibleObject permissibleObject, AsyncCallback<UserRating> callback);

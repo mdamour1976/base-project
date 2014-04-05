@@ -1,6 +1,5 @@
 package org.damour.base.client.service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -8,44 +7,18 @@ import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
-import org.damour.base.client.objects.GroupMembership;
-import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
-import org.damour.base.client.objects.RepositoryTreeNode;
-import org.damour.base.client.objects.Tag;
-import org.damour.base.client.objects.TagMembership;
-import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserAdvisory;
-import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.objects.UserRating;
 import org.damour.base.client.objects.UserThumb;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
 public interface BaseService extends RemoteService {
-  // login/auth
-  public User createOrEditAccount(User user, String password, String captchaText) throws SimpleMessageException;
-  public User login(String username, String password, boolean facebook) throws SimpleMessageException;
-  public void logout() throws SimpleMessageException;
-  public String getLoginHint(String username) throws SimpleMessageException;
-  public User submitAccountValidation(String username, String validationCode) throws SimpleMessageException;
-
-  // hibernate/general admin methods
-  public Date getServerStartupDate() throws SimpleMessageException;
-  public String executeHQL(String query, boolean executeUpdate) throws SimpleMessageException;
-  
-  // users/group admin methods
-  public GroupMembership addUserToGroup(User user, UserGroup group) throws SimpleMessageException;
-  public UserGroup createOrEditGroup(UserGroup group) throws SimpleMessageException;
-  public void deleteUser(User user, UserGroup group) throws SimpleMessageException;
-  public void deleteGroup(UserGroup group) throws SimpleMessageException;
-  public List<PendingGroupMembership> getPendingGroupMemberships(User user) throws SimpleMessageException;
-  public List<PendingGroupMembership> submitPendingGroupMembershipApproval(User user, Set<PendingGroupMembership> members, boolean approve) throws SimpleMessageException;
 
   // file/content/permissions methods
-  public RepositoryTreeNode getRepositoryTree() throws SimpleMessageException;
   public PermissibleObject savePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
   public List<PermissibleObject> savePermissibleObjects(List<PermissibleObject> permissibleObjects) throws SimpleMessageException;
   public void deletePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
@@ -66,17 +39,6 @@ public interface BaseService extends RemoteService {
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public PermissibleObject echoPermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
 
-  // tag methods
-  public List<Tag> getTags() throws SimpleMessageException;
-  public List<Tag> getTags(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public List<PermissibleObject> getTaggedPermissibleObjects(Tag tag) throws SimpleMessageException;
-  public void createTag(String tagName, String tagDescription, Tag parentTag) throws SimpleMessageException;
-  public void deleteTag(Tag tag) throws SimpleMessageException;
-  public void removeFromTag(Tag tag, PermissibleObject permissibleObject) throws SimpleMessageException;
-  public void removeTagMembership(TagMembership tagMembership) throws SimpleMessageException;
-  public void addToTag(Tag tag, PermissibleObject permissibleObject) throws SimpleMessageException;
-  public void addToTag(TagMembership tagMembership) throws SimpleMessageException;
-  
   // content rating, advisory and thumbs
   public UserRating getUserRating(PermissibleObject permissibleObject) throws SimpleMessageException;
   public UserRating setUserRating(PermissibleObject permissibleObject, int rating) throws SimpleMessageException;

@@ -1,5 +1,6 @@
 package org.damour.base.client.ui.comment;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -25,11 +26,11 @@ import org.damour.base.client.utils.StringUtils;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -319,10 +320,13 @@ public class CommentWidget extends VerticalPanel {
           commentHeaderPanel.getFlexCellFormatter().setWidth(0, columnIndex, "100%");
           commentHeaderPanel.getFlexCellFormatter().setHorizontalAlignment(0, columnIndex, HasHorizontalAlignment.ALIGN_RIGHT);
           columnIndex++;
-          Label dateLabel = new Label(new Date(comment.getCommentDate()).toLocaleString(), false);
+          Label dateLabel = new Label(DateFormat.getDateTimeInstance().format(new Date(comment.getCommentDate())), false);
           commentHeaderPanel.setWidget(0, columnIndex, dateLabel);
           if (!userCanManage && !userIsAuthorOfComment) {
-            DOM.setStyleAttribute(dateLabel.getElement(), "padding", "0 5px 0 0");
+            dateLabel.getElement().getStyle().setPaddingTop(0, Unit.PX);
+            dateLabel.getElement().getStyle().setPaddingRight(5, Unit.PX);
+            dateLabel.getElement().getStyle().setPaddingBottom(0, Unit.PX);
+            dateLabel.getElement().getStyle().setPaddingLeft(0, Unit.PX);
           }
           commentHeaderPanel.getFlexCellFormatter().setHorizontalAlignment(0, columnIndex, HasHorizontalAlignment.ALIGN_RIGHT);
 
@@ -498,7 +502,10 @@ public class CommentWidget extends VerticalPanel {
     if (lastPageNumber < 0) {
       pageLabel.setText("Page 1 of 1");
     }
-    DOM.setStyleAttribute(pageLabel.getElement(), "margin", "0 5px 0 5px");
+    pageLabel.getElement().getStyle().setMarginTop(0, Unit.PX);
+    pageLabel.getElement().getStyle().setMarginRight(5, Unit.PX);
+    pageLabel.getElement().getStyle().setMarginBottom(0, Unit.PX);
+    pageLabel.getElement().getStyle().setMarginLeft(5, Unit.PX);
     buttonPanel.add(pageLabel);
     buttonPanel.add(nextPageImageButton);
     buttonPanel.add(lastPageImageButton);
@@ -863,7 +870,7 @@ public class CommentWidget extends VerticalPanel {
   }
 
   private void approveComment(Comment comment) {
-    ResourceCache.getCommentResource().approveComment(comment, approveCallback);
+    ResourceCache.getCommentResource().approveComment(comment.getId(), approveCallback);
   }
 
   private void deleteComment(final Comment comment) {
@@ -874,7 +881,7 @@ public class CommentWidget extends VerticalPanel {
       public void onSuccess(Method method, PageInfo pageInfo) {
         numComments = pageInfo.getTotalRowCount();
         lastPageNumber = pageInfo.getLastPageNumber();
-        ResourceCache.getCommentResource().deleteComment(comment, deleteCommentCallback);
+        ResourceCache.getCommentResource().deleteComment(comment.getId(), deleteCommentCallback);
       };
     });
   }

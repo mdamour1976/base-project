@@ -1,7 +1,11 @@
 package org.damour.base.client.ui.progressbar;
 
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Style.Position;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -9,30 +13,28 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * <h3>CSS Style Rules</h3>
  * <ul class='css'>
- * <li>.gwt-ProgressBar-shell { primary style } </li>
- * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-bar { the actual progress bar }
- * </li>
- * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-text { text on the bar } </li>
- * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-text-firstHalf { applied to text
- * when progress is less than 50 percent } </li>
- * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-text-secondHalf { applied to
- * text when progress is greater than 50 percent } </li>
+ * <li>.gwt-ProgressBar-shell { primary style }</li>
+ * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-bar { the actual progress bar }</li>
+ * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-text { text on the bar }</li>
+ * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-text-firstHalf { applied to text when progress is less than 50 percent }</li>
+ * <li>.gwt-ProgressBar-shell .gwt-ProgressBar-text-secondHalf { applied to text when progress is greater than 50 percent }</li>
  * </ul>
  */
- 
+
 public class ProgressBar extends Widget implements ResizableWidget {
   /**
    * A formatter used to format the text displayed in the progress bar widget.
    */
   public abstract static class TextFormatter {
     /**
-     * Generate the text to display in the ProgressBar based on the current
-     * value.
+     * Generate the text to display in the ProgressBar based on the current value.
      * 
      * Override this method to change the text displayed within the ProgressBar.
      * 
-     * @param bar the progress bar
-     * @param curProgress the current progress
+     * @param bar
+     *          the progress bar
+     * @param curProgress
+     *          the current progress
      * @return the text to display in the progress bar
      */
     protected abstract String getText(ProgressBar bar, double curProgress);
@@ -81,10 +83,10 @@ public class ProgressBar extends Widget implements ResizableWidget {
   }
 
   /**
-   * Create a progress bar with an initial progress and a default range of 0 to
-   * 100.
+   * Create a progress bar with an initial progress and a default range of 0 to 100.
    * 
-   * @param curProgress the current progress
+   * @param curProgress
+   *          the current progress
    */
   public ProgressBar(double curProgress) {
     this(0.0, 100.0, curProgress);
@@ -93,59 +95,64 @@ public class ProgressBar extends Widget implements ResizableWidget {
   /**
    * Create a progress bar within the given range.
    * 
-   * @param minProgress the minimum progress
-   * @param maxProgress the maximum progress
+   * @param minProgress
+   *          the minimum progress
+   * @param maxProgress
+   *          the maximum progress
    */
   public ProgressBar(double minProgress, double maxProgress) {
     this(minProgress, maxProgress, 0.0);
   }
 
   /**
-   * Create a progress bar within the given range starting at the specified
-   * progress amount.
+   * Create a progress bar within the given range starting at the specified progress amount.
    * 
-   * @param minProgress the minimum progress
-   * @param maxProgress the maximum progress
-   * @param curProgress the current progress
+   * @param minProgress
+   *          the minimum progress
+   * @param maxProgress
+   *          the maximum progress
+   * @param curProgress
+   *          the current progress
    */
   public ProgressBar(double minProgress, double maxProgress, double curProgress) {
     this(minProgress, maxProgress, curProgress, null);
   }
 
   /**
-   * Create a progress bar within the given range starting at the specified
-   * progress amount.
+   * Create a progress bar within the given range starting at the specified progress amount.
    * 
-   * @param minProgress the minimum progress
-   * @param maxProgress the maximum progress
-   * @param curProgress the current progress
-   * @param textFormatter the text formatter
+   * @param minProgress
+   *          the minimum progress
+   * @param maxProgress
+   *          the maximum progress
+   * @param curProgress
+   *          the current progress
+   * @param textFormatter
+   *          the text formatter
    */
-  public ProgressBar(double minProgress, double maxProgress,
-      double curProgress, TextFormatter textFormatter) {
+  public ProgressBar(double minProgress, double maxProgress, double curProgress, TextFormatter textFormatter) {
     this.minProgress = minProgress;
     this.maxProgress = maxProgress;
     this.curProgress = curProgress;
     setTextFormatter(textFormatter);
 
     // Create the outer shell
-    setElement(DOM.createDiv());
-    DOM.setStyleAttribute(getElement(), "position", "relative");
+    setElement(Document.get().createDivElement());
+    getElement().getStyle().setPosition(Position.RELATIVE);
     setStyleName("gwt-ProgressBar-shell");
 
     // Create the bar element
-    barElement = DOM.createDiv();
+    barElement = Document.get().createDivElement();
     DOM.appendChild(getElement(), barElement);
-    DOM.setStyleAttribute(barElement, "height", "100%");
-    DOM.setElementProperty(barElement, "className", "gwt-ProgressBar-bar");
+    barElement.getStyle().setHeight(100, Unit.PCT);
+    barElement.getStyle().setProperty("className", "gwt-ProgressBar-bar");
 
     // Create the text element
-    textElement = DOM.createDiv();
+    textElement = Document.get().createDivElement();
     DOM.appendChild(getElement(), textElement);
-    DOM.setStyleAttribute(textElement, "position", "absolute");
-    DOM.setStyleAttribute(textElement, "top", "0px");
-    DOM.setElementProperty(textElement, "className",
-        "gwt-ProgressBar-text-firstHalf");
+    textElement.getStyle().setPosition(Position.ABSOLUTE);
+    textElement.getStyle().setTop(0, Unit.PX);
+    textElement.getStyle().setProperty("className", "gwt-ProgressBar-text-firstHalf");
 
     // Set the current progress
     setProgress(curProgress);
@@ -173,8 +180,7 @@ public class ProgressBar extends Widget implements ResizableWidget {
   }
 
   /**
-   * Get the current percent complete, relative to the minimum and maximum
-   * values. The percent will always be between 0.0 - 1.0.
+   * Get the current percent complete, relative to the minimum and maximum values. The percent will always be between 0.0 - 1.0.
    * 
    * @return the current percent complete
    */
@@ -217,19 +223,20 @@ public class ProgressBar extends Widget implements ResizableWidget {
   }
 
   /**
-   * This method is called when the dimensions of the parent element change.
-   * Subclasses should override this method as needed.
+   * This method is called when the dimensions of the parent element change. Subclasses should override this method as needed.
    * 
    * Move the text to the center of the progress bar.
    * 
-   * @param width the new client width of the element
-   * @param height the new client height of the element
+   * @param width
+   *          the new client width of the element
+   * @param height
+   *          the new client height of the element
    */
   public void onResize(int width, int height) {
     if (textVisible) {
-      int textWidth = DOM.getElementPropertyInt(textElement, "offsetWidth");
+      int textWidth = textElement.getPropertyInt("offsetWidth");
       int left = (width / 2) - (textWidth / 2);
-      DOM.setStyleAttribute(textElement, "left", left + "px");
+      textElement.getStyle().setLeft(left, Unit.PX);
     }
   }
 
@@ -238,17 +245,17 @@ public class ProgressBar extends Widget implements ResizableWidget {
    */
   public void redraw() {
     if (isAttached()) {
-      int width = DOM.getElementPropertyInt(getElement(), "clientWidth");
-      int height = DOM.getElementPropertyInt(getElement(), "clientHeight");
+      int width = getElement().getClientWidth();
+      int height = getElement().getClientHeight();
       onResize(width, height);
     }
   }
 
   /**
-   * Set the maximum progress. If the minimum progress is more than the current
-   * progress, the current progress is adjusted to be within the new range.
+   * Set the maximum progress. If the minimum progress is more than the current progress, the current progress is adjusted to be within the new range.
    * 
-   * @param maxProgress the maximum progress
+   * @param maxProgress
+   *          the maximum progress
    */
   public void setMaxProgress(double maxProgress) {
     this.maxProgress = maxProgress;
@@ -257,10 +264,10 @@ public class ProgressBar extends Widget implements ResizableWidget {
   }
 
   /**
-   * Set the minimum progress. If the minimum progress is more than the current
-   * progress, the current progress is adjusted to be within the new range.
+   * Set the minimum progress. If the minimum progress is more than the current progress, the current progress is adjusted to be within the new range.
    * 
-   * @param minProgress the minimum progress
+   * @param minProgress
+   *          the minimum progress
    */
   public void setMinProgress(double minProgress) {
     this.minProgress = minProgress;
@@ -271,23 +278,22 @@ public class ProgressBar extends Widget implements ResizableWidget {
   /**
    * Set the current progress.
    * 
-   * @param curProgress the current progress
+   * @param curProgress
+   *          the current progress
    */
   public void setProgress(double curProgress) {
     this.curProgress = Math.max(minProgress, Math.min(maxProgress, curProgress));
 
     // Calculate percent complete
     int percent = (int) (100 * getPercent());
-    DOM.setStyleAttribute(barElement, "width", percent + "%");
-    DOM.setElementProperty(textElement, "innerHTML", generateText(curProgress));
+    barElement.getStyle().setWidth(percent, Unit.PCT);
+    textElement.setInnerHTML(generateText(curProgress));
 
     // Set the style depending on the size of the bar
     if (percent < 50) {
-      DOM.setElementProperty(textElement, "className",
-          "gwt-ProgressBar-text gwt-ProgressBar-text-firstHalf");
+      textElement.setClassName("gwt-ProgressBar-text gwt-ProgressBar-text-firstHalf");
     } else {
-      DOM.setElementProperty(textElement, "className",
-          "gwt-ProgressBar-text gwt-ProgressBar-text-secondHalf");
+      textElement.setClassName("gwt-ProgressBar-text gwt-ProgressBar-text-secondHalf");
     }
 
     // Realign the text
@@ -297,7 +303,8 @@ public class ProgressBar extends Widget implements ResizableWidget {
   /**
    * Set the text formatter.
    * 
-   * @param textFormatter the text formatter
+   * @param textFormatter
+   *          the text formatter
    */
   public void setTextFormatter(TextFormatter textFormatter) {
     this.textFormatter = textFormatter;
@@ -306,24 +313,25 @@ public class ProgressBar extends Widget implements ResizableWidget {
   /**
    * Sets whether the text is visible over the bar.
    * 
-   * @param isVisible True to show text, false to hide it
+   * @param isVisible
+   *          True to show text, false to hide it
    */
   public void setTextVisible(boolean isVisible) {
     this.textVisible = isVisible;
     if (this.textVisible) {
-      DOM.setStyleAttribute(textElement, "display", "");
+      textElement.getStyle().clearDisplay();
       redraw();
     } else {
-      DOM.setStyleAttribute(textElement, "display", "none");
+      textElement.getStyle().setDisplay(Display.NONE);
     }
   }
 
   /**
-   * Generate the text to display within the progress bar. Override this
-   * function to change the default progress percent to a more informative
-   * message, such as the number of kilobytes downloaded.
+   * Generate the text to display within the progress bar. Override this function to change the default progress percent to a more informative message, such as
+   * the number of kilobytes downloaded.
    * 
-   * @param curProgress the current progress
+   * @param curProgress
+   *          the current progress
    * @return the text to display in the progress bar
    */
   protected String generateText(double curProgress) {
@@ -353,13 +361,12 @@ public class ProgressBar extends Widget implements ResizableWidget {
   }
 
   /**
-   * This method is called immediately after a widget becomes attached to the
-   * browser's document.
+   * This method is called immediately after a widget becomes attached to the browser's document.
    */
   @Override
   protected void onLoad() {
     // Reset the position attribute of the parent element
-    DOM.setStyleAttribute(getElement(), "position", "relative");
+    getElement().getStyle().setPosition(Position.RELATIVE);
     redraw();
   }
 

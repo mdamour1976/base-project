@@ -18,11 +18,10 @@ import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.User;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
+import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 
 public class GetFileService extends HttpServlet {
-
-  private static BaseService baseService = new BaseService();
 
   public GetFileService() {
     super();
@@ -90,7 +89,7 @@ public class GetFileService extends HttpServlet {
         return;
       }
 
-      User authUser = baseService.getAuthenticatedUser(session, request, response);
+      User authUser = (new UserResource()).getAuthenticatedUser(session, request, response);
       if (!SecurityHelper.doesUserHavePermission(session, authUser, file, Permission.PERM.READ)) {
         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);

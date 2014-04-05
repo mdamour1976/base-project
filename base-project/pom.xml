@@ -33,111 +33,113 @@
 
   <build>
     <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/classes</outputDirectory>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-war-plugin</artifactId>
-        <version>2.4</version>
-        <configuration>
-          <webResources>
-            <resource>
-              <!-- this is relative to the pom.xml directory -->
-              <directory>src/main/webapp</directory>
-            </resource>
-            <resource>
-              <!-- this is relative to the pom.xml directory -->
-              <directory>src/main/java/org/damour/base/public</directory>
-            </resource>
-          </webResources>
-        </configuration>
-      </plugin>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>2.4</version>
+          <configuration>
+            <webResources>
+              <resource>
+                <!-- this is relative to the pom.xml directory -->
+                <directory>src/main/webapp</directory>
+              </resource>
+              <resource>
+                <!-- this is relative to the pom.xml directory -->
+                <directory>src/main/java/org/damour/base/public</directory>
+              </resource>
+            </webResources>
+          </configuration>
+        </plugin>
 
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>gwt-maven-plugin</artifactId>
-        <version>2.5.1</version>
-        <executions>
-          <execution>
-            <configuration>
-              <module>org.damour.base.BaseApplication</module>
-            </configuration>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <extraJvmArgs>-XX:MaxPermSize=512m -Xmx1024m</extraJvmArgs>
-          <runTarget>base.jsp</runTarget>
-          <webappDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</webappDirectory>
-        </configuration>
-      </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>gwt-maven-plugin</artifactId>
+          <version>2.6.0</version>
+          <executions>
+            <execution>
+              <configuration>
+                <module>org.damour.base.BaseApplication</module>
+              </configuration>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <extraJvmArgs>-XX:MaxPermSize=512m -Xmx1024m</extraJvmArgs>
+            <runTarget>base.jsp</runTarget>
+            <webappDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</webappDirectory>
+          </configuration>
+        </plugin>
 
-      <plugin>
-        <groupId>org.apache.tomcat.maven</groupId>
-        <artifactId>tomcat7-maven-plugin</artifactId>
-        <version>2.2</version>
-        <configuration>
-          <!-- http port -->
-          <port>9090</port>
-          <!-- application path always starts with / -->
-          <path>/</path>
-          <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
-        </configuration>
-      </plugin>
+        <plugin>
+          <groupId>org.apache.tomcat.maven</groupId>
+          <artifactId>tomcat7-maven-plugin</artifactId>
+          <version>2.2</version>
+          <configuration>
+            <!-- http port -->
+            <port>9090</port>
+            <!-- application path always starts with / -->
+            <path>/</path>
+            <warSourceDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</warSourceDirectory>
+          </configuration>
+        </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>2.2.1</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.2.1</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
-        <executions>
-          <execution>
-            <id>make-a-jar</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.4</version>
+          <executions>
+            <execution>
+              <id>make-a-jar</id>
+              <phase>compile</phase>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
 
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <execution>
-            <id>attach-artifacts</id>
-            <phase>package</phase>
-            <goals>
-              <goal>attach-artifact</goal>
-            </goals>
-            <configuration>
-              <artifacts>
-                <artifact>
-                  <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
-                  <type>jar</type>
-                </artifact>
-              </artifacts>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.7</version>
+          <executions>
+            <execution>
+              <id>attach-artifacts</id>
+              <phase>package</phase>
+              <goals>
+                <goal>attach-artifact</goal>
+              </goals>
+              <configuration>
+                <artifacts>
+                  <artifact>
+                    <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
+                    <type>jar</type>
+                  </artifact>
+                </artifacts>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 
   <dependencies>
@@ -157,19 +159,19 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.0</version>
+      <version>3.3.1</version>
     </dependency>
 
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
-      <version>1.3</version>
+      <version>1.3.1</version>
     </dependency>
 
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.3.3</version>
     </dependency>
 
     <dependency>
@@ -203,13 +205,19 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
-      <version>3.6.9.Final</version>
+      <version>3.6.10.Final</version>
     </dependency>
 
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-c3p0</artifactId>
-      <version>3.6.9.Final</version>
+      <version>3.6.10.Final</version>
+      <exclusions>
+        <exclusion>
+          <groupId>c3p0</groupId>
+          <artifactId>c3p0</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -233,25 +241,25 @@
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-core</artifactId>
-      <version>1.18</version>
+      <version>1.18.1</version>
     </dependency>
 
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>1.18</version>
+      <version>1.18.1</version>
     </dependency>
 
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-servlet</artifactId>
-      <version>1.18</version>
+      <version>1.18.1</version>
     </dependency>
 
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.27</version>
+      <version>5.1.30</version>
     </dependency>
 
     <dependency>
@@ -303,27 +311,27 @@
     </dependency>
 
     <dependency>
-      <groupId>c3p0</groupId>
+      <groupId>com.mchange</groupId>
       <artifactId>c3p0</artifactId>
-      <version>0.9.1.2</version>
+      <version>0.9.2.1</version>
     </dependency>
 
     <dependency>
       <groupId>net.sf.ehcache</groupId>
       <artifactId>ehcache-core</artifactId>
-      <version>2.5.0</version>
+      <version>2.6.8</version>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.5</version>
+      <version>1.7.6</version>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.5</version>
+      <version>1.7.6</version>
     </dependency>
 
     <dependency>

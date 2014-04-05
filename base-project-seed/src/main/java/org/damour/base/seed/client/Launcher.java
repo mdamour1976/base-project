@@ -2,7 +2,6 @@ package org.damour.base.seed.client;
 
 import org.damour.base.client.objects.User;
 import org.damour.base.client.soundmanager.HTML5AudioPlayer;
-import org.damour.base.client.soundmanager.MP3Player;
 import org.damour.base.client.ui.authentication.CreateNewAccountCommand;
 import org.damour.base.client.ui.colorpicker.ColorPickerDialog;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
@@ -12,7 +11,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.MouseListener;
@@ -89,8 +87,9 @@ public class Launcher extends VerticalPanel {
         }
       });
     }
-    uploadPhotosImage.addClickListener(new ClickListener() {
-      public void onClick(Widget sender) {
+    uploadPhotosImage.addClickHandler(new ClickHandler() {
+      
+      public void onClick(ClickEvent event) {
         final ColorPickerDialog picker = new ColorPickerDialog("00ff00");
         picker.center();
         picker.setCallback(new IDialogCallback() {

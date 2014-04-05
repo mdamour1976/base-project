@@ -20,12 +20,13 @@ public class PermissibleObjectResolver implements TypeIdResolver {
 
   public String idFromValue(Object value) {
     if (value instanceof Photo) {
+      return value.getClass().getName();
     } else {
       if (value instanceof PermissibleObject) {
         return value.getClass().getName();
       }
     }
-    System.out.println("unknown pwn");
+    System.out.println("unknown pwn: " + value.getClass().getName());
     return "unknown";
   }
 

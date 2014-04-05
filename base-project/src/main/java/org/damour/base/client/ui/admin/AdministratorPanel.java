@@ -69,10 +69,10 @@ public class AdministratorPanel extends VerticalPanel implements IAdminCallback 
       }
     };
 
-    ResourceCache.getBaseResource().getUsers(new MethodCallback<List<User>>() {
+    ResourceCache.getUserResource().getUsers(new MethodCallback<List<User>>() {
       public void onSuccess(Method method, List<User> users) {
         AdministratorPanel.this.users = users;
-        ResourceCache.getBaseResource().getGroups(groupsCallback);
+        ResourceCache.getGroupResource().getGroups(groupsCallback);
       }
 
       public void onFailure(Method method, Throwable exception) {

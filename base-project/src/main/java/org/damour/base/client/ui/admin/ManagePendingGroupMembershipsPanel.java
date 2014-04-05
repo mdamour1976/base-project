@@ -7,14 +7,15 @@ import java.util.Set;
 
 import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.User;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
@@ -160,32 +161,34 @@ public class ManagePendingGroupMembershipsPanel extends VerticalPanel {
   }
 
   public void fetchPendingGroupMemberships() {
-    final AsyncCallback<List<PendingGroupMembership>> approveCallback = new AsyncCallback<List<PendingGroupMembership>>() {
-      public void onFailure(Throwable caught) {
-        MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), true, true, true);
+    final MethodCallback<List<PendingGroupMembership>> approveCallback = new MethodCallback<List<PendingGroupMembership>>() {
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox("Error", exception.getMessage(), true, true, true);
         dialog.center();
       }
 
-      public void onSuccess(List<PendingGroupMembership> newPendingList) {
+      public void onSuccess(Method method, List<PendingGroupMembership> newPendingList) {
         populateUI(newPendingList);
       };
     };
-    BaseServiceCache.getService().getPendingGroupMemberships(user, approveCallback);
+    ResourceCache.getGroupResource().getPendingGroupMemberships(user.getId(), approveCallback);
   }
 
   public void submitPendingGroupMembershipApproval(Set<PendingGroupMembership> members, boolean approve) {
     // go to server and approve these group memberships
-    final AsyncCallback<List<PendingGroupMembership>> approveCallback = new AsyncCallback<List<PendingGroupMembership>>() {
-      public void onFailure(Throwable caught) {
-        MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), true, true, true);
+    final MethodCallback<List<PendingGroupMembership>> approveCallback = new MethodCallback<List<PendingGroupMembership>>() {
+
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox("Error", exception.getMessage(), true, true, true);
         dialog.center();
       }
 
-      public void onSuccess(List<PendingGroupMembership> newPendingList) {
+      public void onSuccess(Method method, List<PendingGroupMembership> newPendingList) {
         populateUI(newPendingList);
+
       };
     };
-    BaseServiceCache.getService().submitPendingGroupMembershipApproval(user, members, approve, approveCallback);
+    ResourceCache.getGroupResource().submitPendingGroupMembershipApproval(user.getId(), approve, members, approveCallback);
   }
 
 }

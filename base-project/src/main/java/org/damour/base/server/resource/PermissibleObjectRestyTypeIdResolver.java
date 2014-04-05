@@ -13,12 +13,10 @@ public class PermissibleObjectRestyTypeIdResolver implements RestyJsonTypeIdReso
 
   private HashMap<String, Class<?>> map;
 
-  @Override
   public Class<? extends TypeIdResolver> getTypeIdResolverClass() {
     return PermissibleObjectResolver.class;
   }
 
-  @Override
   public Map<String, Class<?>> getIdClassMap() {
     if (map == null) {
       map = new HashMap<String, Class<?>>();

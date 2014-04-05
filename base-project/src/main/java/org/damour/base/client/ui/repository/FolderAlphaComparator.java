@@ -2,9 +2,9 @@ package org.damour.base.client.ui.repository;
 
 import java.util.Comparator;
 
-import org.damour.base.client.objects.Folder;
+import org.damour.base.client.objects.RepositoryTreeNode;
 
-public class FolderAlphaComparator implements Comparator<Folder> {
+public class FolderAlphaComparator implements Comparator<RepositoryTreeNode> {
 
   boolean aToZ = true;
 
@@ -12,11 +12,11 @@ public class FolderAlphaComparator implements Comparator<Folder> {
     this.aToZ = aToZ;
   }
 
-  public int compare(Folder folder1, Folder folder2) {
+  public int compare(RepositoryTreeNode folder1, RepositoryTreeNode folder2) {
     if (aToZ) {
-      return folder1.getName().compareTo(folder2.getName());
+      return folder1.getFile().getName().compareTo(folder2.getFile().getName());
     }
     // z to a
-    return folder2.getName().compareTo(folder1.getName());
+    return folder2.getFile().getName().compareTo(folder1.getFile().getName());
   };
 }

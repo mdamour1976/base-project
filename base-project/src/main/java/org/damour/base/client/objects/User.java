@@ -116,6 +116,11 @@ public class User extends SecurityPrincipal implements Serializable, IHibernateF
   }
 
   public void setFacebook(Boolean facebook) {
-    this.facebook = facebook!=null?facebook:false;
-  }  
+    this.facebook = facebook != null ? facebook : false;
+  }
+
+  public String toString() {
+    return "\\\"username\\\": \\\"" + username + "\\\", \\\"firstname\\\": \\\"" + firstname + "\\\", \\\"lastname\\\": \\\"" + lastname + "\\\", \\\"email\\\": \\\"" + email + "\\\", \\\"birthday\\\": " + birthday
+        + ", \\\"signupDate\\\": " + signupDate + ", \\\"administrator\\\": " + administrator + ", \\\"validated\\\": " + validated + ", \\\"facebook\\\": " + facebook;
+  }
 }

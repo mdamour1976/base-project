@@ -1,6 +1,7 @@
 package org.damour.base.client.ui;
 
-import com.google.gwt.user.client.DOM;
+import com.google.gwt.dom.client.Style.BorderStyle;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -43,7 +44,9 @@ public class ToolTip extends PopupPanel implements MouseListener {
     if (previewImageURL != null) {
       Image previewImage = new Image(previewImageURL);
       hp.add(previewImage);
-      DOM.setStyleAttribute(previewImage.getElement(), "border", "1px solid #c8c8c8");
+      previewImage.getElement().getStyle().setBorderWidth(1, Unit.PX);
+      previewImage.getElement().getStyle().setBorderStyle(BorderStyle.SOLID);
+      previewImage.getElement().getStyle().setBorderColor("#c8c8c8");
     }
     hp.add(new HTML(html));
 

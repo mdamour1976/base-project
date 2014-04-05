@@ -1,5 +1,6 @@
 package org.damour.base.client.ui.repository;
 
+import java.text.DateFormat;
 import java.util.Date;
 
 import org.damour.base.client.BaseApplication;
@@ -26,9 +27,9 @@ public class PermissibleObjectToolTip extends ToolTip {
       tooltip += "Type: " + ((File) object).getContentType();
     }
     tooltip += "<BR>";
-    tooltip += "Date Created: " + (new Date(object.getCreationDate()).toLocaleString());
+    tooltip += "Date Created: " + DateFormat.getDateTimeInstance().format(new Date(object.getCreationDate()));
     tooltip += "<BR>";
-    tooltip += "Last Modified: " + (new Date(object.getLastModifiedDate()).toLocaleString());
+    tooltip += "Last Modified: " + DateFormat.getDateTimeInstance().format(new Date(object.getLastModifiedDate()));
     tooltip += "<BR>";
     tooltip += "Owner: " + object.getOwner().getUsername();
     if (object instanceof File) {

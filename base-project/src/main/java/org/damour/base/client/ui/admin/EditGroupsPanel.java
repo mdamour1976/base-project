@@ -6,7 +6,6 @@ import java.util.List;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.service.ResourceCache;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
@@ -19,7 +18,6 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CaptionPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -135,13 +133,14 @@ public class EditGroupsPanel extends FlexTable implements IAdminPanel, ChangeHan
         deleteGroupDialogBox.setContent(new Label("Delete Group: " + group.getName() + "?"));
         deleteGroupDialogBox.setCallback(new IDialogCallback() {
           public void okPressed() {
-            final AsyncCallback<Void> deleteGroupCallback = new AsyncCallback<Void>() {
-              public void onFailure(Throwable caught) {
-                MessageDialogBox dialog = new MessageDialogBox("Error", caught.getMessage(), true, true, true);
+            final MethodCallback<Void> deleteGroupCallback = new MethodCallback<Void>() {
+
+              public void onFailure(Method method, Throwable exception) {
+                MessageDialogBox dialog = new MessageDialogBox("Error", exception.getMessage(), true, true, true);
                 dialog.center();
               }
 
-              public void onSuccess(Void nothing) {
+              public void onSuccess(Method method, Void response) {
                 groups.remove(group);
                 lastListSelection = null;
                 populateUI();
@@ -150,7 +149,7 @@ public class EditGroupsPanel extends FlexTable implements IAdminPanel, ChangeHan
                 }
               };
             };
-            BaseServiceCache.getService().deleteGroup(group, deleteGroupCallback);
+            ResourceCache.getGroupResource().deleteGroup(group.getId(), deleteGroupCallback);
 
           }
 
@@ -248,7 +247,7 @@ public class EditGroupsPanel extends FlexTable implements IAdminPanel, ChangeHan
         }
       };
     };
-    ResourceCache.getBaseResource().getOwnedGroups(user.getUsername(), getGroupsCallback);
+    ResourceCache.getGroupResource().getOwnedGroups(user.getUsername(), getGroupsCallback);
   }
 
   public void onChange(ChangeEvent event) {

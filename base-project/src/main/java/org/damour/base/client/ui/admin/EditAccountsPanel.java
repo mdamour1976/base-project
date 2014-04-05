@@ -117,7 +117,7 @@ public class EditAccountsPanel extends FlexTable implements IAdminPanel, ChangeH
       public void onFailure(Method method, Throwable exception) {
       }
     };
-    ResourceCache.getBaseResource().getUsers(getUsersCallback);
+    ResourceCache.getUserResource().getUsers(getUsersCallback);
   }
 
   public void onChange(ChangeEvent event) {

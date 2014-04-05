@@ -1,11 +1,12 @@
 package org.damour.base.client.ui.admin;
 
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.Button;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
@@ -49,15 +50,21 @@ public class HQLPanel extends VerticalPanel {
   }
   
   private void executeQuery() {
-    String query = queryTextBox.getText();
-    BaseServiceCache.getService().executeHQL(query, executeUpdate.getValue(), new AsyncCallback<String>() {
-      public void onFailure(Throwable caught) {
+    final MethodCallback<String> callback = new MethodCallback<String>() {
+      public void onFailure(Method method, Throwable caught) {
         queryResultTextBox.setText(caught.getMessage());
       }
-      public void onSuccess(String result) {
+
+      public void onSuccess(Method method, String result) {
         queryResultTextBox.setText(result);
-      }
-    });
+      };
+    };
+    String query = queryTextBox.getText();
+    if (executeUpdate.getValue()) {
+      ResourceCache.getBaseResource().executeUpdateHQL(query, callback);    
+    } else {
+      ResourceCache.getBaseResource().executeHQL(query, callback);    
+    }
   }
   
 }

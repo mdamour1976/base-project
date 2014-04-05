@@ -14,23 +14,17 @@ public class ThumbHelper {
       return null;
     }
     if (voter != null) {
-      List<UserThumb> thumbs = session
+      UserThumb thumb = (UserThumb) session
           .createQuery("from " + UserThumb.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voter.id = " + voter.id)
-          .setCacheable(true).list();
-      if (thumbs != null && thumbs.size() > 0) {
-        return thumbs.get(0);
-      }
-      return null;
+          .setCacheable(true).uniqueResult();
+      return thumb;
     }
-    List<UserThumb> thumbs = session
+    UserThumb thumb = (UserThumb) session
         .createQuery(
             "from " + UserThumb.class.getSimpleName() + " where permissibleObject.id = " + permissibleObject.id + " and voterGUID = '" + voterGUID + "'")
-        .setCacheable(true).list();
-    if (thumbs != null && thumbs.size() > 0) {
-      return thumbs.get(0);
-    }
+        .setCacheable(true).uniqueResult();
 
-    return null;
+    return thumb;
   }
 
   public static List<UserThumb> getUserThumbs(Session session, PermissibleObject permissibleObject) {

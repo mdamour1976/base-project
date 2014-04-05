@@ -8,7 +8,10 @@ public class ResourceCache {
   private static BaseResource baseResource;
   private static PermissibleResource permissibleResource;
   private static CommentResource commentResource;
-  
+  private static GroupResource groupResource;
+  private static UserResource userResource;
+  private static ReferralResource referralResource;
+
   public static BaseResource getBaseResource() {
     if (baseResource == null) {
       Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
@@ -31,5 +34,29 @@ public class ResourceCache {
       commentResource = (CommentResource) GWT.create(CommentResource.class);
     }
     return commentResource;
+  }
+
+  public static GroupResource getGroupResource() {
+    if (groupResource == null) {
+      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
+      groupResource = (GroupResource) GWT.create(GroupResource.class);
+    }
+    return groupResource;
+  }
+
+  public static UserResource getUserResource() {
+    if (userResource == null) {
+      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
+      userResource = (UserResource) GWT.create(UserResource.class);
+    }
+    return userResource;
+  }
+
+  public static ReferralResource getReferralResource() {
+    if (referralResource == null) {
+      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
+      referralResource = (ReferralResource) GWT.create(ReferralResource.class);
+    }
+    return referralResource;
   }
 }

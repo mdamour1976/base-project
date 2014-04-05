@@ -3,16 +3,18 @@ package org.damour.base.client.ui.admin;
 import java.util.Date;
 
 import org.damour.base.client.objects.User;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.datepicker.MyDatePicker;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
@@ -32,7 +34,7 @@ public class EditAccountPanel extends FlexTable {
     final TextBox lastnameTextBox = new TextBox();
     final TextBox emailTextBox = new TextBox();
     Date birthday = new Date(user.getBirthday());
-    DefaultFormat format = new DefaultFormat(DateTimeFormat.getMediumDateFormat());
+    DefaultFormat format = new DefaultFormat(DateTimeFormat.getFormat(PredefinedFormat.DATE_MEDIUM));
     final DateBox birthdayPicker = new DateBox(new MyDatePicker(), birthday, format);
     final CheckBox validatedCheckBox = new CheckBox("Validated");
     final CheckBox administratorCheckBox = new CheckBox("Administrator");
@@ -57,14 +59,10 @@ public class EditAccountPanel extends FlexTable {
         user.setBirthday(birthdayPicker.getValue().getTime());
         user.setAdministrator(administratorCheckBox.getValue());
         user.setValidated(validatedCheckBox.getValue());
-        final AsyncCallback<User> loginCallback = new AsyncCallback<User>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox dialog = new MessageDialogBox("Error", "Could not edit account.", true, true, true);
-            dialog.center();
-          }
+        final MethodCallback<User> loginCallback = new MethodCallback<User>() {
 
-          public void onSuccess(User user) {
-            if (user == null) {
+          public void onSuccess(Method method, User response) {
+            if (response == null) {
               MessageDialogBox dialog = new MessageDialogBox("Error", "Could not edit account.", true, true, true);
               dialog.center();
             } else {
@@ -72,10 +70,15 @@ public class EditAccountPanel extends FlexTable {
               dialog.center();
               callback.invoke(user);
             }
+          }
+
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox dialog = new MessageDialogBox("Error", "Could not edit account.", true, true, true);
+            dialog.center();
           };
         };
 
-        BaseServiceCache.getService().createOrEditAccount(user, passwordTextBox.getText(), null, loginCallback);
+        ResourceCache.getUserResource().createOrEditAccount(user, passwordTextBox.getText(), null, loginCallback);
       }
     });
     applyButton.setTitle("Apply Changes");

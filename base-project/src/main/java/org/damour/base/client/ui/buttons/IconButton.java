@@ -57,7 +57,7 @@ public class IconButton extends FlexTable implements MouseListener {
     label.setStyleName(STYLE + "Label");
     label.addMouseListener(this);
 
-    image.setUrl(defaultImage.getURL());
+    image.setUrl(defaultImage.getSafeUri());
     image.setStyleName(STYLE + "Image");
     image.addMouseListener(this);
 
@@ -86,14 +86,14 @@ public class IconButton extends FlexTable implements MouseListener {
     if (enabled) {
       addStyleDependentName("pressed");
       removeStyleDependentName("hover");
-      image.setUrl(pressedImage.getURL());
+      image.setUrl(pressedImage.getSafeUri());
     }
   }
 
   public void onMouseEnter(Widget sender) {
     if (enabled) {
       addStyleDependentName("hover");
-      image.setUrl(hoverImage.getURL());
+      image.setUrl(hoverImage.getSafeUri());
     }
   }
 
@@ -101,7 +101,7 @@ public class IconButton extends FlexTable implements MouseListener {
     if (enabled) {
       removeStyleDependentName("pressed");
       removeStyleDependentName("hover");
-      image.setUrl(defaultImage.getURL());
+      image.setUrl(defaultImage.getSafeUri());
     }
   }
 
@@ -122,10 +122,10 @@ public class IconButton extends FlexTable implements MouseListener {
     this.enabled = enabled;
     if (enabled) {
       removeStyleDependentName("disabled");
-      image.setUrl(defaultImage.getURL());
+      image.setUrl(defaultImage.getSafeUri());
     } else {
       addStyleDependentName("disabled");
-      image.setUrl(disabledImage.getURL());
+      image.setUrl(disabledImage.getSafeUri());
     }
   }
 

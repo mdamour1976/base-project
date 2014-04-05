@@ -117,7 +117,7 @@ public class EditGroupsForUsersPanel extends FlexTable implements IAdminPanel, C
       public void onFailure(Method method, Throwable exception) {
       }
     };
-    ResourceCache.getBaseResource().getUsers(getUsersCallback);
+    ResourceCache.getUserResource().getUsers(getUsersCallback);
   }
 
   private void fetchGroups() {
@@ -133,7 +133,7 @@ public class EditGroupsForUsersPanel extends FlexTable implements IAdminPanel, C
         }
       };
     };
-    ResourceCache.getBaseResource().getGroups(getGroupsCallback);
+    ResourceCache.getGroupResource().getGroups(getGroupsCallback);
   }
 
   public void onChange(ChangeEvent event) {
