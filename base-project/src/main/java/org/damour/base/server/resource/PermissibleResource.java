@@ -23,10 +23,10 @@ import org.damour.base.client.objects.PermissibleObjectTreeRequest;
 import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.RepositoryTreeNode;
 import org.damour.base.client.objects.User;
-import org.damour.base.server.BaseService;
 import org.damour.base.server.Logger;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.helpers.PageHelper;
+import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.RepositoryHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
 import org.hibernate.Session;
@@ -111,7 +111,7 @@ public class PermissibleResource {
       if (owner == null || owner.getId() == null) {
         owner = null;
       }
-      RepositoryHelper.buildPermissibleObjectTreeNode(session, authUser, owner, BaseService.getVoterGUID(httpRequest, httpResponse), root, parent,
+      RepositoryHelper.buildPermissibleObjectTreeNode(session, authUser, owner, RatingHelper.getVoterGUID(httpRequest, httpResponse), root, parent,
           request.getAcceptedClasses(), 0, request.getFetchDepth(), request.getMetaDataFetchDepth());
       return root;
     } finally {

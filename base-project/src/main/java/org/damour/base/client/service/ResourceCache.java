@@ -11,6 +11,7 @@ public class ResourceCache {
   private static GroupResource groupResource;
   private static UserResource userResource;
   private static ReferralResource referralResource;
+  private static RatingResource ratingResource;
 
   public static BaseResource getBaseResource() {
     if (baseResource == null) {
@@ -58,5 +59,13 @@ public class ResourceCache {
       referralResource = (ReferralResource) GWT.create(ReferralResource.class);
     }
     return referralResource;
+  }
+
+  public static RatingResource getRatingResource() {
+    if (ratingResource == null) {
+      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
+      ratingResource = (RatingResource) GWT.create(RatingResource.class);
+    }
+    return ratingResource;
   }
 }

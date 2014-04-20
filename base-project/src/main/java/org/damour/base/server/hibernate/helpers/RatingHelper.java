@@ -1,14 +1,42 @@
 package org.damour.base.server.hibernate.helpers;
 
 import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserRating;
+import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 
 public class RatingHelper {
 
+  public static String getVoterGUID(HttpServletRequest request, HttpServletResponse response) {
+    Cookie cookies[] = request.getCookies();
+    String voterGUID = UUID.randomUUID().toString();
+    boolean hasVoterGUID = false;
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("voterGUID".equals(cookie.getName())) {
+          hasVoterGUID = true;
+          voterGUID = cookie.getValue();
+          break;
+        }
+      }
+    }
+    if (!hasVoterGUID) {
+      Cookie voterGUIDCookie = new Cookie("voterGUID", voterGUID);
+      voterGUIDCookie.setPath("/");
+      voterGUIDCookie.setMaxAge(UserResource.COOKIE_TIMEOUT);
+      response.addCookie(voterGUIDCookie);
+    }
+    return voterGUID;
+  }
+  
   public static UserRating getUserRating(Session session, PermissibleObject permissibleObject, User voter, String voterGUID) {
     if (permissibleObject == null) {
       return null;

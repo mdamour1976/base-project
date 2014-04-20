@@ -5,7 +5,10 @@ import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.UserRating;
 import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -312,9 +315,15 @@ public class RatingWidget extends VerticalPanel {
       return;
     }
     isSubmitting = true;
-    AsyncCallback<UserRating> callback = new AsyncCallback<UserRating>() {
+    MethodCallback<UserRating> callback = new MethodCallback<UserRating>() {
 
-      public void onSuccess(UserRating userFileRating) {
+      public void onFailure(Method method, Throwable exception) {
+        isSubmitting = false;
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), false, true, true);
+        dialog.center();
+      }
+
+      public void onSuccess(Method method, UserRating userFileRating) {
         isSubmitting = false;
         if (userFileRating != null) {
           RatingWidget.this.userRating = userFileRating;
@@ -322,33 +331,27 @@ public class RatingWidget extends VerticalPanel {
         }
         setStars();
       }
-
-      public void onFailure(Throwable t) {
-        isSubmitting = false;
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), t.getMessage(), false, true, true);
-        dialog.center();
-      }
     };
-    BaseServiceCache.getService().setUserRating(permissibleObject, rating, callback);
+    ResourceCache.getRatingResource().setUserRating(permissibleObject.getId(), rating, callback);
   }
 
   public void getUserRating(final PermissibleObject permissibleObject) {
-    AsyncCallback<UserRating> callback = new AsyncCallback<UserRating>() {
+    MethodCallback<UserRating> callback = new MethodCallback<UserRating>() {
 
-      public void onSuccess(UserRating userFileRating) {
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), false, true, true);
+        dialog.center();
+        clear();
+      }
+
+      public void onSuccess(Method method, UserRating userFileRating) {
         if (userFileRating != null) {
           RatingWidget.this.userRating = userFileRating;
           userFileRating.getPermissibleObject().mergeInto(permissibleObject);
         }
         setStars();
       }
-
-      public void onFailure(Throwable t) {
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), t.getMessage(), false, true, true);
-        dialog.center();
-        clear();
-      }
     };
-    BaseServiceCache.getService().getUserRating(permissibleObject, callback);
+    ResourceCache.getRatingResource().getUserRating(permissibleObject.getId(), callback);
   }
 }

@@ -1,6 +1,5 @@
 package org.damour.base.client.ui.comment;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,6 +30,8 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -102,9 +103,9 @@ public class CommentWidget extends VerticalPanel {
       loadCommentWidget(true);
     }
   };
-  private MethodCallback<Boolean> submitCommentCallback = new MethodCallback<Boolean>() {
+  private MethodCallback<Comment> submitCommentCallback = new MethodCallback<Comment>() {
 
-    public void onSuccess(Method method, Boolean result) {
+    public void onSuccess(Method method, Comment result) {
       ResourceCache.getPermissibleResource().getPageInfo(permissibleObject.getId(), Comment.class.getName(), pageSize, new MethodCallback<PageInfo>() {
         public void onFailure(Method method, Throwable caught) {
         }
@@ -320,7 +321,7 @@ public class CommentWidget extends VerticalPanel {
           commentHeaderPanel.getFlexCellFormatter().setWidth(0, columnIndex, "100%");
           commentHeaderPanel.getFlexCellFormatter().setHorizontalAlignment(0, columnIndex, HasHorizontalAlignment.ALIGN_RIGHT);
           columnIndex++;
-          Label dateLabel = new Label(DateFormat.getDateTimeInstance().format(new Date(comment.getCommentDate())), false);
+          Label dateLabel = new Label(DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG).format(new Date(comment.getCommentDate())), false);
           commentHeaderPanel.setWidget(0, columnIndex, dateLabel);
           if (!userCanManage && !userIsAuthorOfComment) {
             dateLabel.getElement().getStyle().setPaddingTop(0, Unit.PX);

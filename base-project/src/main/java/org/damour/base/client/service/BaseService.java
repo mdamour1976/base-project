@@ -10,9 +10,6 @@ import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
-import org.damour.base.client.objects.UserAdvisory;
-import org.damour.base.client.objects.UserRating;
-import org.damour.base.client.objects.UserThumb;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
@@ -38,15 +35,6 @@ public interface BaseService extends RemoteService {
   public Long incrementCustomCounter1(PermissibleObject permissibleObject);
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public PermissibleObject echoPermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
-
-  // content rating, advisory and thumbs
-  public UserRating getUserRating(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public UserRating setUserRating(PermissibleObject permissibleObject, int rating) throws SimpleMessageException;
-  public PermissibleObject getNextUnratedPermissibleObject(String objectType) throws SimpleMessageException;
-  public UserAdvisory getUserAdvisory(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public UserAdvisory setUserAdvisory(PermissibleObject permissibleObject, int advisory) throws SimpleMessageException;
-  public UserThumb getUserThumb(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public UserThumb setUserThumb(PermissibleObject permissibleObject, boolean like) throws SimpleMessageException;
 
   // top rated/most liked api
   public List<PermissibleObject> getMostRated(int maxResults, String classType) throws SimpleMessageException;

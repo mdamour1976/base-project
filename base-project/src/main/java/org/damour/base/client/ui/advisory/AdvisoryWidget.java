@@ -5,8 +5,11 @@ import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.UserAdvisory;
 import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.utils.CursorUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -121,7 +124,7 @@ public class AdvisoryWidget extends VerticalPanel {
     clear();
 
     advisoryImage = new Image();
-    
+
     Label statsLabel = new Label();
     DOM.setStyleAttribute(statsLabel.getElement(), "fontSize", "8pt");
 
@@ -189,9 +192,14 @@ public class AdvisoryWidget extends VerticalPanel {
       return;
     }
     isSubmitting = true;
-    AsyncCallback<UserAdvisory> callback = new AsyncCallback<UserAdvisory>() {
+    MethodCallback<UserAdvisory> callback = new MethodCallback<UserAdvisory>() {
+      public void onFailure(Method method, Throwable exception) {
+        isSubmitting = false;
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), false, true, true);
+        dialog.center();
+      }
 
-      public void onSuccess(UserAdvisory userFileAdvisory) {
+      public void onSuccess(Method method, UserAdvisory userFileAdvisory) {
         isSubmitting = false;
         if (userFileAdvisory != null) {
           CursorUtils.setDefaultCursor(advisoryImage);
@@ -200,20 +208,20 @@ public class AdvisoryWidget extends VerticalPanel {
         }
         buildAdvisoryImagePanel();
       }
-
-      public void onFailure(Throwable t) {
-        isSubmitting = false;
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), t.getMessage(), false, true, true);
-        dialog.center();
-      }
     };
-    BaseServiceCache.getService().setUserAdvisory(permissibleObject, advisory, callback);
+    ResourceCache.getRatingResource().setUserAdvisory(permissibleObject.getId(), advisory, callback);
   }
 
   public void getFileUserAdvisory() {
-    AsyncCallback<UserAdvisory> callback = new AsyncCallback<UserAdvisory>() {
+    MethodCallback<UserAdvisory> callback = new MethodCallback<UserAdvisory>() {
 
-      public void onSuccess(UserAdvisory userFileAdvisory) {
+      public void onFailure(Method method, Throwable exception) {
+        clear();
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), false, true, true);
+        dialog.center();
+      }
+
+      public void onSuccess(Method method, UserAdvisory userFileAdvisory) {
         if (userFileAdvisory != null) {
           CursorUtils.setDefaultCursor(advisoryImage);
           AdvisoryWidget.this.userAdvisory = userFileAdvisory;
@@ -221,13 +229,7 @@ public class AdvisoryWidget extends VerticalPanel {
         }
         buildAdvisoryImagePanel();
       }
-
-      public void onFailure(Throwable t) {
-        clear();
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), t.getMessage(), false, true, true);
-        dialog.center();
-      }
     };
-    BaseServiceCache.getService().getUserAdvisory(permissibleObject, callback);
+    ResourceCache.getRatingResource().getUserAdvisory(permissibleObject.getId(), callback);
   }
 }

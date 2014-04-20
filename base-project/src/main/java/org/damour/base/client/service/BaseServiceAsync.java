@@ -10,9 +10,6 @@ import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
-import org.damour.base.client.objects.UserAdvisory;
-import org.damour.base.client.objects.UserRating;
-import org.damour.base.client.objects.UserThumb;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -39,15 +36,6 @@ public interface BaseServiceAsync {
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public void echoPermissibleObject(PermissibleObject permissibleObject, AsyncCallback<PermissibleObject> callback);
 
-  // content rating, advisory and thumbs
-  public void setUserRating(PermissibleObject permissibleObject, int rating, AsyncCallback<UserRating> callback);
-  public void getUserRating(PermissibleObject permissibleObject, AsyncCallback<UserRating> callback);
-  public void getNextUnratedPermissibleObject(String objectType, AsyncCallback<PermissibleObject> callback);
-  public void setUserAdvisory(PermissibleObject permissibleObject, int advisory, AsyncCallback<UserAdvisory> callback);
-  public void getUserAdvisory(PermissibleObject permissibleObject, AsyncCallback<UserAdvisory> callback);
-  public void setUserThumb(PermissibleObject permissibleObject, boolean like, AsyncCallback<UserThumb> callback);
-  public void getUserThumb(PermissibleObject permissibleObject, AsyncCallback<UserThumb> callback);
-  
   // top rated/most liked api
   public void getMostRated(int maxResults, String classType, AsyncCallback<List<PermissibleObject>> callback);
   public void getTopRated(int maxResults, int minNumVotes, String classType, AsyncCallback<List<PermissibleObject>> callback);

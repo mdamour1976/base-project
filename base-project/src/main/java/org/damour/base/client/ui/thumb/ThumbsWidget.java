@@ -4,8 +4,10 @@ import org.damour.base.client.BaseApplication;
 import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.UserThumb;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -15,7 +17,6 @@ import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -193,9 +194,15 @@ public class ThumbsWidget extends HorizontalPanel {
       return;
     }
     isSubmitting = true;
-    AsyncCallback<UserThumb> callback = new AsyncCallback<UserThumb>() {
+    MethodCallback<UserThumb> callback = new MethodCallback<UserThumb>() {
 
-      public void onSuccess(UserThumb userThumb) {
+      public void onFailure(Method method, Throwable exception) {
+        isSubmitting = false;
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), false, true, true);
+        dialog.center();
+      }
+
+      public void onSuccess(Method method, UserThumb userThumb) {
         isSubmitting = false;
         if (userThumb != null) {
           ThumbsWidget.this.userThumb = userThumb;
@@ -203,34 +210,28 @@ public class ThumbsWidget extends HorizontalPanel {
           loadThumbUI();
         }
       }
-
-      public void onFailure(Throwable t) {
-        isSubmitting = false;
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), t.getMessage(), false, true, true);
-        dialog.center();
-      }
     };
-    BaseServiceCache.getService().setUserThumb(permissibleObject, like, callback);
+    ResourceCache.getRatingResource().setUserThumb(permissibleObject.getId(), like, callback);
   }
 
   public void getUserThumb(final PermissibleObject permissibleObject) {
-    AsyncCallback<UserThumb> callback = new AsyncCallback<UserThumb>() {
+    MethodCallback<UserThumb> callback = new MethodCallback<UserThumb>() {
 
-      public void onSuccess(UserThumb userThumb) {
+      public void onFailure(Method method, Throwable exception) {
+        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), false, true, true);
+        dialog.center();
+        clear();
+      }
+
+      public void onSuccess(Method method, UserThumb userThumb) {
         if (userThumb != null) {
           ThumbsWidget.this.userThumb = userThumb;
           userThumb.getPermissibleObject().mergeInto(permissibleObject);
         }
         loadThumbUI();
       }
-
-      public void onFailure(Throwable t) {
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), t.getMessage(), false, true, true);
-        dialog.center();
-        clear();
-      }
     };
-    BaseServiceCache.getService().getUserThumb(permissibleObject, callback);
+    ResourceCache.getRatingResource().getUserThumb(permissibleObject.getId(), callback);
   }
 
   public UserThumb getUserThumb() {

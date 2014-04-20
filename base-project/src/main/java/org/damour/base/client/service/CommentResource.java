@@ -15,7 +15,7 @@ public interface CommentResource extends RestService {
 
   @POST
   @Path("/create")
-  public void submitComment(Comment comment, MethodCallback<Boolean> callback);
+  public void submitComment(Comment comment, MethodCallback<Comment> callback);
 
   @GET
   @Path("/{commentId}/approve")

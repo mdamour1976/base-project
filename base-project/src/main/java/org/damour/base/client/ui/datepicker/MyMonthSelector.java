@@ -48,7 +48,7 @@ public final class MyMonthSelector extends MonthSelector {
   }
 
   protected void refresh() {
-    String formattedMonth = getModel().formatCurrentMonth();
+    String formattedMonth = getModel().formatCurrentMonthAndYear();
     grid.setText(0, 2, formattedMonth);
   }
 
