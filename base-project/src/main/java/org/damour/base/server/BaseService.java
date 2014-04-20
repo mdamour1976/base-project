@@ -6,11 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.UUID;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
@@ -22,18 +17,12 @@ import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.User;
-import org.damour.base.client.objects.UserAdvisory;
-import org.damour.base.client.objects.UserRating;
-import org.damour.base.client.objects.UserThumb;
-import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.ReflectionCache;
-import org.damour.base.server.hibernate.helpers.AdvisoryHelper;
 import org.damour.base.server.hibernate.helpers.FolderHelper;
 import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
-import org.damour.base.server.hibernate.helpers.ThumbHelper;
 import org.damour.base.server.hibernate.helpers.UserHelper;
 import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
@@ -84,142 +73,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
     Logger.log(e);
     super.doUnexpectedFailure(e);
-  }
-
-  public List<PermissibleObject> getMostRated(int maxResults, String classType) throws SimpleMessageException {
-    if (classType == null) {
-      throw new SimpleMessageException("classType not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    try {
-      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
-      String simpleClassName = Class.forName(classType).getSimpleName();
-      List<PermissibleObject> list = session.get().createQuery("from " + simpleClassName + " where numRatingVotes > 0 order by numRatingVotes desc")
-          .setMaxResults(maxResults).setCacheable(true).list();
-      for (PermissibleObject permissibleObject : list) {
-        if (SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
-          mostRated.add(permissibleObject);
-        }
-      }
-      return mostRated;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> getTopRated(int maxResults, int minNumVotes, String classType) throws SimpleMessageException {
-    if (classType == null) {
-      throw new SimpleMessageException("classType not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    try {
-      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
-      String simpleClassName = Class.forName(classType).getSimpleName();
-      List<PermissibleObject> list = session.get()
-          .createQuery("from " + simpleClassName + " where numRatingVotes >= " + minNumVotes + " order by averageRating desc").setMaxResults(maxResults)
-          .setCacheable(true).list();
-      for (PermissibleObject permissibleObject : list) {
-        if (SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
-          mostRated.add(permissibleObject);
-        }
-      }
-      return mostRated;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> getBottomRated(int maxResults, int minNumVotes, String classType) throws SimpleMessageException {
-    if (classType == null) {
-      throw new SimpleMessageException("classType not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    try {
-      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
-      String simpleClassName = Class.forName(classType).getSimpleName();
-      List<PermissibleObject> list = session.get()
-          .createQuery("from " + simpleClassName + " where numRatingVotes >= " + minNumVotes + " order by averageRating asc").setMaxResults(maxResults)
-          .setCacheable(true).list();
-      for (PermissibleObject permissibleObject : list) {
-        if (SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
-          mostRated.add(permissibleObject);
-        }
-      }
-      return mostRated;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> getMostLiked(int maxResults, int minNumVotes, String classType) throws SimpleMessageException {
-    if (classType == null) {
-      throw new SimpleMessageException("classType not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    try {
-      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
-      String simpleClassName = Class.forName(classType).getSimpleName();
-      List<PermissibleObject> list = session.get().createQuery("from " + simpleClassName + " where numUpVotes >= " + minNumVotes + " order by numUpVotes desc")
-          .setMaxResults(maxResults).setCacheable(true).list();
-      for (PermissibleObject permissibleObject : list) {
-        if (SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
-          mostRated.add(permissibleObject);
-        }
-      }
-      return mostRated;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> getMostDisliked(int maxResults, int minNumVotes, String classType) throws SimpleMessageException {
-    if (classType == null) {
-      throw new SimpleMessageException("classType not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    try {
-      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
-      String simpleClassName = Class.forName(classType).getSimpleName();
-      List<PermissibleObject> list = session.get()
-          .createQuery("from " + simpleClassName + " where numDownVotes >= " + minNumVotes + " order by numDownVotes desc").setMaxResults(maxResults)
-          .setCacheable(true).list();
-      for (PermissibleObject permissibleObject : list) {
-        if (SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
-          mostRated.add(permissibleObject);
-        }
-      }
-      return mostRated;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> getCreatedSince(int maxResults, long sinceDateMillis, String classType) throws SimpleMessageException {
-    if (classType == null) {
-      throw new SimpleMessageException("classType not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    try {
-      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
-      String simpleClassName = Class.forName(classType).getSimpleName();
-      List<PermissibleObject> list = session.get()
-          .createQuery("from " + simpleClassName + " where creationDate >= " + sinceDateMillis + " order by creationDate desc").setMaxResults(maxResults)
-          .setCacheable(true).list();
-      for (PermissibleObject permissibleObject : list) {
-        if (SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.READ)) {
-          mostRated.add(permissibleObject);
-        }
-      }
-      return mostRated;
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
   }
 
   public PermissibleObject getPermissibleObject(Long id) throws SimpleMessageException {

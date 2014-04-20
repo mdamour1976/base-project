@@ -36,14 +36,6 @@ public interface BaseServiceAsync {
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public void echoPermissibleObject(PermissibleObject permissibleObject, AsyncCallback<PermissibleObject> callback);
 
-  // top rated/most liked api
-  public void getMostRated(int maxResults, String classType, AsyncCallback<List<PermissibleObject>> callback);
-  public void getTopRated(int maxResults, int minNumVotes, String classType, AsyncCallback<List<PermissibleObject>> callback);
-  public void getBottomRated(int maxResults, int minNumVotes, String classType, AsyncCallback<List<PermissibleObject>> callback);
-  public void getMostLiked(int maxResults, int minNumVotes, String classType, AsyncCallback<List<PermissibleObject>> callback);
-  public void getMostDisliked(int maxResults, int minNumVotes, String classType, AsyncCallback<List<PermissibleObject>> callback);
-  public void getCreatedSince(int maxResults, long createdSinceMillis, String classType, AsyncCallback<List<PermissibleObject>> callback);
-  
   // advertising/feedback rpc
   public void submitAdvertisingInfo(String contactName, String email, String company, String phone, String comments, AsyncCallback<Boolean> callback);
   public void submitFeedback(String contactName, String email, String phone, String comments, AsyncCallback<Boolean> callback);

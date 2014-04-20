@@ -36,14 +36,6 @@ public interface BaseService extends RemoteService {
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public PermissibleObject echoPermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
 
-  // top rated/most liked api
-  public List<PermissibleObject> getMostRated(int maxResults, String classType) throws SimpleMessageException;
-  public List<PermissibleObject> getTopRated(int maxResults, int minNumVotes, String classType) throws SimpleMessageException;
-  public List<PermissibleObject> getBottomRated(int maxResults, int minNumVotes, String classType) throws SimpleMessageException;
-  public List<PermissibleObject> getMostLiked(int maxResults, int minNumVotes, String classType) throws SimpleMessageException;
-  public List<PermissibleObject> getMostDisliked(int maxResults, int minNumVotes, String classType) throws SimpleMessageException;
-  public List<PermissibleObject> getCreatedSince(int maxResults, long createdSinceMillis, String classType) throws SimpleMessageException;
-  
   // advertising/feedback rpc
   public Boolean submitAdvertisingInfo(String contactName, String email, String company, String phone, String comments) throws SimpleMessageException;
   public Boolean submitFeedback(String contactName, String email, String phone, String comments) throws SimpleMessageException;

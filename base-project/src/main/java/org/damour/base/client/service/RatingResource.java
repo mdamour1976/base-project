@@ -1,5 +1,7 @@
 package org.damour.base.client.service;
 
+import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -42,5 +44,35 @@ public interface RatingResource extends RestService {
   @PUT
   @Path("/{id}/thumb")
   void setUserThumb(@PathParam("id") Long id, Boolean like, MethodCallback<UserThumb> callback);
+
+  // top rated/most liked api
+  @GET
+  @Path("/mostRated/{classType}/{maxResults}")
+  void getMostRated(@PathParam("classType") String classType, @PathParam("maxResults") int maxResults, MethodCallback<List<PermissibleObject>> callback);
+
+  @GET
+  @Path("/top/{classType}/{minNumVotes}/{maxResults}")
+  void getTopRated(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes, @PathParam("maxResults") int maxResults,
+      MethodCallback<List<PermissibleObject>> callback);
+
+  @GET
+  @Path("/bottom/{classType}/{minNumVotes}/{maxResults}")
+  void getBottomRated(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes, @PathParam("maxResults") int maxResults,
+      MethodCallback<List<PermissibleObject>> callback);
+
+  @GET
+  @Path("/mostLiked/{classType}/{minNumVotes}/{maxResults}")
+  void getMostLiked(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes, @PathParam("maxResults") int maxResults,
+      MethodCallback<List<PermissibleObject>> callback);
+
+  @GET
+  @Path("/mostDisliked/{classType}/{minNumVotes}/{maxResults}")
+  void getMostDisliked(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes, @PathParam("maxResults") int maxResults,
+      MethodCallback<List<PermissibleObject>> callback);
+
+  @GET
+  @Path("/since/{classType}/{createdSinceMillis}/{maxResults}")
+  void getCreatedSince(@PathParam("classType") String classType, @PathParam("createdSinceMillis") long createdSinceMillis,
+      @PathParam("maxResults") int maxResults, MethodCallback<List<PermissibleObject>> callback);
 
 }

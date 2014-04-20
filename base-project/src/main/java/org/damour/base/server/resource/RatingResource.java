@@ -1,5 +1,8 @@
 package org.damour.base.server.resource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
@@ -303,7 +306,176 @@ public class RatingResource {
     } finally {
       session.close();
     }
+  }
 
+  @GET
+  @Path("/mostRated/{classType}/{maxResults}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getMostRated(@PathParam("classType") String classType, @PathParam("maxResults") int maxResults,
+      @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (classType == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
+      String simpleClassName = Class.forName(classType).getSimpleName();
+      List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numRatingVotes > 0 order by numRatingVotes desc")
+          .setMaxResults(maxResults).setCacheable(true).list();
+      for (PermissibleObject permissibleObject : list) {
+        if (SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
+          mostRated.add(permissibleObject);
+        }
+      }
+      return mostRated;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GET
+  @Path("/top/{classType}/{minNumVotes}/{maxResults}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getTopRated(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes,
+      @PathParam("maxResults") int maxResults, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (classType == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
+      String simpleClassName = Class.forName(classType).getSimpleName();
+      List<PermissibleObject> list = session
+          .createQuery("from " + simpleClassName + " where numRatingVotes >= " + minNumVotes + " order by averageRating desc").setMaxResults(maxResults)
+          .setCacheable(true).list();
+      for (PermissibleObject permissibleObject : list) {
+        if (SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
+          mostRated.add(permissibleObject);
+        }
+      }
+      return mostRated;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GET
+  @Path("/bottom/{classType}/{minNumVotes}/{maxResults}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getBottomRated(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes,
+      @PathParam("maxResults") int maxResults, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (classType == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
+      String simpleClassName = Class.forName(classType).getSimpleName();
+      List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numRatingVotes >= " + minNumVotes + " order by averageRating asc")
+          .setMaxResults(maxResults).setCacheable(true).list();
+      for (PermissibleObject permissibleObject : list) {
+        if (SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
+          mostRated.add(permissibleObject);
+        }
+      }
+      return mostRated;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GET
+  @Path("/mostLiked/{classType}/{minNumVotes}/{maxResults}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getMostLiked(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes,
+      @PathParam("maxResults") int maxResults, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (classType == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
+      String simpleClassName = Class.forName(classType).getSimpleName();
+      List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numUpVotes >= " + minNumVotes + " order by numUpVotes desc")
+          .setMaxResults(maxResults).setCacheable(true).list();
+      for (PermissibleObject permissibleObject : list) {
+        if (SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
+          mostRated.add(permissibleObject);
+        }
+      }
+      return mostRated;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GET
+  @Path("/mostDisliked/{classType}/{minNumVotes}/{maxResults}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getMostDisliked(@PathParam("classType") String classType, @PathParam("minNumVotes") int minNumVotes,
+      @PathParam("maxResults") int maxResults, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (classType == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
+      String simpleClassName = Class.forName(classType).getSimpleName();
+      List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numDownVotes >= " + minNumVotes + " order by numDownVotes desc")
+          .setMaxResults(maxResults).setCacheable(true).list();
+      for (PermissibleObject permissibleObject : list) {
+        if (SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
+          mostRated.add(permissibleObject);
+        }
+      }
+      return mostRated;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GET
+  @Path("/since/{classType}/{createdSinceMillis}/{maxResults}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getCreatedSince(@PathParam("classType") String classType, @PathParam("createdSinceMillis") long createdSinceMillis,
+      @PathParam("maxResults") int maxResults, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (classType == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
+      String simpleClassName = Class.forName(classType).getSimpleName();
+      List<PermissibleObject> list = session
+          .createQuery("from " + simpleClassName + " where creationDate >= " + createdSinceMillis + " order by creationDate desc").setMaxResults(maxResults)
+          .setCacheable(true).list();
+      for (PermissibleObject permissibleObject : list) {
+        if (SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
+          mostRated.add(permissibleObject);
+        }
+      }
+      return mostRated;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
   }
 
 }
