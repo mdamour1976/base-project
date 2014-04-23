@@ -36,9 +36,4 @@ public interface BaseService extends RemoteService {
   // for debug purposes: simply return what was given, proving the serialization of the desired object
   public PermissibleObject echoPermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
 
-  // advertising/feedback rpc
-  public Boolean submitAdvertisingInfo(String contactName, String email, String company, String phone, String comments) throws SimpleMessageException;
-  public Boolean submitFeedback(String contactName, String email, String phone, String comments) throws SimpleMessageException;
-  public void sendEmail(PermissibleObject permissibleObject, String subject, String message, String fromAddress, String fromName, String toAddresses) throws SimpleMessageException;
-
 }
