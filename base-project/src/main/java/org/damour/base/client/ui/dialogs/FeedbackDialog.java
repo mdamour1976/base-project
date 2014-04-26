@@ -1,12 +1,14 @@
 package org.damour.base.client.ui.dialogs;
 
 import org.damour.base.client.BaseApplication;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.objects.Feedback;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.dom.client.Style.FontWeight;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -43,7 +45,7 @@ public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorC
     vp.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
 
     Label feedbackLabel = new Label(BaseApplication.getMessages().getString("feedbackTitle", "Give Us Feedback"));
-    DOM.setStyleAttribute(feedbackLabel.getElement(), "fontWeight", "bold");
+    feedbackLabel.getElement().getStyle().setFontWeight(FontWeight.BOLD);
     vp.add(feedbackLabel);
     HTML feedbackDescription = new HTML(
         BaseApplication
@@ -97,13 +99,13 @@ public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorC
       MessageDialogBox.alert("Error", errorStr);
     } else {
       // perform the submission
-      AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
-        public void onFailure(Throwable caught) {
-          MessageDialogBox.alert("Error", caught.getMessage());
+      MethodCallback<Boolean> callback = new MethodCallback<Boolean>() {
+        public void onFailure(Method method, Throwable exception) {
+          MessageDialogBox.alert("Error", exception.getMessage());
         }
 
-        public void onSuccess(Boolean result) {
-          if (result) {
+        public void onSuccess(Method method, Boolean response) {
+          if (response) {
             hide();
             MessageDialogBox.alert("Info", "Your submission has been sent.  Thank you.");
           } else {
@@ -111,7 +113,12 @@ public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorC
           }
         }
       };
-      BaseServiceCache.getService().submitFeedback(contactName.getText(), email.getText(), phone.getText(), comments.getText(), callback);
+      Feedback feedback = new Feedback();
+      feedback.setContactName(contactName.getText());
+      feedback.setEmail(email.getText());
+      feedback.setPhone(phone.getText());
+      feedback.setComments(comments.getText());
+      ResourceCache.getBaseResource().submitFeedback(feedback, callback);
     }
     return false;
   }

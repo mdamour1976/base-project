@@ -1,19 +1,21 @@
 package org.damour.base.client.ui.email;
 
+import org.damour.base.client.objects.Email;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.User;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.dialogs.DialogBox;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.scrolltable.ScrollTable;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
@@ -117,15 +119,15 @@ public class EmailDialog extends DialogBox {
         if (i == 0) {
           firstAddressTextBox = addressTextBox;
         }
-        DOM.setStyleAttribute(addressTextBox.getElement(), "border", "0px");
+        addressTextBox.getElement().getStyle().setBorderWidth(0, Unit.PX);
         emailAddressTable.setDataWidget(i, 0, addressTextBox, HasHorizontalAlignment.ALIGN_LEFT);
         TextBox nameTextBox = new TextBox();
-        DOM.setStyleAttribute(nameTextBox.getElement(), "border", "0px");
+        nameTextBox.getElement().getStyle().setBorderWidth(0, Unit.PX);
         emailAddressTable.setDataWidget(i, 1, nameTextBox, HasHorizontalAlignment.ALIGN_LEFT);
-        
+
         addressTextBox.setWidth("360px");
-        nameTextBox.setWidth("190px");        
-        
+        nameTextBox.setWidth("190px");
+
       }
       if (user != null) {
         setFocusWidget(firstAddressTextBox);
@@ -152,13 +154,22 @@ public class EmailDialog extends DialogBox {
 
     // replace {toAddress} with toAddress on server
     // replace {toName} with toName on server
-    
-    BaseServiceCache.getService().sendEmail(permissibleObject, subject, message, fromAddress, fromName, toAddresses, new AsyncCallback<Void>() {
-      public void onFailure(Throwable caught) {
+
+    Email email = new Email();
+    email.setSubject(subject);
+    email.setMessage(message);
+    email.setFromAddress(fromAddress);
+    email.setFromName(fromName);
+    email.setToAddresses(toAddresses);
+
+    ResourceCache.getBaseResource().sendEmail(permissibleObject.getId(), email, new MethodCallback<Void>() {
+
+      public void onFailure(Method method, Throwable exception) {
       }
 
-      public void onSuccess(Void result) {
+      public void onSuccess(Method method, Void response) {
       }
+
     });
 
   }

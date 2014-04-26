@@ -3,6 +3,7 @@ package org.damour.base.server.resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,10 +13,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
+import org.damour.base.client.objects.AdvertisingInfo;
+import org.damour.base.client.objects.Email;
+import org.damour.base.client.objects.Feedback;
 import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.MemoryStats;
 import org.damour.base.client.objects.User;
@@ -34,8 +40,7 @@ public class BaseResource {
   @GET
   @Path("/hibernate/stats")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<HibernateStat> getHibernateStats(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse)
-      throws SimpleMessageException {
+  public List<HibernateStat> getHibernateStats(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     List<HibernateStat> statsList = new ArrayList<HibernateStat>();
 
     User authUser = (new UserResource()).getAuthenticatedUser(httpRequest, httpResponse);
@@ -66,7 +71,7 @@ public class BaseResource {
   @POST
   @Path("/hibernate/reset")
   @Produces(MediaType.APPLICATION_JSON)
-  public void resetHibernate(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) throws SimpleMessageException {
+  public void resetHibernate(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     User authUser = (new UserResource()).getAuthenticatedUser(httpRequest, httpResponse);
     if (authUser != null && authUser.isAdministrator()) {
       HibernateUtil.resetHibernate();
@@ -75,8 +80,7 @@ public class BaseResource {
 
   @DELETE
   @Path("/hibernate/evict/{classname}")
-  public void evictClassFromCache(@PathParam("classname") String className, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse)
-      throws SimpleMessageException {
+  public void evictClassFromCache(@PathParam("classname") String className, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     User authUser = (new UserResource()).getAuthenticatedUser(httpRequest, httpResponse);
     if (authUser != null && authUser.isAdministrator()) {
 
@@ -117,15 +121,15 @@ public class BaseResource {
 
   public String executeHQLInternal(String query, Boolean executeUpdate, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
     if (StringUtils.isEmpty(query)) {
-      throw new SimpleMessageException("Query not supplied.");
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
     Session session = HibernateUtil.getInstance().getSession();
-    User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-    if (authUser == null || !authUser.isAdministrator()) {
-      throw new SimpleMessageException("Insufficient authorization.");
-    }
     Transaction tx = null;
     try {
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null || !authUser.isAdministrator()) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
       String result;
       if (executeUpdate) {
         tx = HibernateUtil.getInstance().getSession().beginTransaction();
@@ -150,7 +154,7 @@ public class BaseResource {
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException(t.getMessage());
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       session.close();
     }
@@ -190,4 +194,67 @@ public class BaseResource {
     return System.currentTimeMillis();
   }
 
+  @POST
+  @Path("advertise")
+  public Boolean submitAdvertisingInfo(AdvertisingInfo info, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    String text = "Contact Name: " + info.getContactName() + "<BR>";
+    text += "E-Mail: " + info.getEmail() + "<BR>";
+    text += "Company: " + info.getCompany() + "<BR>";
+    text += "Phone: " + info.getPhone() + "<BR>";
+    text += "Comments: " + info.getComments() + "<BR>";
+    return BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), info.getContactName(),
+        BaseSystem.getAdminEmailAddress(), info.getContactName() + " is interested in advertising on " + BaseSystem.getDomainName(), text);
+  }
+
+  @POST
+  @Path("feedback")
+  public Boolean submitFeedback(Feedback feedback, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    String text = "Contact Name: " + feedback.getContactName() + "<BR>";
+    text += "E-Mail: " + feedback.getEmail() + "<BR>";
+    text += "Phone: " + feedback.getPhone() + "<BR>";
+    text += "Comments: " + feedback.getComments() + "<BR>";
+    return BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), feedback.getContactName(),
+        BaseSystem.getAdminEmailAddress(), feedback.getContactName() + " has submitted feedback for " + BaseSystem.getDomainName(), text);
+  }
+
+  @POST
+  @Path("email/{id}")
+  public void sendEmail(@PathParam("id") Long id, Email email, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (email == null) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+    Session session = HibernateUtil.getInstance().getSession();
+    try {
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null || !authUser.isAdministrator()) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      if (authUser != null) {
+        email.setFromName(authUser.getFirstname() + " " + authUser.getLastname());
+      }
+      StringTokenizer st = new StringTokenizer(email.getToAddresses(), ";");
+      while (st.hasMoreTokens()) {
+        String toAddress = st.nextToken();
+        String toName = st.nextToken();
+
+        // replace {toAddress} with toAddress on server
+        // replace {toName} with toName on server
+        String tmpSubject = email.getSubject();
+        tmpSubject = tmpSubject.replace("{toAddress}", toAddress); //$NON-NLS-1$ 
+        tmpSubject = tmpSubject.replace("{toName}", toName); //$NON-NLS-1$ 
+
+        String tmpMessage = email.getMessage();
+        tmpMessage = tmpMessage.replace("{toAddress}", toAddress); //$NON-NLS-1$ 
+        tmpMessage = tmpMessage.replace("{toName}", toName); //$NON-NLS-1$ 
+
+        BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), email.getFromName(), toAddress, tmpSubject,
+            tmpMessage);
+      }
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
 }

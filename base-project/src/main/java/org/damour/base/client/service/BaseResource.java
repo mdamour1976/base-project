@@ -11,6 +11,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.damour.base.client.objects.AdvertisingInfo;
+import org.damour.base.client.objects.Email;
+import org.damour.base.client.objects.Feedback;
 import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.MemoryStats;
 import org.fusesource.restygwt.client.MethodCallback;
@@ -44,7 +47,7 @@ public interface BaseResource extends RestService {
   @Path("hibernate/executeUpdateHQL")
   @Produces(MediaType.TEXT_PLAIN)
   void executeUpdateHQL(String query, MethodCallback<String> callback);
-  
+
   @GET
   @Path("memory/stats")
   void getMemoryStats(MethodCallback<MemoryStats> callback);
@@ -56,5 +59,17 @@ public interface BaseResource extends RestService {
   @GET
   @Path("ping")
   void ping(MethodCallback<Long> callback);
+
+  @POST
+  @Path("advertise")
+  void submitAdvertisingInfo(AdvertisingInfo info, MethodCallback<Boolean> callback);
+
+  @POST
+  @Path("feedback")
+  void submitFeedback(Feedback feedback, MethodCallback<Boolean> callback);
+
+  @POST
+  @Path("email/{id}")
+  void sendEmail(@PathParam("id") Long id, Email email, MethodCallback<Void> callback);
 
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
@@ -560,54 +559,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     } catch (Throwable t) {
       throw new SimpleMessageException(t.getMessage());
     }
-  }
-
-
-  public void sendEmail(PermissibleObject permissibleObject, final String subject, final String message, String fromAddress, String fromName, String toAddresses) {
-    User user = null;
-    try {
-      user = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    } catch (Throwable t) {
-    }
-    if (user != null) {
-      fromName = user.getFirstname() + " " + user.getLastname();
-    }
-    StringTokenizer st = new StringTokenizer(toAddresses, ";");
-    while (st.hasMoreTokens()) {
-      String toAddress = st.nextToken();
-      String toName = st.nextToken();
-
-      // replace {toAddress} with toAddress on server
-      // replace {toName} with toName on server
-      String tmpSubject = subject;
-      tmpSubject = tmpSubject.replace("{toAddress}", toAddress); //$NON-NLS-1$ 
-      tmpSubject = tmpSubject.replace("{toName}", toName); //$NON-NLS-1$ 
-
-      String tmpMessage = message;
-      tmpMessage = tmpMessage.replace("{toAddress}", toAddress); //$NON-NLS-1$ 
-      tmpMessage = tmpMessage.replace("{toName}", toName); //$NON-NLS-1$ 
-
-      BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), fromName, toAddress, tmpSubject, tmpMessage);
-    }
-  }
-
-  public Boolean submitAdvertisingInfo(String contactName, String email, String company, String phone, String comments) throws SimpleMessageException {
-    String text = "Contact Name: " + contactName + "<BR>";
-    text += "E-Mail: " + email + "<BR>";
-    text += "Company: " + company + "<BR>";
-    text += "Phone: " + phone + "<BR>";
-    text += "Comments: " + comments + "<BR>";
-    return BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), contactName,
-        BaseSystem.getAdminEmailAddress(), contactName + " is interested in advertising on " + BaseSystem.getDomainName(), text);
-  }
-
-  public Boolean submitFeedback(String contactName, String email, String phone, String comments) throws SimpleMessageException {
-    String text = "Contact Name: " + contactName + "<BR>";
-    text += "E-Mail: " + email + "<BR>";
-    text += "Phone: " + phone + "<BR>";
-    text += "Comments: " + comments + "<BR>";
-    return BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), contactName,
-        BaseSystem.getAdminEmailAddress(), contactName + " has submitted feedback for " + BaseSystem.getDomainName(), text);
   }
 
 }

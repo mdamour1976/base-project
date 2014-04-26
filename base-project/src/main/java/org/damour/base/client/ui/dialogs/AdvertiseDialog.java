@@ -1,12 +1,14 @@
 package org.damour.base.client.ui.dialogs;
 
 import org.damour.base.client.BaseApplication;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.objects.AdvertisingInfo;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.dom.client.Style.FontWeight;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -14,8 +16,8 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.ValueBoxBase.TextAlignment;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class AdvertiseDialog extends PromptDialogBox implements IDialogValidatorCallback, IDialogCallback {
 
@@ -31,12 +33,12 @@ public class AdvertiseDialog extends PromptDialogBox implements IDialogValidator
     contactName.setVisibleLength(50);
     email.setVisibleLength(50);
     company.setVisibleLength(50);
-    
+
     if (AuthenticationHandler.getInstance().getUser() != null) {
       email.setText(AuthenticationHandler.getInstance().getUser().getEmail());
       contactName.setText(AuthenticationHandler.getInstance().getUser().getFirstname() + " " + AuthenticationHandler.getInstance().getUser().getLastname());
     }
-    
+
     phone.setVisibleLength(20);
     phone.setAlignment(TextAlignment.RIGHT);
     comments.setVisibleLines(4);
@@ -46,7 +48,7 @@ public class AdvertiseDialog extends PromptDialogBox implements IDialogValidator
     vp.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
 
     Label advertLabel = new Label(BaseApplication.getMessages().getString("advertiseWithUs", "Advertise With Us!"));
-    DOM.setStyleAttribute(advertLabel.getElement(), "fontWeight", "bold");
+    advertLabel.getElement().getStyle().setFontWeight(FontWeight.BOLD);
     vp.add(advertLabel);
     HTML advertiseDescription = new HTML(
         BaseApplication
@@ -104,13 +106,13 @@ public class AdvertiseDialog extends PromptDialogBox implements IDialogValidator
       MessageDialogBox.alert("Error", errorStr);
     } else {
       // perform the submission
-      AsyncCallback<Boolean> callback = new AsyncCallback<Boolean>() {
-        public void onFailure(Throwable caught) {
-          MessageDialogBox.alert("Error", caught.getMessage());
+      MethodCallback<Boolean> callback = new MethodCallback<Boolean>() {
+        public void onFailure(Method method, Throwable exception) {
+          MessageDialogBox.alert("Error", exception.getMessage());
         }
 
-        public void onSuccess(Boolean result) {
-          if (result) {
+        public void onSuccess(Method method, Boolean response) {
+          if (response) {
             hide();
             MessageDialogBox.alert("Info", "Your submission has been sent.  Thank you.");
           } else {
@@ -118,8 +120,15 @@ public class AdvertiseDialog extends PromptDialogBox implements IDialogValidator
           }
         }
       };
-      BaseServiceCache.getService().submitAdvertisingInfo(contactName.getText(), email.getText(), company.getText(), phone.getText(), comments.getText(),
-          callback);
+
+      AdvertisingInfo info = new AdvertisingInfo();
+      info.setContactName(contactName.getText());
+      info.setEmail(email.getText());
+      info.setCompany(company.getText());
+      info.setPhone(phone.getText());
+      info.setComments(comments.getText());
+
+      ResourceCache.getBaseResource().submitAdvertisingInfo(info, callback);
     }
     return false;
   }
