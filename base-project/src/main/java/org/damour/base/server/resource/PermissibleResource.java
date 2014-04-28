@@ -44,7 +44,12 @@ public class PermissibleResource {
       if (id == null) {
         throw new SimpleMessageException("Id not supplied.");
       }
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       try {
         PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
         if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
@@ -71,7 +76,12 @@ public class PermissibleResource {
       if (id == null) {
         throw new SimpleMessageException("Id not supplied.");
       }
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       try {
         PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
         if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
@@ -101,7 +111,12 @@ public class PermissibleResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       PermissibleObjectTreeNode root = new PermissibleObjectTreeNode();
       PermissibleObject parent = request.getParent();
       if (parent != null) {
@@ -128,7 +143,12 @@ public class PermissibleResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       try {
         Class<?> clazz = Class.forName(pageClassType);
         PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
@@ -154,7 +174,12 @@ public class PermissibleResource {
     try {
       session = HibernateUtil.getInstance().getSession();
       try {
-        User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+        User authUser = null;
+
+        try {
+          authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+        } catch (Throwable t) {
+        }
         PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
         if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
           throw new SimpleMessageException("User is not authorized to get this content.");
@@ -177,7 +202,12 @@ public class PermissibleResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       RepositoryTreeNode root = new RepositoryTreeNode();
       RepositoryHelper.buildRepositoryTreeNode(session, authUser, root, null);
       return root;

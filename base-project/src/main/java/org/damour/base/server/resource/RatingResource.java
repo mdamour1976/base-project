@@ -151,7 +151,12 @@ public class RatingResource {
 
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
 
       PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
 
@@ -234,7 +239,12 @@ public class RatingResource {
 
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
 
       PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
       if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
@@ -319,7 +329,11 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
       List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numRatingVotes > 0 order by numRatingVotes desc")
@@ -347,7 +361,12 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
       List<PermissibleObject> list = session
@@ -376,7 +395,12 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
       List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numRatingVotes >= " + minNumVotes + " order by averageRating asc")
@@ -404,7 +428,12 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
       List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numUpVotes >= " + minNumVotes + " order by numUpVotes desc")
@@ -432,7 +461,12 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
       List<PermissibleObject> list = session.createQuery("from " + simpleClassName + " where numDownVotes >= " + minNumVotes + " order by numDownVotes desc")
@@ -460,7 +494,12 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       List<PermissibleObject> mostRated = new ArrayList<PermissibleObject>();
       String simpleClassName = Class.forName(classType).getSimpleName();
       List<PermissibleObject> list = session
