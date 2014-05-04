@@ -225,9 +225,10 @@ public class BaseResource {
     }
     Session session = HibernateUtil.getInstance().getSession();
     try {
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-      if (authUser == null || !authUser.isAdministrator()) {
-        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
       }
       if (authUser != null) {
         email.setFromName(authUser.getFirstname() + " " + authUser.getLastname());

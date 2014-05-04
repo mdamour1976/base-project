@@ -43,7 +43,11 @@ public class RatingResource {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
       if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -72,8 +76,11 @@ public class RatingResource {
     try {
       session = HibernateUtil.getInstance().getSession();
       tx = session.beginTransaction();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
 
       if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
@@ -128,8 +135,11 @@ public class RatingResource {
 
     try {
       session = HibernateUtil.getInstance().getSession();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
       PermissibleObject object = RatingHelper.getNextUnratedPermissibleObject(session, objectType, authUser,
           RatingHelper.getVoterGUID(httpRequest, httpResponse));
       return object;
@@ -152,7 +162,6 @@ public class RatingResource {
     try {
       session = HibernateUtil.getInstance().getSession();
       User authUser = null;
-
       try {
         authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       } catch (Throwable t) {
@@ -186,8 +195,12 @@ public class RatingResource {
     try {
       session = HibernateUtil.getInstance().getSession();
       tx = session.beginTransaction();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
+      
       PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
 
       if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
@@ -274,8 +287,12 @@ public class RatingResource {
     try {
       session = HibernateUtil.getInstance().getSession();
       tx = session.beginTransaction();
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+      }
+      
       PermissibleObject permissibleObject = (PermissibleObject) session.load(PermissibleObject.class, id);
 
       if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.READ)) {
