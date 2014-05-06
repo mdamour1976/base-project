@@ -33,7 +33,4 @@ public interface BaseService extends RemoteService {
   public List<PermissibleObjectTreeNode> searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending, String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase) throws SimpleMessageException;
   public Long getCustomCounter1(PermissibleObject permissibleObject);
   public Long incrementCustomCounter1(PermissibleObject permissibleObject);
-  // for debug purposes: simply return what was given, proving the serialization of the desired object
-  public PermissibleObject echoPermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
-
 }

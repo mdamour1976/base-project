@@ -32,6 +32,4 @@ public interface BaseServiceAsync {
   public void searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending, String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase, AsyncCallback<List<PermissibleObjectTreeNode>> callback);
   public void getCustomCounter1(PermissibleObject permissibleObject, AsyncCallback<Long> callback);
   public void incrementCustomCounter1(PermissibleObject permissibleObject, AsyncCallback<Long> callback);
-  // for debug purposes: simply return what was given, proving the serialization of the desired object
-  public void echoPermissibleObject(PermissibleObject permissibleObject, AsyncCallback<PermissibleObject> callback);
 }

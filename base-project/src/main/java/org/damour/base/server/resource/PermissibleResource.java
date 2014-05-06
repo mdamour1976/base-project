@@ -219,4 +219,12 @@ public class PermissibleResource {
     }
   }
 
+  @GET
+  @Path("/echo")
+  @Produces(MediaType.APPLICATION_JSON)
+  public PermissibleObject echoPermissibleObject(PermissibleObject object, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    // for debug purposes: simply return what was given, proving the serialization of the desired object
+    return object;
+  }
+
 }

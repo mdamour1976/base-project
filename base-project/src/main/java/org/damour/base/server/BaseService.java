@@ -527,10 +527,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
   }
 
-  public PermissibleObject echoPermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException {
-    return permissibleObject;
-  }
-
   public FileUploadStatus getFileUploadStatus() throws SimpleMessageException {
     User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {

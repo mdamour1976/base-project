@@ -7,6 +7,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
+import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
@@ -47,4 +48,7 @@ public interface PermissibleResource extends RestService {
   @Path("/filetree")
   void getRepositoryTree(MethodCallback<RepositoryTreeNode> callback);
 
+  @POST
+  @Path("/echo")
+  void echoPermissibleObject(PermissibleObject permissibleObject, MethodCallback<PermissibleObject> callback);
 }
