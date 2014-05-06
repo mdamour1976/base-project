@@ -493,40 +493,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
   }
 
-  public Long getCustomCounter1(PermissibleObject permissibleObject) {
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not supplied.");
-    }
-    try {
-      permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
-      return permissibleObject.getCustomCounter1();
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public Long incrementCustomCounter1(PermissibleObject permissibleObject) {
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not supplied.");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      permissibleObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
-      permissibleObject.setCustomCounter1(permissibleObject.getCustomCounter1() + 1);
-      session.get().save(permissibleObject);
-      tx.commit();
-      return permissibleObject.getCustomCounter1();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
   public FileUploadStatus getFileUploadStatus() throws SimpleMessageException {
     User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
     if (authUser == null) {

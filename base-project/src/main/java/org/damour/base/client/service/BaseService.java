@@ -31,6 +31,4 @@ public interface BaseService extends RemoteService {
   public List<PermissibleObject> updatePermissibleObjects(List<PermissibleObject> permissibleObjects) throws SimpleMessageException;
   public FileUploadStatus getFileUploadStatus() throws SimpleMessageException;
   public List<PermissibleObjectTreeNode> searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending, String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase) throws SimpleMessageException;
-  public Long getCustomCounter1(PermissibleObject permissibleObject);
-  public Long incrementCustomCounter1(PermissibleObject permissibleObject);
 }

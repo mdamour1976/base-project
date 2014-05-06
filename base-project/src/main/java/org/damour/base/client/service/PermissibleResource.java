@@ -7,7 +7,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
-import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
@@ -51,4 +50,13 @@ public interface PermissibleResource extends RestService {
   @POST
   @Path("/echo")
   void echoPermissibleObject(PermissibleObject permissibleObject, MethodCallback<PermissibleObject> callback);
+  
+  @GET
+  @Path("/counter/{id}")
+  void getCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
+
+  @POST
+  @Path("/counter/{id}")
+  void incrementCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
+  
 }
