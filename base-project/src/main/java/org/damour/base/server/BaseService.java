@@ -10,7 +10,6 @@ import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
-import org.damour.base.client.objects.IAnonymousPermissibleObject;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
@@ -22,7 +21,7 @@ import org.damour.base.server.hibernate.helpers.FolderHelper;
 import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
-import org.damour.base.server.hibernate.helpers.UserHelper;
+import org.damour.base.server.resource.PermissibleResource;
 import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -91,88 +90,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     }
   }
 
-  public PermissibleObject savePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException {
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("Object not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null && permissibleObject instanceof IAnonymousPermissibleObject) {
-      authUser = UserHelper.getUser(session.get(), "anonymous");
-    }
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-
-    Transaction tx = session.get().beginTransaction();
-    try {
-      if (permissibleObject.getParent() != null) {
-        permissibleObject.setParent((PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getParent().getId()));
-      }
-      if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject.getParent(), PERM.CREATE_CHILD)) {
-        throw new SimpleMessageException("User is not authorized to write to parent folder.");
-      }
-      if (permissibleObject.getId() != null) {
-        PermissibleObject hibNewObject = (PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId());
-        if (hibNewObject != null) {
-          if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, hibNewObject, PERM.WRITE)) {
-            throw new SimpleMessageException("User is not authorized to overwrite object.");
-          }
-          List<Field> fields = ReflectionCache.getFields(permissibleObject.getClass());
-          for (Field field : fields) {
-            try {
-              field.set(hibNewObject, field.get(permissibleObject));
-            } catch (Exception e) {
-              e.printStackTrace();
-              Logger.log(e);
-            }
-          }
-
-          permissibleObject = hibNewObject;
-        }
-      }
-
-      List<Field> fields = ReflectionCache.getFields(permissibleObject.getClass());
-      for (Field field : fields) {
-        try {
-          // do not update parent permission only our 'owned' objects
-          if (!"parent".equals(field.getName())) {
-            Object obj = field.get(permissibleObject);
-            if (obj instanceof PermissibleObject) {
-              PermissibleObject childObj = (PermissibleObject) obj;
-              PermissibleObject hibChild = (PermissibleObject) session.get().load(PermissibleObject.class, childObj.getId());
-              hibChild.setGlobalRead(permissibleObject.isGlobalRead());
-              hibChild.setGlobalWrite(permissibleObject.isGlobalWrite());
-              hibChild.setGlobalExecute(permissibleObject.isGlobalExecute());
-              hibChild.setGlobalCreateChild(permissibleObject.isGlobalCreateChild());
-              field.set(permissibleObject, hibChild);
-            }
-          }
-        } catch (Exception e) {
-          Logger.log(e);
-        }
-      }
-
-      permissibleObject.setOwner(authUser);
-      session.get().save(permissibleObject);
-      tx.commit();
-      return permissibleObject;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> savePermissibleObjects(List<PermissibleObject> permissibleObjects) {
-    for (PermissibleObject object : permissibleObjects) {
-      savePermissibleObject(object);
-    }
-    return permissibleObjects;
-  }
-
   public void deletePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException {
     if (permissibleObject == null) {
       throw new SimpleMessageException("Object not supplied.");
@@ -225,7 +142,7 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
 
   public void deleteAndSavePermissibleObjects(Set<PermissibleObject> toBeDeleted, Set<PermissibleObject> toBeSaved) throws SimpleMessageException {
     deletePermissibleObjects(toBeDeleted);
-    savePermissibleObjects(new ArrayList<PermissibleObject>(toBeSaved));
+    (new PermissibleResource()).savePermissibleObjects(new ArrayList<PermissibleObject>(toBeSaved), getThreadLocalRequest(), getThreadLocalResponse());
   }
 
   public List<PermissibleObject> getMyPermissibleObjects(PermissibleObject parent, String objectType) throws SimpleMessageException {
@@ -516,8 +433,8 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
     // return all permissible objects which match the name/description
     try {
       Class<?> clazz = Class.forName(searchObjectType);
-      return PermissibleObjectHelper.search(session.get(), authUser, RatingHelper.getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz, query, sortField,
-          sortDescending, searchNames, searchDescriptions, searchKeywords, useExactPhrase);
+      return PermissibleObjectHelper.search(session.get(), authUser, RatingHelper.getVoterGUID(getThreadLocalRequest(), getThreadLocalResponse()), clazz,
+          query, sortField, sortDescending, searchNames, searchDescriptions, searchKeywords, useExactPhrase);
     } catch (Throwable t) {
       throw new SimpleMessageException(t.getMessage());
     }

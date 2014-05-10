@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
@@ -18,6 +19,14 @@ import org.fusesource.restygwt.client.RestService;
 
 @Path("rest/objects")
 public interface PermissibleResource extends RestService {
+
+  @PUT
+  @Path("/save")
+  public void savePermissibleObject(PermissibleObject permissibleObject, MethodCallback<PermissibleObject> callback);
+
+  @PUT
+  @Path("/saveList")
+  public void savePermissibleObjects(List<PermissibleObject> permissibleObjects, MethodCallback<List<PermissibleObject>> callback);
 
   @GET
   @Path("/{id}")
@@ -50,7 +59,7 @@ public interface PermissibleResource extends RestService {
   @POST
   @Path("/echo")
   void echoPermissibleObject(PermissibleObject permissibleObject, MethodCallback<PermissibleObject> callback);
-  
+
   @GET
   @Path("/counter/{id}")
   void getCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
@@ -58,5 +67,5 @@ public interface PermissibleResource extends RestService {
   @POST
   @Path("/counter/{id}")
   void incrementCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
-  
+
 }

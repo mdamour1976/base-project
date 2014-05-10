@@ -1,5 +1,6 @@
 package org.damour.base.server.resource;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -16,6 +18,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.damour.base.client.objects.IAnonymousPermissibleObject;
 import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
@@ -26,15 +29,115 @@ import org.damour.base.client.objects.RepositoryTreeNode;
 import org.damour.base.client.objects.User;
 import org.damour.base.server.Logger;
 import org.damour.base.server.hibernate.HibernateUtil;
+import org.damour.base.server.hibernate.ReflectionCache;
 import org.damour.base.server.hibernate.helpers.PageHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.RepositoryHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
+import org.damour.base.server.hibernate.helpers.UserHelper;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 @Path("/objects")
 public class PermissibleResource {
+
+  @PUT
+  @Path("/save")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public PermissibleObject savePermissibleObject(PermissibleObject permissibleObject, @Context HttpServletRequest httpRequest,
+      @Context HttpServletResponse httpResponse) {
+    if (permissibleObject == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Transaction tx = null;
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      tx = session.beginTransaction();
+
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null && permissibleObject instanceof IAnonymousPermissibleObject) {
+        authUser = UserHelper.getUser(session, "anonymous");
+      }
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+
+      if (permissibleObject.getParent() != null) {
+        permissibleObject.setParent((PermissibleObject) session.load(PermissibleObject.class, permissibleObject.getParent().getId()));
+      }
+      if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject.getParent(), PERM.CREATE_CHILD)) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      if (permissibleObject.getId() != null) {
+        PermissibleObject hibNewObject = (PermissibleObject) session.load(PermissibleObject.class, permissibleObject.getId());
+        if (hibNewObject != null) {
+          if (!SecurityHelper.doesUserHavePermission(session, authUser, hibNewObject, PERM.WRITE)) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+          }
+          List<Field> fields = ReflectionCache.getFields(permissibleObject.getClass());
+          for (Field field : fields) {
+            try {
+              field.set(hibNewObject, field.get(permissibleObject));
+            } catch (Exception e) {
+              e.printStackTrace();
+              Logger.log(e);
+            }
+          }
+
+          permissibleObject = hibNewObject;
+        }
+      }
+
+      List<Field> fields = ReflectionCache.getFields(permissibleObject.getClass());
+      for (Field field : fields) {
+        try {
+          // do not update parent permission only our 'owned' objects
+          if (!"parent".equals(field.getName())) {
+            Object obj = field.get(permissibleObject);
+            if (obj instanceof PermissibleObject) {
+              PermissibleObject childObj = (PermissibleObject) obj;
+              PermissibleObject hibChild = (PermissibleObject) session.load(PermissibleObject.class, childObj.getId());
+              hibChild.setGlobalRead(permissibleObject.isGlobalRead());
+              hibChild.setGlobalWrite(permissibleObject.isGlobalWrite());
+              hibChild.setGlobalExecute(permissibleObject.isGlobalExecute());
+              hibChild.setGlobalCreateChild(permissibleObject.isGlobalCreateChild());
+              field.set(permissibleObject, hibChild);
+            }
+          }
+        } catch (Exception e) {
+          Logger.log(e);
+        }
+      }
+
+      permissibleObject.setOwner(authUser);
+      session.save(permissibleObject);
+      tx.commit();
+      return permissibleObject;
+    } catch (Throwable t) {
+      Logger.log(t);
+      try {
+        tx.rollback();
+      } catch (Throwable tt) {
+      }
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
+  @PUT
+  @Path("/saveList")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> savePermissibleObjects(List<PermissibleObject> permissibleObjects, @Context HttpServletRequest httpRequest,
+      @Context HttpServletResponse httpResponse) {
+    for (PermissibleObject object : permissibleObjects) {
+      savePermissibleObject(object, httpRequest, httpResponse);
+    }
+    return permissibleObjects;
+  }
 
   @GET
   @Path("/{id : .+}")
@@ -224,6 +327,7 @@ public class PermissibleResource {
   @GET
   @Path("/echo")
   @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
   public PermissibleObject echoPermissibleObject(PermissibleObject object, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     // for debug purposes: simply return what was given, proving the serialization of the desired object
     return object;

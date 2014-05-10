@@ -16,8 +16,6 @@ import com.google.gwt.user.client.rpc.RemoteService;
 public interface BaseService extends RemoteService {
 
   // file/content/permissions methods
-  public PermissibleObject savePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public List<PermissibleObject> savePermissibleObjects(List<PermissibleObject> permissibleObjects) throws SimpleMessageException;
   public void deletePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
   public void deletePermissibleObjects(Set<PermissibleObject> permissibleObjects) throws SimpleMessageException;
   public void deleteAndSavePermissibleObjects(Set<PermissibleObject> toBeDeleted, Set<PermissibleObject> toBeSaved) throws SimpleMessageException;
