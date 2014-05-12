@@ -2,16 +2,17 @@ package org.damour.base.client.ui.repository;
 
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.PermissibleObject;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PopupPanel;
 import org.damour.base.client.ui.progressbar.ProgressBar;
 import org.damour.base.client.ui.progressbar.ProgressBar.TextFormatter;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
 
@@ -26,17 +27,17 @@ public class FileUploadPanel extends FormPanel {
 
   private Timer uploadStatusTimer = new Timer() {
     public void run() {
-      AsyncCallback<FileUploadStatus> callback = new AsyncCallback<FileUploadStatus>() {
-        public void onFailure(Throwable caught) {
+      MethodCallback<FileUploadStatus> callback = new MethodCallback<FileUploadStatus>() {
+        public void onFailure(Method method, Throwable exception) {
         }
 
-        public void onSuccess(FileUploadStatus result) {
+        public void onSuccess(Method method, FileUploadStatus response) {
           FileUploadPanel.this.result = result;
           progressMeter.setProgress(result.getStatus());
           progressMeter.setTextVisible(true);
         }
       };
-      BaseServiceCache.getService().getFileUploadStatus(callback);
+      ResourceCache.getBaseResource().getFileUploadStatus(callback);
     }
   };
 

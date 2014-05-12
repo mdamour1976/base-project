@@ -2,13 +2,11 @@ package org.damour.base.server;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
-import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
@@ -29,8 +27,6 @@ import org.hibernate.Transaction;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 public class BaseService extends RemoteServiceServlet implements org.damour.base.client.service.BaseService {
-
-  public static HashMap<User, FileUploadStatus> fileUploadStatusMap = new HashMap<User, FileUploadStatus>();
 
   private ThreadLocal<Session> session = new ThreadLocal<Session>();
 
@@ -406,23 +402,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public FileUploadStatus getFileUploadStatus() throws SimpleMessageException {
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    try {
-      FileUploadStatus status = fileUploadStatusMap.get(authUser);
-      if (status == null) {
-        throw new SimpleMessageException("No stats currently available.");
-      }
-      return status;
-    } catch (Throwable t) {
-      Logger.log(t);
       throw new SimpleMessageException(t.getMessage());
     }
   }

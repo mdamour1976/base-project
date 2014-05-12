@@ -45,6 +45,7 @@ import org.damour.base.client.objects.PhotoThumbnail;
 import org.damour.base.client.objects.User;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
+import org.damour.base.server.resource.BaseResource;
 import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -77,7 +78,7 @@ public class FileUploadService extends HttpServlet {
         Logger.log(t);
         return;
       }
-      final FileUploadStatus status = BaseService.fileUploadStatusMap.get(owner);
+      final FileUploadStatus status = BaseResource.fileUploadStatusMap.get(owner);
       status.setStatus(FileUploadStatus.CREATING_FILE);
 
       for (final FileItem item : fileItems) {
@@ -402,7 +403,7 @@ public class FileUploadService extends HttpServlet {
 
     final FileUploadStatus status = new FileUploadStatus();
     status.setStatus(FileUploadStatus.UPLOADING);
-    BaseService.fileUploadStatusMap.put(user, status);
+    BaseResource.fileUploadStatusMap.put(user, status);
 
     // If file size exceeds, a FileUploadException will be thrown
     fu.setSizeMax(268435456);

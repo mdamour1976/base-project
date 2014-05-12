@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
-import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
@@ -27,6 +26,5 @@ public interface BaseService extends RemoteService {
   public void setPermissions(PermissibleObject permissibleObject, List<Permission> permissions) throws SimpleMessageException;
   public PermissibleObject updatePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
   public List<PermissibleObject> updatePermissibleObjects(List<PermissibleObject> permissibleObjects) throws SimpleMessageException;
-  public FileUploadStatus getFileUploadStatus() throws SimpleMessageException;
   public List<PermissibleObjectTreeNode> searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending, String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase) throws SimpleMessageException;
 }

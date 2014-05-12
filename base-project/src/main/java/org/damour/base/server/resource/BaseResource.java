@@ -2,6 +2,7 @@ package org.damour.base.server.resource;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -22,6 +23,7 @@ import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.AdvertisingInfo;
 import org.damour.base.client.objects.Email;
 import org.damour.base.client.objects.Feedback;
+import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.MemoryStats;
 import org.damour.base.client.objects.User;
@@ -36,6 +38,8 @@ import org.hibernate.stat.Statistics;
 
 @Path("/base")
 public class BaseResource {
+
+  public static HashMap<User, FileUploadStatus> fileUploadStatusMap = new HashMap<User, FileUploadStatus>();
 
   @GET
   @Path("/hibernate/stats")
@@ -258,4 +262,25 @@ public class BaseResource {
       session.close();
     }
   }
+
+  public FileUploadStatus getFileUploadStatus(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    Session session = HibernateUtil.getInstance().getSession();
+    try {
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      FileUploadStatus status = fileUploadStatusMap.get(authUser);
+      if (status == null) {
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
+      }
+      return status;
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
 }

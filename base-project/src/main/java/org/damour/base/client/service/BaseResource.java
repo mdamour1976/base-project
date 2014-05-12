@@ -14,10 +14,13 @@ import javax.ws.rs.core.MediaType;
 import org.damour.base.client.objects.AdvertisingInfo;
 import org.damour.base.client.objects.Email;
 import org.damour.base.client.objects.Feedback;
+import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.MemoryStats;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @Path("rest/base")
 public interface BaseResource extends RestService {
@@ -72,4 +75,9 @@ public interface BaseResource extends RestService {
   @Path("email/{id}")
   void sendEmail(@PathParam("id") Long id, Email email, MethodCallback<Void> callback);
 
+  @GET
+  @Path("fileUploadStatus")
+  public void getFileUploadStatus(MethodCallback<FileUploadStatus> callback);
+  
+  
 }

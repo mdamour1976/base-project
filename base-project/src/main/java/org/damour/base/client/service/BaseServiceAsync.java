@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.damour.base.client.objects.File;
-import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
@@ -26,6 +25,5 @@ public interface BaseServiceAsync {
   public void setPermissions(PermissibleObject permissibleObject, List<Permission> permissions, AsyncCallback<Void> callback);
   public void updatePermissibleObject(PermissibleObject permissibleObject, AsyncCallback<PermissibleObject> callback);
   public void updatePermissibleObjects(List<PermissibleObject> permissibleObjects, AsyncCallback<List<PermissibleObject>> callback);
-  public void getFileUploadStatus(AsyncCallback<FileUploadStatus> callback);
   public void searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending, String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase, AsyncCallback<List<PermissibleObjectTreeNode>> callback);
 }
