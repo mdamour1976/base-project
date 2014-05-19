@@ -18,6 +18,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public String name;
   public String description;
   public String keywords;
+  public String contentHTML;
 
   public PermissibleObject parent;
   public Long creationDate = System.currentTimeMillis();
@@ -184,6 +185,14 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     this.keywords = keywords;
   }
 
+  public String getContentHTML() {
+    return contentHTML;
+  }
+
+  public void setContentHTML(String contentHTML) {
+    this.contentHTML = contentHTML;
+  }
+  
   public PermissibleObject getParent() {
     return parent;
   }
@@ -354,7 +363,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public void setCustomCounter3(Long customCounter3) {
     this.customCounter3 = customCounter3;
   }
-
+  
   public boolean isHidden() {
     return hidden;
   }
@@ -387,6 +396,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     target.name = source.name;
     target.description = source.description;
     target.keywords = source.keywords;
+    target.contentHTML = source.contentHTML;
     target.parent = source.parent;
     target.creationDate = source.creationDate;
     target.lastModifiedDate = source.lastModifiedDate;
