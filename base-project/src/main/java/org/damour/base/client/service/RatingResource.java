@@ -26,8 +26,8 @@ public interface RatingResource extends RestService {
   void setUserRating(@PathParam("id") Long id, Integer rating, MethodCallback<UserRating> callback);
 
   @GET
-  @Path("/{id}/next")
-  void getNextUnratedPermissibleObject(@PathParam("id") Long id, String objectType, MethodCallback<PermissibleObject> callback);
+  @Path("/{id}/{objectType}/next")
+  void getNextUnratedPermissibleObject(@PathParam("id") Long id, @PathParam("objectType") String objectType, MethodCallback<PermissibleObject> callback);
 
   @GET
   @Path("/{id}/advisory")

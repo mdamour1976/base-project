@@ -16,7 +16,6 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.ValueBoxBase.TextAlignment;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorCallback, IDialogCallback {
@@ -28,18 +27,18 @@ public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorC
 
   public FeedbackDialog() {
     super(BaseApplication.getMessages().getString("feedback", "Feedback"), "Submit", null, "Cancel", false, true);
-    super.setAllowKeyboardEvents(false);
+    super.setAllowEnterSubmit(false);
+
+    contactName.setWidth("350px");
+    email.setWidth("350px");
+    phone.setWidth("350px");
+    comments.setVisibleLines(4);
+    comments.setWidth("450px");    
     
-    contactName.setVisibleLength(50);
-    email.setVisibleLength(50);
     if (AuthenticationHandler.getInstance().getUser() != null) {
       email.setText(AuthenticationHandler.getInstance().getUser().getEmail());
       contactName.setText(AuthenticationHandler.getInstance().getUser().getFirstname() + " " + AuthenticationHandler.getInstance().getUser().getLastname());
     }
-    phone.setVisibleLength(20);
-    phone.setAlignment(TextAlignment.RIGHT);
-    comments.setVisibleLines(4);
-    comments.setWidth("100%");
 
     VerticalPanel vp = new VerticalPanel();
     vp.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
@@ -55,26 +54,16 @@ public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorC
                 "<BR>If you are reporting a bug, please include as much detail as you can so that our engineers can work to resolve the problem as quickly as possible.<BR><BR>If you are submitting a feature request or enhancement, we will attempt to work with you if we accept your idea.  You may keep your description brief.<BR><BR>For other comments and criticisms, simply fill out as much of the form as you want.  <BR><BR>"));
     vp.add(feedbackDescription);
 
+    contactName.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("contactName", "Contact Name"));
+    email.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("email", "Email"));
+    phone.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("phone", "Phone"));
+    comments.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("message", "Message"));
+    
     FlexTable formTable = new FlexTable();
-    formTable.setText(0, 0, "Contact Name");
-    formTable.setText(1, 0, "E-Mail");
-    formTable.setText(2, 0, "Phone Number");
-    formTable.setText(3, 0, "Comments or Description");
-
-    formTable.setWidget(0, 1, contactName);
-    formTable.setWidget(1, 1, email);
-    formTable.setWidget(2, 1, phone);
-    formTable.setWidget(3, 1, comments);
-
-    formTable.getCellFormatter().setAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(1, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(3, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-
-    formTable.getCellFormatter().setAlignment(0, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(1, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(2, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(3, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
+    formTable.setWidget(0, 0, contactName);
+    formTable.setWidget(1, 0, email);
+    formTable.setWidget(2, 0, phone);
+    formTable.setWidget(3, 0, comments);
 
     vp.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
     vp.add(formTable);

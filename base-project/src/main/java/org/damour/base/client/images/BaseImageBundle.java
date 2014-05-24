@@ -27,6 +27,7 @@ public interface BaseImageBundle extends ClientBundle, Resources {
   ImageResource treeLeaf();
 
   // file manager
+  ImageResource new16();
   ImageResource file16x16();
   ImageResource open_32();
   ImageResource open_disabled_32();
@@ -123,7 +124,14 @@ public interface BaseImageBundle extends ClientBundle, Resources {
   
   // facebook / social icons
   ImageResource facebookLogin22();
+  ImageResource facebook20();
   ImageResource facebook19();
   ImageResource facebook16();
   ImageResource facebook13();
+  ImageResource twitter16();
+  ImageResource twitter20();
+  
+  // phone widget
+  ImageResource phone();
+  
 }

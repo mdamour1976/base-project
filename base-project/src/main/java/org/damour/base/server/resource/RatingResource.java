@@ -125,9 +125,9 @@ public class RatingResource {
   }
 
   @GET
-  @Path("/{id}/next")
+  @Path("/{id}/{objectType}/next")
   @Produces(MediaType.APPLICATION_JSON)
-  public PermissibleObject getNextUnratedPermissibleObject(String objectType, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+  public PermissibleObject getNextUnratedPermissibleObject(@PathParam("id") Long id, @PathParam("objectType") String objectType, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     if (StringUtils.isEmpty(objectType)) {
       throw new WebApplicationException(Response.Status.NOT_FOUND);
     }

@@ -1,7 +1,8 @@
 package org.damour.base.seed.client;
 
 import org.damour.base.client.BaseApplicationUI;
-import org.damour.base.client.ui.toolbar.ToolBar;
+
+import com.google.gwt.user.client.ui.Widget;
 
 public class SeedApplication extends BaseApplicationUI {
 
@@ -14,8 +15,8 @@ public class SeedApplication extends BaseApplicationUI {
     getApplicationContentDeck().showWidget(0);
   }
 
-  public ToolBar buildApplicationToolBar() {
-    ToolBar tb = super.buildApplicationToolBar();
+  public Widget buildApplicationToolBar() {
+    Widget tb = super.buildApplicationToolBar();
 //    tb.add(new Label("hello"));
 //    tb.addPadding(5);
     return tb;

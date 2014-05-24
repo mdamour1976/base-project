@@ -217,8 +217,12 @@ public class BaseResource {
     text += "E-Mail: " + feedback.getEmail() + "<BR>";
     text += "Phone: " + feedback.getPhone() + "<BR>";
     text += "Comments: " + feedback.getComments() + "<BR>";
+    String subject = feedback.getContactName() + " has submitted feedback for " + BaseSystem.getDomainName();
+    if (feedback.getSubject() != null) {
+      subject = feedback.getSubject();
+    }
     return BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), feedback.getContactName(),
-        BaseSystem.getAdminEmailAddress(), feedback.getContactName() + " has submitted feedback for " + BaseSystem.getDomainName(), text);
+        BaseSystem.getAdminEmailAddress(), subject, text);
   }
 
   @POST

@@ -26,6 +26,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.logical.shared.CloseEvent;
+import com.google.gwt.event.logical.shared.CloseHandler;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.Window;
@@ -38,6 +41,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.user.datepicker.client.DateBox.DefaultFormat;
@@ -94,8 +98,21 @@ public class AuthenticationHandler {
     possibleBirthday.setYear(possibleBirthday.getYear() - 25);
     dateBox.setValue(possibleBirthday);
 
-    usernameTextBox.setVisibleLength(30);
-    passwordTextBox.setVisibleLength(30);
+    usernameTextBox.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("username", "Username"));
+    passwordTextBox.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("password", "Password"));
+    passwordConfirm.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("confirmPassword", "Confirm Password"));
+    passwordHint.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("passwordHint", "Password Hint"));
+    firstname.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("firstname", "Firstname"));
+    lastname.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("lastname", "Lastname"));
+    emailAddress.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("email", "Email"));
+    dateBox.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("birthday", "Birthday"));
+    captchaValidationTextBox.getElement().setAttribute("placeHolder",
+        BaseApplication.getMessages().getString("captchaValidationPlaceHolder", "Validation Text"));
+
+    usernameTextBox.setWidth("250px");
+    passwordTextBox.setWidth("250px");
+    passwordConfirm.setWidth("250px");
+
     passwordTextBox.addFocusHandler(new FocusHandler() {
       public void onFocus(FocusEvent event) {
         passwordTextBox.selectAll();
@@ -216,30 +233,28 @@ public class AuthenticationHandler {
     int row = 0;
     contentPanel.setWidget(row++, 0, new HTML("&nbsp;"));
     contentPanel.setWidget(row, 0, signonMsgLabel);
-    contentPanel.getFlexCellFormatter().setColSpan(row++, 0, 3);
+    contentPanel.getFlexCellFormatter().setColSpan(row++, 0, 2);
 
-    Label orLabel = new Label("or");
-    orLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-    contentPanel.setWidget(row, 0, orLabel);
-    contentPanel.getFlexCellFormatter().setColSpan(row++, 0, 3);
+    if ("true".equals(BaseApplication.getSettings().getString("allowFacebookAuth", "true"))) {
+      Label orLabel = new Label("or");
+      orLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+      contentPanel.setWidget(row, 0, orLabel);
+      contentPanel.getFlexCellFormatter().setColSpan(row++, 0, 2);
 
-    contentPanel.setWidget(row, 0, facebookLoginButton);
-    contentPanel.getFlexCellFormatter().setColSpan(row, 0, 3);
-    contentPanel.getFlexCellFormatter().setHorizontalAlignment(row++, 0, HasHorizontalAlignment.ALIGN_CENTER);
+      contentPanel.setWidget(row, 0, facebookLoginButton);
+      contentPanel.getFlexCellFormatter().setColSpan(row, 0, 2);
+      contentPanel.getFlexCellFormatter().setHorizontalAlignment(row++, 0, HasHorizontalAlignment.ALIGN_CENTER);
+    }
 
     contentPanel.setWidget(row++, 0, new HTML("&nbsp;"));
 
-    Label usernameLabel = new Label(BaseApplication.getMessages().getString("usernameColon", "Username:"));
-    usernameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-    contentPanel.setWidget(row, 0, usernameLabel);
-    contentPanel.setWidget(row, 1, usernameTextBox);
-    contentPanel.setWidget(row, 2, hintLink);
+    // contentPanel.setWidget(row, 0, usernameLabel);
+    contentPanel.setWidget(row, 0, usernameTextBox);
+    contentPanel.setWidget(row, 1, hintLink);
     contentPanel.getCellFormatter().setHorizontalAlignment(row++, 2, HasHorizontalAlignment.ALIGN_LEFT);
-    Label passwordLabel = new Label(BaseApplication.getMessages().getString("passwordColon", "Password:"));
-    passwordLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-    contentPanel.setWidget(row, 0, passwordLabel);
-    contentPanel.setWidget(row, 1, passwordTextBox);
-    contentPanel.setWidget(row, 2, new HTML("&nbsp;"));
+    // contentPanel.setWidget(row, 0, passwordLabel);
+    contentPanel.setWidget(row, 0, passwordTextBox);
+    contentPanel.setWidget(row, 1, new HTML("&nbsp;"));
 
     if (forceRecenter) {
       loginDialog.center();
@@ -251,7 +266,8 @@ public class AuthenticationHandler {
     final MethodCallback<StringWrapper> callback = new MethodCallback<StringWrapper>() {
 
       public void onFailure(Method method, Throwable exception) {
-        final MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
+        final MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true,
+            true);
         dialog.center();
       }
 
@@ -273,54 +289,18 @@ public class AuthenticationHandler {
   public void showNewAccountDialog(final boolean showLoginIfCancelPressed) {
     usernameTextBox.setReadOnly(false);
 
-    final HTML usernameLabel = new HTML("<b>" + BaseApplication.getMessages().getString("username", "Username") + "</b>");
-    usernameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordLabel = new HTML("<b>" + BaseApplication.getMessages().getString("password", "Password") + "</b>");
-    passwordLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordConfirmLabel = new HTML("<b>" + BaseApplication.getMessages().getString("confirmPassword", "Confirm Password") + "</b>");
-    passwordConfirmLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordStrengthLabel = new HTML(BaseApplication.getMessages().getString("passwordStrength", "Password Strength"));
-    passwordStrengthLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordHintLabel = new HTML("<b>" + BaseApplication.getMessages().getString("passwordHint", "Password Hint") + "</b>");
-    passwordHintLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML firstnameLabel = new HTML("<b>" + BaseApplication.getMessages().getString("firstname", "Firstname") + "</b>");
-    firstnameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML lastnameLabel = new HTML("<b>" + BaseApplication.getMessages().getString("lastname", "Lastname") + "</b>");
-    lastnameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML emailLabel = new HTML("<b>" + BaseApplication.getMessages().getString("email", "Email") + "</b>");
-    emailLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML birthdayLabel = new HTML("<b>" + BaseApplication.getMessages().getString("birthday", "Birthday") + "</b>");
-    birthdayLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
     final FlexTable contentPanel = new FlexTable();
     int row = 0;
-    contentPanel.setWidget(row, 0, usernameLabel);
-    contentPanel.setWidget(row, 1, usernameTextBox);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, usernameTextBox);
 
     HorizontalPanel passwordPanel = new HorizontalPanel();
     passwordPanel.add(passwordTextBox);
     passwordPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
     passwordPanel.add(new SecurePasswordVerification(true, passwordTextBox, passwordConfirm));
 
-    contentPanel.setWidget(row, 0, passwordLabel);
-    contentPanel.setWidget(row, 1, passwordPanel);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, passwordPanel);
 
-    contentPanel.setWidget(row, 0, passwordConfirmLabel);
-    contentPanel.setWidget(row, 1, passwordConfirm);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, passwordConfirm);
 
     // use password widgets
     // contentPanel.setWidget(row, 0, passwordStrengthLabel);
@@ -328,60 +308,31 @@ public class AuthenticationHandler {
     // contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
     // row++;
 
-    contentPanel.setWidget(row, 0, passwordHintLabel);
-    contentPanel.setWidget(row, 1, passwordHint);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, passwordHint);
+    contentPanel.setWidget(row++, 0, firstname);
+    contentPanel.setWidget(row++, 0, lastname);
+    contentPanel.setWidget(row++, 0, emailAddress);
+    contentPanel.setWidget(row++, 0, dateBox);
 
-    contentPanel.setWidget(row, 0, firstnameLabel);
-    contentPanel.setWidget(row, 1, firstname);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
-
-    contentPanel.setWidget(row, 0, lastnameLabel);
-    contentPanel.setWidget(row, 1, lastname);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
-
-    contentPanel.setWidget(row, 0, emailLabel);
-    contentPanel.setWidget(row, 1, emailAddress);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
-
-    contentPanel.setWidget(row, 0, birthdayLabel);
-    contentPanel.setWidget(row, 1, dateBox);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
-
-    contentPanel.setWidget(row++, 1, new HTML("<HR>"));
-    contentPanel.setText(row, 1, BaseApplication.getMessages().getString("captchaInstructions", "Type the characters you see in the picture below."));
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, new HTML("<HR>"));
+    contentPanel.setText(row++, 0, BaseApplication.getMessages().getString("captchaInstructions", "Type the characters you see in the picture below."));
 
     createCaptchaImage();
     captchaValidationImage.setTitle(BaseApplication.getMessages().getString("captchaTitle", "Click to load a new validation image"));
     captchaValidationImage.setStyleName("captchaImage");
-    contentPanel.setWidget(row, 1, captchaValidationImage);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, captchaValidationImage);
 
-    contentPanel.setWidget(row, 1, captchaValidationTextBox);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, captchaValidationTextBox);
 
-    contentPanel.setWidget(row++, 1, new HTML("<HR>"));
+    contentPanel.setWidget(row++, 0, new HTML("<HR>"));
     HorizontalPanel disclaimerButtonPanel = new HorizontalPanel();
     disclaimerButtonPanel.add(readDisclaimer);
-    contentPanel.setWidget(row, 1, disclaimerButtonPanel);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, disclaimerButtonPanel);
 
-    contentPanel.setWidget(row, 1, disclaimerCheckBox);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, disclaimerCheckBox);
 
-    accountDialog.setCallback(new IDialogCallback() {
-      public void okPressed() {
+    accountDialog.setValidatorCallback(new IDialogValidatorCallback() {
+      public boolean validate() {
         boolean validationFailed = false;
         String validationMessage = "";
         if (usernameTextBox.getText() == null || "".equals(usernameTextBox.getText())) {
@@ -428,8 +379,12 @@ public class AuthenticationHandler {
             }
           });
           dialog.center();
-          return;
         }
+        return !validationFailed;
+      }
+    });
+    accountDialog.setCallback(new IDialogCallback() {
+      public void okPressed() {
         createNewAccount(usernameTextBox.getText(), firstname.getText(), lastname.getText(), passwordTextBox.getText(), passwordHint.getText(),
             emailAddress.getText(), dateBox.getValue().getTime());
       }
@@ -458,40 +413,10 @@ public class AuthenticationHandler {
     passwordConfirm.setText("");
     usernameTextBox.setReadOnly(true);
 
-    final HTML usernameLabel = new HTML("<b>" + BaseApplication.getMessages().getString("username", "Username") + "</b>");
-    usernameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordLabel = new HTML("<b>" + BaseApplication.getMessages().getString("password", "Password") + "</b>");
-    passwordLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordConfirmLabel = new HTML("<b>" + BaseApplication.getMessages().getString("confirmPassword", "Confirm Password") + "</b>");
-    passwordConfirmLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordHintLabel = new HTML("<b>" + BaseApplication.getMessages().getString("passwordHint", "Password Hint") + "</b>");
-    passwordHintLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML passwordStrengthLabel = new HTML(BaseApplication.getMessages().getString("passwordStrength", "Password Strength"));
-    passwordStrengthLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML firstnameLabel = new HTML("<b>" + BaseApplication.getMessages().getString("firstname", "Firstname") + "</b>");
-    firstnameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML lastnameLabel = new HTML("<b>" + BaseApplication.getMessages().getString("lastname", "Lastname") + "</b>");
-    lastnameLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML emailLabel = new HTML("<b>" + BaseApplication.getMessages().getString("email", "Email") + "</b>");
-    emailLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
-    final HTML birthdayLabel = new HTML("<b>" + BaseApplication.getMessages().getString("birthday", "Birthday") + "</b>");
-    birthdayLabel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-
     final FlexTable contentPanel = new FlexTable();
     int row = 0;
-    contentPanel.setWidget(row, 0, usernameLabel);
-    contentPanel.setWidget(row, 1, usernameTextBox);
+    contentPanel.setWidget(row++, 0, usernameTextBox);
     usernameTextBox.setText(user.getUsername());
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
 
     if (!user.isFacebook()) {
       HorizontalPanel passwordPanel = new HorizontalPanel();
@@ -499,48 +424,24 @@ public class AuthenticationHandler {
       passwordPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
       passwordPanel.add(new SecurePasswordVerification(true, passwordTextBox, passwordConfirm));
 
-      contentPanel.setWidget(row, 0, passwordLabel);
-      contentPanel.setWidget(row, 1, passwordPanel);
-      contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-      row++;
-
-      contentPanel.setWidget(row, 0, passwordConfirmLabel);
-      contentPanel.setWidget(row, 1, passwordConfirm);
-      contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-      row++;
-
-      contentPanel.setWidget(row, 0, passwordHintLabel);
-      contentPanel.setWidget(row, 1, passwordHint);
+      contentPanel.setWidget(row++, 0, passwordPanel);
+      contentPanel.setWidget(row++, 0, passwordConfirm);
+      contentPanel.setWidget(row++, 0, passwordHint);
       passwordHint.setText(user.getPasswordHint());
-      contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-      row++;
     }
 
-    contentPanel.setWidget(row, 0, firstnameLabel);
-    contentPanel.setWidget(row, 1, firstname);
+    contentPanel.setWidget(row++, 0, firstname);
     firstname.setText(user.getFirstname());
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
 
-    contentPanel.setWidget(row, 0, lastnameLabel);
-    contentPanel.setWidget(row, 1, lastname);
+    contentPanel.setWidget(row++, 0, lastname);
     lastname.setText(user.getLastname());
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
 
-    contentPanel.setWidget(row, 0, emailLabel);
-    contentPanel.setWidget(row, 1, emailAddress);
+    contentPanel.setWidget(row++, 0, emailAddress);
     emailAddress.setText(user.getEmail());
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
-
-    contentPanel.setWidget(row, 0, birthdayLabel);
 
     Date date = new Date(user.getBirthday());
     dateBox.setValue(date);
-    contentPanel.setWidget(row, 1, dateBox);
-    contentPanel.getCellFormatter().setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-    row++;
+    contentPanel.setWidget(row++, 0, dateBox);
 
     accountDialog.setCallback(new IDialogCallback() {
       public void okPressed() {
@@ -599,16 +500,27 @@ public class AuthenticationHandler {
   public void login(final String username, final String password, final boolean facebook) {
     final MethodCallback<User> loginCallback = new MethodCallback<User>() {
       public void onFailure(Method method, Throwable exception) {
-        MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
-        dialog.setCallback(new IDialogCallback() {
-          public void okPressed() {
-            loginDialog.center();
-          }
+        if (method.getResponse().getStatusCode() == Response.SC_UNAUTHORIZED) {
+          MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString(
+              "invalidUsernameOrPassword", "Invalid Username or Password."), true, true, true);
+          dialog.center();
+          dialog.addCloseHandler(new CloseHandler<PopupPanel>() {
+            public void onClose(CloseEvent<PopupPanel> event) {
+              loginDialog.center();
+            }
+          });
+        } else {
+          MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
+          dialog.setCallback(new IDialogCallback() {
+            public void okPressed() {
+              loginDialog.center();
+            }
 
-          public void cancelPressed() {
-          }
-        });
-        dialog.center();
+            public void cancelPressed() {
+            }
+          });
+          dialog.center();
+        }
       }
 
       public void onSuccess(Method method, User response) {
@@ -631,6 +543,13 @@ public class AuthenticationHandler {
     final MethodCallback<User> loginCallback = new MethodCallback<User>() {
 
       public void onFailure(Method method, Throwable exception) {
+
+        if (method.getResponse().getStatusCode() == Response.SC_CONFLICT) {
+          Window.alert("conflict - means user already exists");
+        } else if (method.getResponse().getStatusCode() == Response.SC_PRECONDITION_FAILED) {
+          Window.alert("precondition failed - means captcha invalid");
+        }
+
         MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString(
             "couldNotCreateAccount", "Could not create new account. {0}", exception.getMessage()), true, true, true);
         dialog.setCallback(new IDialogCallback() {
@@ -676,6 +595,11 @@ public class AuthenticationHandler {
   public void editAccount(User user, String password) {
     final MethodCallback<User> loginCallback = new MethodCallback<User>() {
       public void onFailure(Method method, Throwable exception) {
+        if (method.getResponse().getStatusCode() == Response.SC_CONFLICT) {
+          Window.alert("conflict - means user already exists");
+        } else if (method.getResponse().getStatusCode() == Response.SC_PRECONDITION_FAILED) {
+          Window.alert("precondition failed - means captcha invalid");
+        }
         MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), exception.getMessage(), true, true, true);
         dialog.setCallback(new IDialogCallback() {
           public void okPressed() {
@@ -792,7 +716,7 @@ public class AuthenticationHandler {
 
   public static native boolean hasFacebookCredentials()
   /*-{
-    return window.top.FB.getUserID() != null && window.top.FB.getAccessToken() != null;
+    return window.top.FB != null && window.top.FB.getUserID() != null && window.top.FB.getAccessToken() != null;
   }-*/;
 
   private static native void facebookLogin(AuthenticationHandler authHandler)

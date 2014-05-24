@@ -324,7 +324,7 @@ public class PermissibleResource {
     }
   }
 
-  @GET
+  @POST
   @Path("/echo")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)

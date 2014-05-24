@@ -29,20 +29,20 @@ public class AdvertiseDialog extends PromptDialogBox implements IDialogValidator
 
   public AdvertiseDialog() {
     super("Advertising", "Submit", null, "Cancel", false, true);
+    setAllowEnterSubmit(false);
 
-    contactName.setVisibleLength(50);
-    email.setVisibleLength(50);
-    company.setVisibleLength(50);
+    contactName.setWidth("350px");
+    email.setWidth("350px");
+    company.setWidth("350px");
+    phone.setWidth("350px");
+    comments.setVisibleLines(4);
+    comments.setWidth("450px");
 
     if (AuthenticationHandler.getInstance().getUser() != null) {
       email.setText(AuthenticationHandler.getInstance().getUser().getEmail());
       contactName.setText(AuthenticationHandler.getInstance().getUser().getFirstname() + " " + AuthenticationHandler.getInstance().getUser().getLastname());
     }
 
-    phone.setVisibleLength(20);
-    phone.setAlignment(TextAlignment.RIGHT);
-    comments.setVisibleLines(4);
-    comments.setWidth("100%");
 
     VerticalPanel vp = new VerticalPanel();
     vp.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
@@ -58,30 +58,18 @@ public class AdvertiseDialog extends PromptDialogBox implements IDialogValidator
                 "<BR>If you are interested in advertising on this website please fill out the form below. We will be happy to work with you regarding cost, ad placement and frequency.<BR><BR>"));
     vp.add(advertiseDescription);
 
+    contactName.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("contactName", "Contact Name"));
+    email.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("email", "Email"));
+    company.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("company", "Company"));
+    phone.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("phone", "Phone"));
+    comments.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("message", "Message"));
+
     FlexTable formTable = new FlexTable();
-    formTable.setText(0, 0, "Contact Name");
-    formTable.setText(1, 0, "E-Mail");
-    formTable.setText(2, 0, "Company");
-    formTable.setText(3, 0, "Phone Number");
-    formTable.setText(4, 0, "Comments");
-
-    formTable.setWidget(0, 1, contactName);
-    formTable.setWidget(1, 1, email);
-    formTable.setWidget(2, 1, company);
-    formTable.setWidget(3, 1, phone);
-    formTable.setWidget(4, 1, comments);
-
-    formTable.getCellFormatter().setAlignment(0, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(1, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(2, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(3, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(4, 0, HasHorizontalAlignment.ALIGN_RIGHT, HasVerticalAlignment.ALIGN_MIDDLE);
-
-    formTable.getCellFormatter().setAlignment(0, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(1, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(2, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(3, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
-    formTable.getCellFormatter().setAlignment(4, 1, HasHorizontalAlignment.ALIGN_LEFT, HasVerticalAlignment.ALIGN_MIDDLE);
+    formTable.setWidget(0, 0, contactName);
+    formTable.setWidget(1, 0, email);
+    formTable.setWidget(2, 0, company);
+    formTable.setWidget(3, 0, phone);
+    formTable.setWidget(4, 0, comments);
 
     vp.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
     vp.add(formTable);

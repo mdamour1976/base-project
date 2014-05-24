@@ -10,8 +10,11 @@ import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.utils.StringUtils;
 
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
@@ -30,11 +33,14 @@ public class GeneralPanel extends FlexTable {
   private VerticalPanel globalPermissionsPanel = new VerticalPanel();
   private PermissibleObject permissibleObject;
   private TextBox nameTextBox = new TextBox();
+  private TextBox priorityTextBox = new TextBox();
 
   private CheckBox globalReadCheckBox = new CheckBox("Read");
   private CheckBox globalWriteCheckBox = new CheckBox("Write");
   private CheckBox globalExecuteCheckBox = new CheckBox("Execute");
   private CheckBox globalCreateChildrenCheckBox = new CheckBox("Create Children");
+  private CheckBox hiddenCheckBox = new CheckBox("Hidden");
+  private CheckBox allowCommentsCheckBox = new CheckBox("Allow Comments");
 
   private boolean dirty = false;
 
@@ -66,8 +72,29 @@ public class GeneralPanel extends FlexTable {
         dirty = true;
       }
     });
-    nameTextBox.addClickHandler(new ClickHandler() {
+    hiddenCheckBox.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
+        dirty = true;
+      }
+    });
+    allowCommentsCheckBox.addClickHandler(new ClickHandler() {
+      public void onClick(ClickEvent event) {
+        dirty = true;
+      }
+    });
+    nameTextBox.addChangeHandler(new ChangeHandler() {
+      public void onChange(ChangeEvent event) {
+        dirty = true;
+      }
+    });
+    priorityTextBox.addChangeHandler(new ChangeHandler() {
+      public void onChange(ChangeEvent event) {
+        try {
+          Long.parseLong(priorityTextBox.getText());
+        } catch (Throwable t) {
+          MessageDialogBox messageDialog = new MessageDialogBox("Error", t.getMessage(), false, true, true);
+          messageDialog.center();
+        }
         dirty = true;
       }
     });
@@ -77,7 +104,9 @@ public class GeneralPanel extends FlexTable {
     setWidget(row, 0, getFileTypeIcon());
     getCellFormatter().setHorizontalAlignment(row, 0, HasHorizontalAlignment.ALIGN_CENTER);
     nameTextBox.setVisibleLength(30);
-    nameTextBox.setText(getName());
+    nameTextBox.setText(permissibleObject.getName());
+    priorityTextBox.setVisibleLength(3);
+    priorityTextBox.setText("" + permissibleObject.getSortPriority());
     // filename
     setWidget(row, 1, nameTextBox);
     // type
@@ -95,6 +124,9 @@ public class GeneralPanel extends FlexTable {
     // owner
     setWidget(++row, 0, new Label("Owner:"));
     setWidget(row, 1, buildOwnerLabel());
+    // sort priority
+    setWidget(++row, 0, new Label("Sort Priority:"));
+    setWidget(row, 1, priorityTextBox);
     // global permissions
     CaptionPanel globalPermissionsPanelWrapper = new CaptionPanel("Global Permissions");
     globalPermissionsPanelWrapper.setContentWidget(globalPermissionsPanel);
@@ -113,11 +145,15 @@ public class GeneralPanel extends FlexTable {
     globalWriteCheckBox.setValue(permissibleObject.isGlobalWrite());
     globalExecuteCheckBox.setValue(permissibleObject.isGlobalExecute());
     globalCreateChildrenCheckBox.setValue(permissibleObject.isGlobalCreateChild());
+    hiddenCheckBox.setValue(permissibleObject.isHidden());
+    allowCommentsCheckBox.setValue(permissibleObject.isAllowComments());
     globalPermissionsPanel.setHeight("100%");
     globalPermissionsPanel.add(globalReadCheckBox);
     globalPermissionsPanel.add(globalWriteCheckBox);
     globalPermissionsPanel.add(globalExecuteCheckBox);
     globalPermissionsPanel.add(globalCreateChildrenCheckBox);
+    globalPermissionsPanel.add(hiddenCheckBox);
+    globalPermissionsPanel.add(allowCommentsCheckBox);
   }
 
   @SuppressWarnings("deprecation")
@@ -137,15 +173,6 @@ public class GeneralPanel extends FlexTable {
     }
     NumberFormat formatter = NumberFormat.getFormat("#,###");
     return formatter.format(size) + " bytes";
-  }
-
-  private String getName() {
-    if (permissibleObject instanceof Folder) {
-      return ((Folder) permissibleObject).getName();
-    } else if (permissibleObject instanceof File) {
-      return ((File) permissibleObject).getName();
-    }
-    return permissibleObject.getName();
   }
 
   private String getType() {
@@ -212,11 +239,14 @@ public class GeneralPanel extends FlexTable {
   public void apply(final AsyncCallback<Void> callback) {
     if (dirty) {
       permissibleObject.setName(nameTextBox.getText());
+      permissibleObject.setSortPriority(Long.parseLong(priorityTextBox.getText()));
       permissibleObject.setOwner(permissibleObject.getOwner());
       permissibleObject.setGlobalRead(globalReadCheckBox.getValue());
       permissibleObject.setGlobalWrite(globalWriteCheckBox.getValue());
       permissibleObject.setGlobalExecute(globalExecuteCheckBox.getValue());
       permissibleObject.setGlobalCreateChild(globalCreateChildrenCheckBox.getValue());
+      permissibleObject.setHidden(hiddenCheckBox.getValue());
+      permissibleObject.setAllowComments(allowCommentsCheckBox.getValue());
       AsyncCallback<PermissibleObject> updatePermissibleObjectCallback = new AsyncCallback<PermissibleObject>() {
         public void onFailure(Throwable caught) {
           callback.onFailure(caught);

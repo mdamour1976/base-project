@@ -1,7 +1,11 @@
 package org.damour.base.client.objects;
 
+import java.util.Date;
+
 public class Feedback {
 
+  private Date date;
+  private String subject;
   private String contactName;
   private String email;
   private String phone;
@@ -40,6 +44,22 @@ public class Feedback {
 
   public void setComments(String comments) {
     this.comments = comments;
+  }
+
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public String getSubject() {
+    return subject;
+  }
+
+  public void setSubject(String subject) {
+    this.subject = subject;
   }
 
 }

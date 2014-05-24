@@ -37,6 +37,9 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public boolean allowComments = true;
   public boolean moderateComments = false;
 
+  // may be used to adjust sorting in lists for UI display
+  public Long sortPriority = new Long(0);
+
   // counters which may be optionally used by clients
   public Long customCounter1 = new Long(0);
   public Long customCounter2 = new Long(0);
@@ -47,7 +50,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public boolean globalRead = true;
   public boolean globalWrite = false;
   public boolean globalExecute = false;
-  public Boolean globalCreateChild = false;
+  public boolean globalCreateChild = false;
 
   public PermissibleObject() {
   }
@@ -105,9 +108,6 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   }
 
   public boolean isGlobalCreateChild() {
-    if (globalCreateChild == null) {
-      globalCreateChild = false;
-    }
     return globalCreateChild;
   }
 
@@ -192,7 +192,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public void setContentHTML(String contentHTML) {
     this.contentHTML = contentHTML;
   }
-  
+
   public PermissibleObject getParent() {
     return parent;
   }
@@ -331,6 +331,17 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     this.moderateComments = moderateComments;
   }
 
+  public Long getSortPriority() {
+    if (sortPriority == null) {
+      sortPriority = new Long(0);
+    }
+    return sortPriority;
+  }
+
+  public void setSortPriority(Long sortPriority) {
+    this.sortPriority = sortPriority;
+  }
+
   public Long getCustomCounter1() {
     if (customCounter1 == null) {
       customCounter1 = new Long(0);
@@ -363,7 +374,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public void setCustomCounter3(Long customCounter3) {
     this.customCounter3 = customCounter3;
   }
-  
+
   public boolean isHidden() {
     return hidden;
   }
@@ -409,6 +420,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     target.numComments = source.numComments;
     target.allowComments = source.allowComments;
     target.moderateComments = source.moderateComments;
+    target.sortPriority = source.sortPriority;
     target.customCounter1 = source.customCounter1;
     target.customCounter2 = source.customCounter2;
     target.customCounter3 = source.customCounter3;
@@ -418,14 +430,17 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     target.globalExecute = source.globalExecute;
   }
 
-//  public String toString() {
-//    String toString = "id:" + getId() + " parentId:" + (getParent() != null ? getParent().getId() : "-") + " class:"
-//        + getClass().getName().substring(getClass().getName().lastIndexOf(".") + 1) + " name:" + getName() + " owner:"
-//        + (getOwner() != null ? getOwner().getUsername() : "-");
-//    return toString;
-//  }
+  // public String toString() {
+  // String toString = "id:" + getId() + " parentId:" + (getParent() != null ? getParent().getId() : "-") + " class:"
+  // + getClass().getName().substring(getClass().getName().lastIndexOf(".") + 1) + " name:" + getName() + " owner:"
+  // + (getOwner() != null ? getOwner().getUsername() : "-");
+  // return toString;
+  // }
 
   public int getFieldLength(String fieldName) {
+    if (fieldName.equals("contentHTML")) {
+      return 4096;
+    }
     return -1;
   }
 

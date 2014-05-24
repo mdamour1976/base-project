@@ -6,6 +6,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Image;
@@ -29,6 +30,10 @@ public class IconButton extends FlexTable implements MouseListener {
   private ImageResource disabledImage;
   private ImageResource pressedImage;
 
+  public IconButton(String labelText, boolean labelOnLeft, ImageResource image) {
+    this(labelText, labelOnLeft, image, image, image, image);
+  }  
+  
   public IconButton(String labelText, boolean labelOnLeft, ImageResource defaultImage, ImageResource hoverImage,
       ImageResource pressedImage, ImageResource disabledImage) {
     this.defaultImage = defaultImage;
@@ -46,6 +51,7 @@ public class IconButton extends FlexTable implements MouseListener {
           try {
             command.execute();
           } catch (Exception e) {
+            Window.alert("ugh! " + e.getMessage());
             // don't fail because some idiot you are calling fails
           }
         }

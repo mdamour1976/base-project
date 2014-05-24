@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.damour.base.client.BaseApplication;
 import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.Comment;
 import org.damour.base.client.objects.Page;
@@ -173,8 +174,15 @@ public class CommentWidget extends VerticalPanel {
     }
   };
 
+  public CommentWidget(final PermissibleObject permissibleObject) {
+    this(permissibleObject, null, null, false, -1);
+  }
+
   public CommentWidget(final PermissibleObject permissibleObject, final List<PermissibleObject> comments, ICommentLayoutComplete layoutCallback,
       boolean paginate, int pageSize) {
+    if (!permissibleObject.isAllowComments()) {
+      return;
+    }
     this.permissibleObject = permissibleObject;
     this.comments = comments;
     this.paginate = paginate;
@@ -589,7 +597,7 @@ public class CommentWidget extends VerticalPanel {
     DisclosurePanel postCommentDisclosurePanel = new DisclosurePanel("Post Comment");
     postCommentDisclosurePanel.setWidth("100%");
     postCommentDisclosurePanel.setOpen(true);
-    VerticalPanel postCommentPanel = new VerticalPanel();
+    FlexTable postCommentPanel = new FlexTable();
     postCommentPanel.setWidth("100%");
     // create text area for comment
     final TextArea commentTextArea = new TextArea();
@@ -634,34 +642,39 @@ public class CommentWidget extends VerticalPanel {
     buttonPanel.add(submitButton);
     buttonPanelWrapper.add(buttonPanel);
     // add panels
+    int row = 0;
     if (AuthenticationHandler.getInstance().getUser() == null) {
-      postCommentPanel.add(new Label("Email:"));
-      postCommentPanel.add(emailTextField);
+      emailTextField.getElement().setAttribute("placeHolder", "Email");
+      postCommentPanel.setWidget(row++, 0, emailTextField);
     }
-    postCommentPanel.add(new Label("Comment:"));
-    postCommentPanel.add(commentTextArea);
-    postCommentPanel.add(buttonPanelWrapper);
+    commentTextArea.getElement().setAttribute("placeHolder", "Comment");
+    postCommentPanel.setWidget(row++, 0, commentTextArea);
+    postCommentPanel.setWidget(row++, 0, buttonPanelWrapper);
     postCommentDisclosurePanel.setContent(postCommentPanel);
     return postCommentDisclosurePanel;
   }
 
   private void replyToComment(final Comment parentComment) {
-    String replyPromptMessage = "Reply";
+    String replyPromptMessage = BaseApplication.getMessages().getString("reply", "Reply");
     if (parentComment.getAuthor() != null) {
-      replyPromptMessage = "Reply To: " + parentComment.getAuthor().getUsername();
+      replyPromptMessage = BaseApplication.getMessages().getString("replyTo", "Reply To: ") + parentComment.getAuthor().getUsername();
     } else if (!StringUtils.isEmpty(parentComment.getEmail())) {
-      replyPromptMessage = "Reply To: " + parentComment.getEmail();
+      replyPromptMessage = BaseApplication.getMessages().getString("replyTo", "Reply To: ") + parentComment.getEmail();
     }
-    PromptDialogBox dialog = new PromptDialogBox(replyPromptMessage, "Submit", null, "Cancel", false, true);
-    dialog.setAllowKeyboardEvents(false);
+    PromptDialogBox dialog = new PromptDialogBox(replyPromptMessage, BaseApplication.getMessages().getString("submit", "Submit"), null, BaseApplication.getMessages().getString("cancel", "Cancel"), false, true);
+    dialog.setAllowEnterSubmit(false);
     VerticalPanel replyPanel = new VerticalPanel();
-
+    replyPanel.setSpacing(5);
+    
     final TextArea textArea = new TextArea();
-    textArea.setCharacterWidth(60);
+    textArea.setWidth("400px");
     textArea.setVisibleLines(4);
+    textArea.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("message", "Message"));
+
     final TextBox emailTextBox = new TextBox();
+    emailTextBox.setWidth("400px");
+    emailTextBox.getElement().setAttribute("placeHolder", BaseApplication.getMessages().getString("Email", "Email"));
     if (AuthenticationHandler.getInstance().getUser() == null) {
-      replyPanel.add(new Label("Email:"));
       replyPanel.add(emailTextBox);
     }
     replyPanel.add(textArea);
@@ -671,7 +684,7 @@ public class CommentWidget extends VerticalPanel {
     dialog.setValidatorCallback(new IDialogValidatorCallback() {
       public boolean validate() {
         if (textArea.getText() == null || "".equals(textArea.getText())) {
-          MessageDialogBox dialog = new MessageDialogBox("Error", "Comment is blank.", false, true, true);
+          MessageDialogBox dialog = new MessageDialogBox(BaseApplication.getMessages().getString("error", "Error"), BaseApplication.getMessages().getString("commentIsBlank", "Comment is blank."), false, true, true);
           dialog.center();
           return false;
         }

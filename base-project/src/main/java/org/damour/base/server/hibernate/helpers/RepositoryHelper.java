@@ -26,7 +26,7 @@ public class RepositoryHelper {
         // admin sees all
         folders = session.createQuery("from " + Folder.class.getSimpleName() + " as folder where folder.parent is null").setCacheable(true).list();
       } else if (user == null) {
-        folders = session.createQuery("from " + Folder.class.getSimpleName() + " as folder where folder.parent is null folder.globalRead = true")
+        folders = session.createQuery("from " + Folder.class.getSimpleName() + " as folder where folder.parent is null and folder.globalRead = true")
             .setCacheable(true).list();
       } else {
         folders = session

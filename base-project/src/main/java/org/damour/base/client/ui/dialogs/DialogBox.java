@@ -20,11 +20,11 @@ public class DialogBox extends com.google.gwt.user.client.ui.DialogBox implement
   boolean autoHide = false;
   boolean modal = true;
   boolean centerCalled = false;
-  boolean allowKeyboardEvents = true;
+  boolean allowEscape = true;
 
   public DialogBox(boolean autoHide, boolean modal) {
     super(autoHide, modal);
-    //setAnimationEnabled(true);
+    // setAnimationEnabled(true);
     getElement().addClassName("base-rounded-panel");
     getElement().setAttribute("clip", "");
     this.autoHide = autoHide;
@@ -43,14 +43,11 @@ public class DialogBox extends com.google.gwt.user.client.ui.DialogBox implement
   }
 
   public boolean onKeyDownPreview(char key, int modifiers) {
-    if (allowKeyboardEvents) {
-      // Use the popup's key preview hooks to close the dialog when either
-      // enter or escape is pressed.
-      switch (key) {
-      case KeyCodes.KEY_ESCAPE:
+    if (allowEscape) {
+      if (key == KeyCodes.KEY_ESCAPE)
+        // Use the popup's key preview hooks to close the dialog when either
+        // enter or escape is pressed.
         hide();
-        break;
-      }
     }
     return true;
   }
@@ -108,11 +105,11 @@ public class DialogBox extends com.google.gwt.user.client.ui.DialogBox implement
     }
   }
 
-  public boolean isAllowKeyboardEvents() {
-    return allowKeyboardEvents;
+  public boolean isAllowEscape() {
+    return allowEscape;
   }
 
-  public void setAllowKeyboardEvents(boolean allowKeyboardEvents) {
-    this.allowKeyboardEvents = allowKeyboardEvents;
+  public void setAllowEscape(boolean allowEscape) {
+    this.allowEscape = allowEscape;
   }
 }

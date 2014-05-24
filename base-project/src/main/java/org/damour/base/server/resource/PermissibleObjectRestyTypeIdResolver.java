@@ -22,6 +22,8 @@ public class PermissibleObjectRestyTypeIdResolver implements RestyJsonTypeIdReso
       map = new HashMap<String, Class<?>>();
       Reflections reflections = new Reflections();
       Set<Class<? extends PermissibleObject>> types = reflections.getSubTypesOf(PermissibleObject.class);
+      System.out.println("Adding: " + PermissibleObject.class.getName());
+      map.put(PermissibleObject.class.getName(), PermissibleObject.class);
 
       for (Class<? extends PermissibleObject> clazz : types) {
         System.out.println("Adding: " + clazz.getName());

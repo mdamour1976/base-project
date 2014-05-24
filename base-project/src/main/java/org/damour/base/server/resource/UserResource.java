@@ -1,5 +1,6 @@
 package org.damour.base.server.resource;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.Response;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
+import net.minidev.json.parser.ParseException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -197,9 +199,8 @@ public class UserResource {
         }
       }
       return login(session, httpRequest, httpResponse, username, password, false);
-    } catch (Throwable t) {
-      Logger.log(t);
-      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } catch (ParseException | IOException e) {
+      throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       session.close();
     }
@@ -273,7 +274,7 @@ public class UserResource {
         }
         Captcha captcha = (Captcha) httpRequest.getSession().getAttribute("captcha");
         if (captcha != null && !captcha.isValid(captchaText)) {
-          throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+          throw new WebApplicationException(Response.Status.PRECONDITION_FAILED);
         }
 
         User newUser = new User();
@@ -382,7 +383,7 @@ public class UserResource {
         }
         return dbUser;
       }
-      throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+      throw new WebApplicationException(Response.Status.CONFLICT);
     } catch (Exception ex) {
       Logger.log(ex);
       try {

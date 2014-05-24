@@ -38,7 +38,11 @@ public class CommentResource {
     try {
       session = HibernateUtil.getInstance().getSession();
 
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (WebApplicationException wa) {
+      }
       if (comment == null) {
         Exception t = new SimpleMessageException("Comment not supplied.");
         throw new WebApplicationException(t, Response.Status.NOT_FOUND);

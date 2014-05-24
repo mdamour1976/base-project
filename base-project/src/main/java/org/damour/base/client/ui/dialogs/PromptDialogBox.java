@@ -19,6 +19,7 @@ public class PromptDialogBox extends DialogBox {
   IDialogValidatorCallback validatorCallback;
   Widget content;
   final FlexTable dialogContent = new FlexTable();
+  boolean allowEnterSubmit = true;
 
   public PromptDialogBox(String title, String okText, Button customButton, String cancelText, boolean autoHide, boolean modal) {
     super(autoHide, modal);
@@ -75,27 +76,19 @@ public class PromptDialogBox extends DialogBox {
   }
 
   public boolean onKeyDownPreview(char key, int modifiers) {
-    if (allowKeyboardEvents) {
-      // Use the popup's key preview hooks to close the dialog when either
-      // enter or escape is pressed.
-      switch (key) {
-      case KeyCodes.KEY_ENTER:
+    // Use the popup's key preview hooks to close the dialog when either
+    // enter or escape is pressed.
+    if (key == KeyCodes.KEY_ENTER) {
+      if (allowEnterSubmit) {
         if (validatorCallback == null || (validatorCallback != null && validatorCallback.validate())) {
           hide();
           if (callback != null) {
             callback.okPressed();
           }
         }
-        break;
-      case KeyCodes.KEY_ESCAPE:
-        if (callback != null) {
-          callback.cancelPressed();
-        }
-        hide();
-        break;
       }
     }
-    return true;
+    return super.onKeyDownPreview(key, modifiers);
   }
 
   public IDialogCallback getCallback() {
@@ -137,6 +130,14 @@ public class PromptDialogBox extends DialogBox {
 
   public void setValidatorCallback(IDialogValidatorCallback validatorCallback) {
     this.validatorCallback = validatorCallback;
+  }
+
+  public boolean isAllowEnterSubmit() {
+    return allowEnterSubmit;
+  }
+
+  public void setAllowEnterSubmit(boolean allowEnterSubmit) {
+    this.allowEnterSubmit = allowEnterSubmit;
   }
 
 }

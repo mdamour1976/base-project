@@ -175,10 +175,15 @@
 
 
 .toolBar {
+  height: 29px;
   background-color: #c3c3c3;
   background-image: url(images/subtoolbar_bg.png);
   background-repeat: repeat-x;
   border-bottom: 1px solid #707070;
+}
+
+.toolBarDivider {
+  border-left: 1px solid black;
 }
 
 .toolBarButton {
@@ -960,7 +965,9 @@ a:focus {
   padding: 2px 2px 2px 2px;
 }
 
-
+.gwt-DateBox {
+  border: 1px solid #838383;
+}
 
 .gwt-DateBox input {
   width: 8em;
@@ -1138,4 +1145,25 @@ td.datePickerMonth {
   border: 1px solid black;
   cursor: pointer;
   cursor: hand;
+}
+
+.phone {
+  font-family: tahoma, Arial, Helvetica, sans-serif;
+  color: #707689;
+  font-weight: bold;
+  font-size: 14px;
+  width: 125px;
+  margin: 5px;
+}
+
+.hand {
+  cursor: pointer;
+  cursor: hand;
+}
+
+.feedbackTitle {
+  padding-top: 10px;
+  padding-left: 2px;
+  padding-bottom: 5px;
+  font-weight: bold;
 }

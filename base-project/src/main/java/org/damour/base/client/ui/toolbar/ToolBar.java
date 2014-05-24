@@ -8,11 +8,19 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 public class ToolBar extends HorizontalPanel {
 
   public ToolBar() {
-    setHeight("29px");
     setStyleName("toolBar");
     setWidth("100%");
     setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
     setHorizontalAlignment(HasHorizontalAlignment.ALIGN_LEFT);
+  }
+
+  public void addDivider(int padding) {
+    addPadding(padding);
+    HTML divider = new HTML("");
+    super.add(divider);
+    divider.getElement().getParentElement().setClassName("toolBarDivider");
+    setCellWidth(divider, "1px");
+    addPadding(padding);
   }
 
   public void addPadding(int padding) {

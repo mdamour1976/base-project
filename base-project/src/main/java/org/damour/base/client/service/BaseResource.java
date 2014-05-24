@@ -20,8 +20,6 @@ import org.damour.base.client.objects.MemoryStats;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 @Path("rest/base")
 public interface BaseResource extends RestService {
 

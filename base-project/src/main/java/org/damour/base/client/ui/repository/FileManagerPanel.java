@@ -5,11 +5,23 @@ import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.RepositoryTreeNode;
+import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.IconButton;
+import org.damour.base.client.ui.ckeditor.CKEditor;
+import org.damour.base.client.ui.dialogs.IDialogCallback;
+import org.damour.base.client.ui.dialogs.MessageDialogBox;
+import org.damour.base.client.ui.dialogs.PromptDialogBox;
 import org.damour.base.client.ui.toolbar.ToolBar;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.TreeListener;
@@ -18,6 +30,8 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class FileManagerPanel extends VerticalPanel implements TreeListener, IRepositoryCallback {
 
+  IconButton newImageButton = new IconButton(null, false, BaseImageBundle.images.new16());
+  IconButton editImageButton = new IconButton(null, false, BaseImageBundle.images.edit16());
   IconButton openImageButton = new IconButton(null, false, BaseImageBundle.images.open_32(), BaseImageBundle.images.open_32(),
       BaseImageBundle.images.open_32(), BaseImageBundle.images.open_disabled_32());
   IconButton downloadImageButton = new IconButton(null, false, BaseImageBundle.images.download(), BaseImageBundle.images.download(),
@@ -60,7 +74,9 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
 
   private Widget buildToolbar(String title) {
     ToolBar toolbar = new ToolBar();
+    toolbar.addPadding(5);
     toolbar.add(new Label(title, false));
+    toolbar.addPadding(5);
 
     IconButton reloadImageButton = new IconButton(null, false, BaseImageBundle.images.refresh_16(), BaseImageBundle.images.refresh_16(),
         BaseImageBundle.images.refresh_16(), BaseImageBundle.images.refresh_disabled_16());
@@ -136,6 +152,94 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
     });
     toolbar.add(deleteImageButton);
 
+    newImageButton.setEnabled(false);
+    newImageButton.setTitle("New File");
+    newImageButton.setCommand(new Command() {
+
+      public void execute() {
+        final CKEditor editor = new CKEditor("newEditor" + System.currentTimeMillis());
+        final PromptDialogBox dialogBox = new PromptDialogBox("New", "Save", null, "Cancel", false, true);
+        dialogBox.setContent(editor);
+        dialogBox.setCallback(new IDialogCallback() {
+
+          public void okPressed() {
+            File obj = new File();
+            obj.setName("My Name");
+            obj.setParent((PermissibleObject) repositoryTree.getLastItem().getUserObject());
+            obj.setContentHTML(editor.getData());
+            obj.setGlobalCreateChild(true);
+            MethodCallback<PermissibleObject> callback = new MethodCallback<PermissibleObject>() {
+              public void onFailure(Method method, Throwable exception) {
+                MessageDialogBox messageDialog = new MessageDialogBox("Error", exception.getMessage(), false, true, true);
+                messageDialog.center();
+              }
+
+              public void onSuccess(Method method, PermissibleObject response) {
+                repositoryTree.setLastItemId(response.getId());
+                refresh();
+              }
+            };
+            ResourceCache.getPermissibleResource().savePermissibleObject(obj, callback);
+          }
+
+          public void cancelPressed() {
+          }
+        });
+        dialogBox.center();
+        editor.setup(1024, 400);
+        Timer t = new Timer() {
+          public void run() {
+            dialogBox.center();
+          }
+        };
+        t.schedule(100);
+      }
+    });
+    toolbar.add(newImageButton);
+
+    editImageButton.setEnabled(false);
+    editImageButton.setTitle("Edit File");
+    editImageButton.setCommand(new Command() {
+
+      public void execute() {
+        final PermissibleObject obj = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
+        final CKEditor editor = new CKEditor("newEditor" + System.currentTimeMillis());
+        final PromptDialogBox dialogBox = new PromptDialogBox("Edit", "Save", null, "Cancel", false, false);
+        dialogBox.setContent(editor);
+        dialogBox.setCallback(new IDialogCallback() {
+
+          public void okPressed() {
+            obj.setContentHTML(editor.getData());
+            AsyncCallback<PermissibleObject> callback = new AsyncCallback<PermissibleObject>() {
+              public void onFailure(Throwable caught) {
+                MessageDialogBox messageDialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
+                messageDialog.center();
+              }
+
+              public void onSuccess(PermissibleObject result) {
+                repositoryTree.setLastItemId(result.getId());
+                refresh();
+              }
+            };
+            BaseServiceCache.getService().updatePermissibleObject(obj, callback);
+          }
+
+          public void cancelPressed() {
+          }
+        });
+        dialogBox.center();
+        editor.setup(1024, 400);
+        editor.setData(obj.getContentHTML());
+        Timer t = new Timer() {
+          public void run() {
+            dialogBox.center();
+          }
+        };
+        t.schedule(100);
+      }
+    });
+    toolbar.add(editImageButton);
+
     openImageButton.setEnabled(false);
     openImageButton.setTitle("Open File");
     openImageButton.addClickHandler(new ClickHandler() {
@@ -174,6 +278,8 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
 
   private void updateButtonState(TreeItem item) {
     // update button state
+    newImageButton.setEnabled((item != null && item.getUserObject() == null) || (item != null && item.getUserObject() != null && item.getUserObject() instanceof Folder));
+    editImageButton.setEnabled(item != null && item.getUserObject() != null);
     openImageButton.setEnabled(item != null && item.getUserObject() != null && item.getUserObject() instanceof File);
     downloadImageButton.setEnabled(item != null && item.getUserObject() != null && item.getUserObject() instanceof File);
     uploadFileButton.setEnabled(item != null);
@@ -214,6 +320,10 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
 
   public RepositoryTree getRepositoryTree() {
     return repositoryTree;
+  }
+
+  public void refresh() {
+    repositoryTree.fetchRepositoryTree(FileManagerPanel.this);
   }
 
 }

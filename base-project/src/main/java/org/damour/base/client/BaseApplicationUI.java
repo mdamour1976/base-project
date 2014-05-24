@@ -24,12 +24,14 @@ import org.damour.base.client.utils.StringUtils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
+import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -41,6 +43,7 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -58,16 +61,19 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
   public void loadModule() {
     applicationContentDeck.setHeight("100%");
     applicationContentDeck.setWidth("100%");
+    // applicationContentDeck.getElement().getStyle().setOverflow(Overflow.AUTO);
     applicationContentDeck.setAnimationEnabled(true);
     if ("true".equals(getSettings().getString("dockToolbars"))) {
       DockLayoutPanel applicationPanel = new DockLayoutPanel(Unit.PX);
       if ("true".equals(getSettings().getString("showApplicationToolbar"))) {
-        applicationPanel.addNorth(buildApplicationToolBar(), 29);
+        applicationPanel.addNorth(buildApplicationToolBar(), Double.parseDouble(getSettings().getString("applicationToolbarHeight", "29")));
       }
+      addNorthWidgets(applicationPanel);
 
       if ("true".equals(getSettings().getString("showApplicationFooter"))) {
-        applicationPanel.addSouth(buildFooterPanel(), 60);
+        applicationPanel.addSouth(buildFooterPanel(), Double.parseDouble(getSettings().getString("applicationFooterHeight", "60")));
       }
+      addSouthWidgets(applicationPanel);
 
       applicationPanel.add(applicationContentDeck);
 
@@ -80,12 +86,14 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
       if ("true".equals(getSettings().getString("showApplicationToolbar"))) {
         applicationPanel.add(buildApplicationToolBar());
       }
+      addNorthWidgets(applicationPanel);
 
       applicationPanel.add(applicationContentDeck);
 
       if ("true".equals(getSettings().getString("showApplicationFooter"))) {
         applicationPanel.add(buildFooterPanel());
       }
+      addSouthWidgets(applicationPanel);
 
       RootPanel.get("content").clear();
       RootPanel.get("content").add(applicationPanel);
@@ -240,6 +248,12 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
         }
         ((AdministratorPanel) adminPanel).activate();
         applicationContentDeck.showWidget(applicationContentDeck.getWidgetIndex(adminPanel));
+        Timer t = new Timer() {
+          public void run() {
+            adminPanel.getElement().getParentElement().getStyle().setOverflow(Overflow.AUTO);
+          }
+        };
+        t.schedule(500);
       }
     });
   }
@@ -335,31 +349,33 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
   }
 
   // override if desired
-  public ToolBar buildApplicationToolBar() {
-    applicationToolBar.clear();
+  public Widget buildApplicationToolBar() {
+    getApplicationToolBar().clear();
 
-    applicationToolBar.addPadding(5);
-    applicationToolBar.add(buildWelcomeLabel());
-    applicationToolBar.addPadding(5);
-    applicationToolBar.add(buildProfileButton(isAuthenticated()));
+    if ("true".equals(getSettings().getString("showWelcomeOnToolbar", "true"))) {
+      getApplicationToolBar().addPadding(5);
+      getApplicationToolBar().add(buildWelcomeLabel());
+    }
+    getApplicationToolBar().addPadding(5);
+    getApplicationToolBar().add(buildProfileButton(isAuthenticated()));
     if ("true".equals(getSettings().getString("showGroupsOnToolbar", "true"))) {
-      applicationToolBar.add(buildManageGroupsButton(isAuthenticated()));
+      getApplicationToolBar().add(buildManageGroupsButton(isAuthenticated()));
     }
 
-    customizeApplicationToolBarLeft(applicationToolBar);
-    applicationToolBar.addFiller(100);
-    customizeApplicationToolBarRight(applicationToolBar);
+    customizeApplicationToolBarLeft(getApplicationToolBar());
+    getApplicationToolBar().addFiller(100);
+    customizeApplicationToolBarRight(getApplicationToolBar());
 
     if (isAuthenticated()) {
       if (getAuthenticatedUser().isAdministrator()) {
-        applicationToolBar.add(buildAdminButton());
+        getApplicationToolBar().add(buildAdminButton());
       }
-      applicationToolBar.add(buildLogoutButton());
+      getApplicationToolBar().add(buildLogoutButton());
     } else {
-      applicationToolBar.add(buildLoginButton());
+      getApplicationToolBar().add(buildLoginButton());
     }
-    applicationToolBar.addPadding(5);
-    return applicationToolBar;
+    getApplicationToolBar().addPadding(5);
+    return getApplicationToolBar();
   }
 
   // override
@@ -368,6 +384,14 @@ public class BaseApplicationUI extends BaseApplication implements IAuthenticatio
 
   // override
   public void customizeApplicationToolBarRight(final ToolBar toolbar) {
+  }
+
+  // override
+  public void addNorthWidgets(Panel applicationPanel) {
+  }
+
+  // override
+  public void addSouthWidgets(Panel applicationPanel) {
   }
 
   public DeckPanel getApplicationContentDeck() {
