@@ -13,6 +13,7 @@ import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.Photo;
 import org.damour.base.client.objects.RepositoryTreeNode;
 import org.damour.base.client.service.ResourceCache;
+import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.ToolTip;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
@@ -40,6 +41,7 @@ public class RepositoryTree extends Tree implements TreeListener {
   private Long lastItemId = null;
   private boolean showOnlyFolders = false;
   private boolean showHiddenFiles = false;
+  private IRepositoryCallback repositoryCallback;
 
   public RepositoryTree(IRepositoryCallback repositoryCallback) {
     this(null, repositoryCallback, false, false);
@@ -50,6 +52,7 @@ public class RepositoryTree extends Tree implements TreeListener {
     this.showOnlyFolders = showOnlyFolders;
     this.repositoryTree = repositoryTree;
     this.showHiddenFiles = showHiddenFiles;
+    this.repositoryCallback = repositoryCallback;
     setAnimationEnabled(true);
     if (repositoryTree == null) {
       // fetch it
@@ -66,8 +69,20 @@ public class RepositoryTree extends Tree implements TreeListener {
     super.onBrowserEvent(event);
     if (event.getTypeInt() == Event.ONDBLCLICK) {
       if (getLastItem().getUserObject() instanceof File) {
-        OpenFileCommand cmd = new OpenFileCommand((File) getLastItem().getUserObject(), true);
-        cmd.execute();
+        if (((File) getLastItem().getUserObject()).getSize() >= 0) {
+          OpenFileCommand cmd = new OpenFileCommand((File) getLastItem().getUserObject(), true);
+          cmd.execute();
+        } else {
+          final PermissibleObject obj = (PermissibleObject) getLastItem().getUserObject();
+          EditFileCommand cmd = new EditFileCommand(obj);
+          cmd.setCallback(new IGenericCallback<PermissibleObject>() {
+            public void invoke(PermissibleObject object) {
+              setLastItemId(object.getId());
+              fetchRepositoryTree(repositoryCallback);
+            }
+          });
+          cmd.execute();
+        }
       }
     }
   }

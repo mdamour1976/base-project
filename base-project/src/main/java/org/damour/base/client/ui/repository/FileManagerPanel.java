@@ -5,8 +5,8 @@ import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.RepositoryTreeNode;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.service.ResourceCache;
+import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.buttons.IconButton;
 import org.damour.base.client.ui.ckeditor.CKEditor;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
@@ -20,8 +20,6 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.TreeListener;
@@ -200,42 +198,16 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
     editImageButton.setEnabled(false);
     editImageButton.setTitle("Edit File");
     editImageButton.setCommand(new Command() {
-
       public void execute() {
         final PermissibleObject obj = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
-        final CKEditor editor = new CKEditor("newEditor" + System.currentTimeMillis());
-        final PromptDialogBox dialogBox = new PromptDialogBox("Edit", "Save", null, "Cancel", false, false);
-        dialogBox.setContent(editor);
-        dialogBox.setCallback(new IDialogCallback() {
-
-          public void okPressed() {
-            obj.setContentHTML(editor.getData());
-            AsyncCallback<PermissibleObject> callback = new AsyncCallback<PermissibleObject>() {
-              public void onFailure(Throwable caught) {
-                MessageDialogBox messageDialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
-                messageDialog.center();
-              }
-
-              public void onSuccess(PermissibleObject result) {
-                repositoryTree.setLastItemId(result.getId());
-                refresh();
-              }
-            };
-            BaseServiceCache.getService().updatePermissibleObject(obj, callback);
-          }
-
-          public void cancelPressed() {
+        EditFileCommand cmd = new EditFileCommand(obj);
+        cmd.setCallback(new IGenericCallback<PermissibleObject>() {
+          public void invoke(PermissibleObject object) {
+            repositoryTree.setLastItemId(object.getId());
+            refresh();
           }
         });
-        dialogBox.center();
-        editor.setup(1024, 400);
-        editor.setData(obj.getContentHTML());
-        Timer t = new Timer() {
-          public void run() {
-            dialogBox.center();
-          }
-        };
-        t.schedule(100);
+        cmd.execute();
       }
     });
     toolbar.add(editImageButton);
@@ -244,8 +216,20 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
     openImageButton.setTitle("Open File");
     openImageButton.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
-        OpenFileCommand cmd = new OpenFileCommand((File) repositoryTree.getLastItem().getUserObject(), false);
-        cmd.execute();
+        if (((File) repositoryTree.getLastItem().getUserObject()).getSize() >= 0) {
+          OpenFileCommand cmd = new OpenFileCommand((File) repositoryTree.getLastItem().getUserObject(), false);
+          cmd.execute();
+        } else {
+          final PermissibleObject obj = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
+          EditFileCommand cmd = new EditFileCommand(obj);
+          cmd.setCallback(new IGenericCallback<PermissibleObject>() {
+            public void invoke(PermissibleObject object) {
+              repositoryTree.setLastItemId(object.getId());
+              refresh();
+            }
+          });
+          cmd.execute();
+        }
       }
     });
     toolbar.add(openImageButton);
@@ -264,8 +248,21 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
     downloadImageButton.setTitle("Download File");
     downloadImageButton.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
-        DownloadFileCommand cmd = new DownloadFileCommand((File) repositoryTree.getLastItem().getUserObject());
-        cmd.execute();
+        if (((File) repositoryTree.getLastItem().getUserObject()).getSize() >= 0) {
+          DownloadFileCommand cmd = new DownloadFileCommand((File) repositoryTree.getLastItem().getUserObject());
+          cmd.execute();
+        } else {
+          // edit
+          final PermissibleObject obj = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
+          EditFileCommand cmd = new EditFileCommand(obj);
+          cmd.setCallback(new IGenericCallback<PermissibleObject>() {
+            public void invoke(PermissibleObject object) {
+              repositoryTree.setLastItemId(object.getId());
+              refresh();
+            }
+          });
+          cmd.execute();
+        }
       }
     });
     toolbar.add(downloadImageButton);
@@ -278,7 +275,8 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
 
   private void updateButtonState(TreeItem item) {
     // update button state
-    newImageButton.setEnabled((item != null && item.getUserObject() == null) || (item != null && item.getUserObject() != null && item.getUserObject() instanceof Folder));
+    newImageButton.setEnabled((item != null && item.getUserObject() == null)
+        || (item != null && item.getUserObject() != null && item.getUserObject() instanceof Folder));
     editImageButton.setEnabled(item != null && item.getUserObject() != null);
     openImageButton.setEnabled(item != null && item.getUserObject() != null && item.getUserObject() instanceof File);
     downloadImageButton.setEnabled(item != null && item.getUserObject() != null && item.getUserObject() instanceof File);

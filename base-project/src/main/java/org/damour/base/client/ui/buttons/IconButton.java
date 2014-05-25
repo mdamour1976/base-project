@@ -47,7 +47,7 @@ public class IconButton extends FlexTable implements MouseListener {
     addClickHandler(new ClickHandler() {
 
       public void onClick(ClickEvent event) {
-        if (command != null) {
+        if (command != null && enabled) {
           try {
             command.execute();
           } catch (Exception e) {
