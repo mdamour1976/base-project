@@ -1,7 +1,6 @@
 package org.damour.base.client.service;
 
 import java.util.List;
-import java.util.Set;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
@@ -15,16 +14,11 @@ import com.google.gwt.user.client.rpc.RemoteService;
 public interface BaseService extends RemoteService {
 
   // file/content/permissions methods
-  public void deletePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public void deletePermissibleObjects(Set<PermissibleObject> permissibleObjects) throws SimpleMessageException;
-  public void deleteAndSavePermissibleObjects(Set<PermissibleObject> toBeDeleted, Set<PermissibleObject> toBeSaved) throws SimpleMessageException;
   public List<PermissibleObject> getMyPermissibleObjects(PermissibleObject parent, String objectType) throws SimpleMessageException;
   public Folder createNewFolder(Folder newFolder) throws SimpleMessageException;
   public void renameFile(File file) throws SimpleMessageException;
   public void renameFolder(Folder folder) throws SimpleMessageException;
   public List<Permission> getPermissions(PermissibleObject permissibleObject) throws SimpleMessageException;
   public void setPermissions(PermissibleObject permissibleObject, List<Permission> permissions) throws SimpleMessageException;
-  public PermissibleObject updatePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException;
-  public List<PermissibleObject> updatePermissibleObjects(List<PermissibleObject> permissibleObjects) throws SimpleMessageException;
   public List<PermissibleObjectTreeNode> searchPermissibleObjects(PermissibleObject parent, String query, String sortField, boolean sortDescending, String searchObjectType, boolean searchNames, boolean searchDescriptions, boolean searchKeywords, boolean useExactPhrase) throws SimpleMessageException;
 }

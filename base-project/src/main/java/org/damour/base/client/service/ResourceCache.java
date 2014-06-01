@@ -13,9 +13,12 @@ public class ResourceCache {
   private static ReferralResource referralResource;
   private static RatingResource ratingResource;
 
+  static {
+    Defaults.setServiceRoot("/"); // (avoid Template in the url)
+  }
+  
   public static BaseResource getBaseResource() {
     if (baseResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       baseResource = (BaseResource) GWT.create(BaseResource.class);
     }
     return baseResource;
@@ -23,7 +26,6 @@ public class ResourceCache {
 
   public static PermissibleResource getPermissibleResource() {
     if (permissibleResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       permissibleResource = (PermissibleResource) GWT.create(PermissibleResource.class);
     }
     return permissibleResource;
@@ -31,7 +33,6 @@ public class ResourceCache {
 
   public static CommentResource getCommentResource() {
     if (commentResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       commentResource = (CommentResource) GWT.create(CommentResource.class);
     }
     return commentResource;
@@ -39,7 +40,6 @@ public class ResourceCache {
 
   public static GroupResource getGroupResource() {
     if (groupResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       groupResource = (GroupResource) GWT.create(GroupResource.class);
     }
     return groupResource;
@@ -47,7 +47,6 @@ public class ResourceCache {
 
   public static UserResource getUserResource() {
     if (userResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       userResource = (UserResource) GWT.create(UserResource.class);
     }
     return userResource;
@@ -55,7 +54,6 @@ public class ResourceCache {
 
   public static ReferralResource getReferralResource() {
     if (referralResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       referralResource = (ReferralResource) GWT.create(ReferralResource.class);
     }
     return referralResource;
@@ -63,7 +61,6 @@ public class ResourceCache {
 
   public static RatingResource getRatingResource() {
     if (ratingResource == null) {
-      Defaults.setServiceRoot(GWT.getHostPageBaseURL()); // (avoid Template in the url)
       ratingResource = (RatingResource) GWT.create(RatingResource.class);
     }
     return ratingResource;

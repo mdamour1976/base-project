@@ -11,7 +11,7 @@ import org.damour.base.client.objects.Referral;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/referral")
+@Path("/rest/referral")
 public interface ReferralResource extends RestService {
   @PUT
   @Path("add")

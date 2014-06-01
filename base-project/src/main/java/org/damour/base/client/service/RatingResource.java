@@ -14,7 +14,7 @@ import org.damour.base.client.objects.UserThumb;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/rate")
+@Path("/rest/rate")
 public interface RatingResource extends RestService {
 
   @GET

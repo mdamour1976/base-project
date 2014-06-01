@@ -1,13 +1,14 @@
 package org.damour.base.client.ui.repository;
 
 import org.damour.base.client.objects.PermissibleObject;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Label;
 
 public class DeleteObjectCommand implements Command {
@@ -25,17 +26,17 @@ public class DeleteObjectCommand implements Command {
     dialogBox.setContent(new Label("Delete " + permissibleObject.getName() + "?"));
     dialogBox.setCallback(new IDialogCallback() {
       public void okPressed() {
-        final AsyncCallback<Void> deleteCallback = new AsyncCallback<Void>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox messageDialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
+        final MethodCallback<Void> deleteCallback = new MethodCallback<Void>() {
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox messageDialog = new MessageDialogBox("Error", exception.getMessage(), false, true, true);
             messageDialog.center();
           }
 
-          public void onSuccess(Void nothing) {
+          public void onSuccess(Method method, Void response) {
             repositoryCallback.fileDeleted();
           }
         };
-        BaseServiceCache.getService().deletePermissibleObject(permissibleObject, deleteCallback);
+        ResourceCache.getPermissibleResource().deletePermissibleObject(permissibleObject.getId(), deleteCallback);
       }
 
       public void cancelPressed() {

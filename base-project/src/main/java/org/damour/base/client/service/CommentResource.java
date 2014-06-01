@@ -10,7 +10,7 @@ import org.damour.base.client.objects.Comment;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/comment")
+@Path("/rest/comment")
 public interface CommentResource extends RestService {
 
   @POST

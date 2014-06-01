@@ -1,12 +1,17 @@
 package org.damour.base.client.service;
 
 import java.util.List;
+import java.util.Set;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
@@ -17,7 +22,7 @@ import org.damour.base.client.objects.RepositoryTreeNode;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/objects")
+@Path("/rest/objects")
 public interface PermissibleResource extends RestService {
 
   @PUT
@@ -27,6 +32,25 @@ public interface PermissibleResource extends RestService {
   @PUT
   @Path("/saveList")
   public void savePermissibleObjects(List<PermissibleObject> permissibleObjects, MethodCallback<List<PermissibleObject>> callback);
+
+  @PUT
+  @Path("/update")
+  public void updatePermissibleObject(PermissibleObject permissibleObject, MethodCallback<PermissibleObject> callback);
+
+  @PUT
+  @Path("/updateList")
+  public void updatePermissibleObjects(List<PermissibleObject> permissibleObjects, MethodCallback<List<PermissibleObject>> callback);
+
+  @DELETE
+  @Path("/delete/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  void deletePermissibleObject(@PathParam("id") Long id, MethodCallback<Void> callback);
+
+  @DELETE
+  @Path("/delete")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  void deletePermissibleObjects(Set<Long> ids, MethodCallback<Void> callback);
 
   @GET
   @Path("/{id}")

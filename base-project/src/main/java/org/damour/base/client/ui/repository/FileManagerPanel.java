@@ -157,6 +157,8 @@ public class FileManagerPanel extends VerticalPanel implements TreeListener, IRe
       public void execute() {
         final CKEditor editor = new CKEditor("newEditor" + System.currentTimeMillis());
         final PromptDialogBox dialogBox = new PromptDialogBox("New", "Save", null, "Cancel", false, true);
+        dialogBox.setAllowEnterSubmit(false);
+        dialogBox.setAllowEscape(false);
         dialogBox.setContent(editor);
         dialogBox.setCallback(new IDialogCallback() {
 

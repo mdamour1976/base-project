@@ -13,7 +13,7 @@ import org.damour.base.client.objects.User;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/user")
+@Path("/rest/user")
 public interface UserResource extends RestService {
 
   @POST

@@ -216,6 +216,9 @@ public class BaseResource {
     String text = "Contact Name: " + feedback.getContactName() + "<BR>";
     text += "E-Mail: " + feedback.getEmail() + "<BR>";
     text += "Phone: " + feedback.getPhone() + "<BR>";
+    if (feedback.getDate() != null) {
+      text += "Date: " + feedback.getDate() + "<BR>";
+    }
     text += "Comments: " + feedback.getComments() + "<BR>";
     String subject = feedback.getContactName() + " has submitted feedback for " + BaseSystem.getDomainName();
     if (feedback.getSubject() != null) {

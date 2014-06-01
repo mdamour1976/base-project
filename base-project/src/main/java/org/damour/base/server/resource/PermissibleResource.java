@@ -3,10 +3,12 @@ package org.damour.base.server.resource;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -18,6 +20,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.IAnonymousPermissibleObject;
 import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
@@ -30,7 +33,9 @@ import org.damour.base.client.objects.User;
 import org.damour.base.server.Logger;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.ReflectionCache;
+import org.damour.base.server.hibernate.helpers.FolderHelper;
 import org.damour.base.server.hibernate.helpers.PageHelper;
+import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.RepositoryHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
@@ -137,6 +142,152 @@ public class PermissibleResource {
       savePermissibleObject(object, httpRequest, httpResponse);
     }
     return permissibleObjects;
+  }
+
+  @PUT
+  @Path("/update")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public PermissibleObject updatePermissibleObject(PermissibleObject permissibleObject, @Context HttpServletRequest httpRequest,
+      @Context HttpServletResponse httpResponse) {
+    if (permissibleObject == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Transaction tx = null;
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      tx = session.beginTransaction();
+      User newOwner = ((User) session.load(User.class, permissibleObject.getOwner().getId()));
+
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+
+      PermissibleObject hibPermissibleObject = ((PermissibleObject) session.load(PermissibleObject.class, permissibleObject.getId()));
+      if (!authUser.isAdministrator() && !hibPermissibleObject.getOwner().equals(authUser)) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      // update fields (for example, image has child permissibles)
+      List<Field> fields = ReflectionCache.getFields(hibPermissibleObject.getClass());
+      for (Field field : fields) {
+        try {
+          if (!field.getName().equals("parent") && PermissibleObject.class.isAssignableFrom(field.getType())) {
+            Object obj = field.get(hibPermissibleObject);
+            if (obj == null) {
+              field.set(hibPermissibleObject, field.get(permissibleObject));
+              obj = field.get(hibPermissibleObject);
+              if (obj != null) {
+                PermissibleObject hibSubObj = ((PermissibleObject) session.load(PermissibleObject.class, ((PermissibleObject) obj).getId()));
+                obj = hibSubObj;
+              }
+            }
+            if (obj != null) {
+              PermissibleObject childObj = (PermissibleObject) obj;
+              childObj.setGlobalRead(hibPermissibleObject.isGlobalRead());
+              childObj.setGlobalWrite(hibPermissibleObject.isGlobalWrite());
+              childObj.setGlobalExecute(hibPermissibleObject.isGlobalExecute());
+              childObj.setGlobalCreateChild(hibPermissibleObject.isGlobalCreateChild());
+              session.save(childObj);
+            }
+          }
+          if (!field.getName().equals("parent")) {
+            try {
+              field.set(hibPermissibleObject, field.get(permissibleObject));
+            } catch (Throwable t) {
+            }
+          }
+        } catch (Exception e) {
+          Logger.log(e);
+        }
+      }
+      hibPermissibleObject.setOwner(newOwner);
+      // save it
+      session.save(hibPermissibleObject);
+      tx.commit();
+      return hibPermissibleObject;
+    } catch (Throwable t) {
+      Logger.log(t);
+      try {
+        tx.rollback();
+      } catch (Throwable tt) {
+      }
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
+  @POST
+  @Path("/updateList")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> updatePermissibleObjects(List<PermissibleObject> permissibleObjects, @Context HttpServletRequest httpRequest,
+      @Context HttpServletResponse httpResponse) {
+    for (PermissibleObject object : permissibleObjects) {
+      updatePermissibleObject(object, httpRequest, httpResponse);
+    }
+    return permissibleObjects;
+  }
+
+  @DELETE
+  @Path("/delete/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public void deletePermissibleObject(@PathParam("id") Long id, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (id == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Transaction tx = null;
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      tx = session.beginTransaction();
+
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+
+      PermissibleObject permissibleObject = ((PermissibleObject) session.load(PermissibleObject.class, id));
+
+      if (permissibleObject instanceof Folder) {
+        Folder folder = (Folder) permissibleObject;
+        if (!authUser.isAdministrator() && !authUser.equals(folder.getOwner())) {
+          throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        FolderHelper.deleteFolder(session, folder);
+      } else {
+        if (!SecurityHelper.doesUserHavePermission(session, authUser, permissibleObject, PERM.WRITE)) {
+          throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+        }
+        // just try to delete the object, hopefully it has no children
+        PermissibleObjectHelper.deletePermissibleObject(session, permissibleObject);
+      }
+      tx.commit();
+    } catch (Throwable t) {
+      Logger.log(t);
+      try {
+        tx.rollback();
+      } catch (Throwable tt) {
+      }
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
+  @DELETE
+  @Path("/delete")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public void deletePermissibleObjects(Set<Long> ids, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (ids == null) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+    for (Long id : ids) {
+      deletePermissibleObject(id, httpRequest, httpResponse);
+    }
   }
 
   @GET

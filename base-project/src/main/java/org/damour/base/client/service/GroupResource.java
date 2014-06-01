@@ -16,7 +16,7 @@ import org.damour.base.client.objects.UserGroup;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/group")
+@Path("/rest/group")
 public interface GroupResource extends RestService {
 
   // users/group admin methods

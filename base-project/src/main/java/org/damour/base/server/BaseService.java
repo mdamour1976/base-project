@@ -1,9 +1,7 @@
 package org.damour.base.server;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.File;
@@ -15,11 +13,9 @@ import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.User;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.ReflectionCache;
-import org.damour.base.server.hibernate.helpers.FolderHelper;
 import org.damour.base.server.hibernate.helpers.PermissibleObjectHelper;
 import org.damour.base.server.hibernate.helpers.RatingHelper;
 import org.damour.base.server.hibernate.helpers.SecurityHelper;
-import org.damour.base.server.resource.PermissibleResource;
 import org.damour.base.server.resource.UserResource;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -84,61 +80,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       Logger.log(t);
       throw new SimpleMessageException(t.getMessage());
     }
-  }
-
-  public void deletePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException {
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("Object not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    Transaction tx = session.get().beginTransaction();
-
-    permissibleObject = ((PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId()));
-
-    try {
-      if (permissibleObject instanceof Folder) {
-        Folder folder = (Folder) permissibleObject;
-        if (!authUser.isAdministrator() && !authUser.equals(folder.getOwner())) {
-          throw new SimpleMessageException("User is not authorized to delete this object.");
-        }
-        FolderHelper.deleteFolder(session.get(), folder);
-      } else {
-        if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, permissibleObject, PERM.WRITE)) {
-          throw new SimpleMessageException("User is not authorized to delete this object.");
-        }
-        // just try to delete the object, hopefully it has no children
-        PermissibleObjectHelper.deletePermissibleObject(session.get(), permissibleObject);
-      }
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public void deletePermissibleObjects(Set<PermissibleObject> permissibleObjects) throws SimpleMessageException {
-    if (permissibleObjects == null) {
-      throw new SimpleMessageException("Objects not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    for (PermissibleObject permissibleObject : permissibleObjects) {
-      deletePermissibleObject(permissibleObject);
-    }
-  }
-
-  public void deleteAndSavePermissibleObjects(Set<PermissibleObject> toBeDeleted, Set<PermissibleObject> toBeSaved) throws SimpleMessageException {
-    deletePermissibleObjects(toBeDeleted);
-    (new PermissibleResource()).savePermissibleObjects(new ArrayList<PermissibleObject>(toBeSaved), getThreadLocalRequest(), getThreadLocalResponse());
   }
 
   public List<PermissibleObject> getMyPermissibleObjects(PermissibleObject parent, String objectType) throws SimpleMessageException {
@@ -270,76 +211,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       Logger.log(t);
       throw new SimpleMessageException(t.getMessage());
     }
-  }
-
-  public PermissibleObject updatePermissibleObject(PermissibleObject permissibleObject) throws SimpleMessageException {
-    if (permissibleObject == null) {
-      throw new SimpleMessageException("PermissibleObject not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      User newOwner = ((User) session.get().load(User.class, permissibleObject.getOwner().getId()));
-      PermissibleObject hibPermissibleObject = ((PermissibleObject) session.get().load(PermissibleObject.class, permissibleObject.getId()));
-      if (!authUser.isAdministrator() && !hibPermissibleObject.getOwner().equals(authUser)) {
-        throw new SimpleMessageException("User is not authorized to update this object.");
-      }
-      // update fields (for example, image has child permissibles)
-      List<Field> fields = ReflectionCache.getFields(hibPermissibleObject.getClass());
-      for (Field field : fields) {
-        try {
-          if (!field.getName().equals("parent") && PermissibleObject.class.isAssignableFrom(field.getType())) {
-            Object obj = field.get(hibPermissibleObject);
-            if (obj == null) {
-              field.set(hibPermissibleObject, field.get(permissibleObject));
-              obj = field.get(hibPermissibleObject);
-              if (obj != null) {
-                PermissibleObject hibSubObj = ((PermissibleObject) session.get().load(PermissibleObject.class, ((PermissibleObject) obj).getId()));
-                obj = hibSubObj;
-              }
-            }
-            if (obj != null) {
-              PermissibleObject childObj = (PermissibleObject) obj;
-              childObj.setGlobalRead(hibPermissibleObject.isGlobalRead());
-              childObj.setGlobalWrite(hibPermissibleObject.isGlobalWrite());
-              childObj.setGlobalExecute(hibPermissibleObject.isGlobalExecute());
-              childObj.setGlobalCreateChild(hibPermissibleObject.isGlobalCreateChild());
-              session.get().save(childObj);
-            }
-          }
-          if (!field.getName().equals("parent")) {
-            try {
-              field.set(hibPermissibleObject, field.get(permissibleObject));
-            } catch (Throwable t) {
-            }
-          }
-        } catch (Exception e) {
-          Logger.log(e);
-        }
-      }
-
-      // save it
-      session.get().save(hibPermissibleObject);
-      tx.commit();
-      return hibPermissibleObject;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public List<PermissibleObject> updatePermissibleObjects(List<PermissibleObject> permissibleObjects) throws SimpleMessageException {
-    for (PermissibleObject object : permissibleObjects) {
-      updatePermissibleObject(object);
-    }
-    return permissibleObjects;
   }
 
   public void setPermissions(PermissibleObject permissibleObject, List<Permission> permissions) throws SimpleMessageException {

@@ -1,16 +1,17 @@
 package org.damour.base.client.ui.repository;
 
 import org.damour.base.client.objects.PermissibleObject;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.ckeditor.CKEditor;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class EditFileCommand implements Command {
 
@@ -43,24 +44,26 @@ public class EditFileCommand implements Command {
   public void execute() {
     final CKEditor editor = new CKEditor("newEditor" + System.currentTimeMillis());
     final PromptDialogBox dialogBox = new PromptDialogBox("Edit", "Save", null, "Cancel", false, false);
+    dialogBox.setAllowEnterSubmit(false);
+    dialogBox.setAllowEscape(false);
     dialogBox.setContent(editor);
     dialogBox.setCallback(new IDialogCallback() {
 
       public void okPressed() {
         object.setContentHTML(editor.getData());
-        AsyncCallback<PermissibleObject> callback = new AsyncCallback<PermissibleObject>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox messageDialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
+        MethodCallback<PermissibleObject> callback = new MethodCallback<PermissibleObject>() {
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox messageDialog = new MessageDialogBox("Error", exception.getMessage(), false, true, true);
             messageDialog.center();
           }
 
-          public void onSuccess(PermissibleObject result) {
+          public void onSuccess(Method method, PermissibleObject response) {
             if (EditFileCommand.this.callback != null) {
-              EditFileCommand.this.callback.invoke(result);
+              EditFileCommand.this.callback.invoke(response);
             }
           }
         };
-        BaseServiceCache.getService().updatePermissibleObject(object, callback);
+        ResourceCache.getPermissibleResource().updatePermissibleObject(object, callback);
       }
 
       public void cancelPressed() {

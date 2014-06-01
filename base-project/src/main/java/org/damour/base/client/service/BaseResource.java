@@ -20,7 +20,7 @@ import org.damour.base.client.objects.MemoryStats;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
-@Path("rest/base")
+@Path("/rest/base")
 public interface BaseResource extends RestService {
 
   @GET

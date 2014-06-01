@@ -9,9 +9,11 @@ import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.utils.StringUtils;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -247,18 +249,19 @@ public class GeneralPanel extends FlexTable {
       permissibleObject.setGlobalCreateChild(globalCreateChildrenCheckBox.getValue());
       permissibleObject.setHidden(hiddenCheckBox.getValue());
       permissibleObject.setAllowComments(allowCommentsCheckBox.getValue());
-      AsyncCallback<PermissibleObject> updatePermissibleObjectCallback = new AsyncCallback<PermissibleObject>() {
-        public void onFailure(Throwable caught) {
-          callback.onFailure(caught);
+      MethodCallback<PermissibleObject> updatePermissibleObjectCallback = new MethodCallback<PermissibleObject>() {
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          callback.onFailure(exception);
         }
 
-        public void onSuccess(PermissibleObject result) {
+        public void onSuccess(Method method, PermissibleObject response) {
           // update our copy (cheaper than refetching or inserting back into tree)
-          result.mergeInto(permissibleObject);
+          response.mergeInto(permissibleObject);
           callback.onSuccess(null);
         }
       };
-      BaseServiceCache.getService().updatePermissibleObject(permissibleObject, updatePermissibleObjectCallback);
+      ResourceCache.getPermissibleResource().updatePermissibleObject(permissibleObject, updatePermissibleObjectCallback);
     }
   }
 
