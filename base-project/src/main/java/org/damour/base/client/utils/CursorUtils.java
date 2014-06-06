@@ -1,6 +1,6 @@
 package org.damour.base.client.utils;
 
-import com.google.gwt.user.client.DOM;
+import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -11,7 +11,7 @@ public class CursorUtils {
   }
 
   public static void setBusyCursor(Element element) {
-    DOM.setStyleAttribute(element, "cursor", "wait");
+    element.getStyle().setCursor(Cursor.WAIT);
   }
 
   public static void setDefaultCursor(Widget widget) {
@@ -19,7 +19,7 @@ public class CursorUtils {
   }
 
   public static void setDefaultCursor(Element element) {
-    DOM.setStyleAttribute(element, "cursor", "default");
+    element.getStyle().setCursor(Cursor.DEFAULT);
   }
 
   public static void setHandCursor(Widget widget) {
@@ -27,8 +27,7 @@ public class CursorUtils {
   }
 
   public static void setHandCursor(Element element) {
-    DOM.setStyleAttribute(element, "cursor", "pointer");
-    DOM.setStyleAttribute(element, "cursor", "hand");
+    element.getStyle().setCursor(Cursor.POINTER);
   }
 
   public static native void preventTextSelection(Element ele)

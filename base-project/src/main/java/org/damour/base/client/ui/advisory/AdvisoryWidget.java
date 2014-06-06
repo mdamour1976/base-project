@@ -10,9 +10,9 @@ import org.damour.base.client.utils.CursorUtils;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
@@ -66,7 +66,7 @@ public class AdvisoryWidget extends VerticalPanel {
         } else if (event.getSource() == NC17 || event.getSource() == NC17RB) {
           vote = 5;
         }
-        DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "wait");
+        ((Widget) event.getSource()).getElement().getStyle().setProperty("cursor", "wait");
         setFileUserAdvisory(vote);
         contentAdvisoryPopup.hide();
       }
@@ -124,7 +124,7 @@ public class AdvisoryWidget extends VerticalPanel {
     advisoryImage = new Image();
 
     Label statsLabel = new Label();
-    DOM.setStyleAttribute(statsLabel.getElement(), "fontSize", "8pt");
+    statsLabel.getElement().getStyle().setFontSize(8, Unit.PT);
 
     if (permissibleObject == null || permissibleObject.getAverageAdvisory() == 0) {
       advisoryImage.setResource(BaseImageBundle.images.advisoryNR());

@@ -9,6 +9,8 @@ import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
+import com.google.gwt.dom.client.Style.Cursor;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.MouseOutEvent;
@@ -18,7 +20,6 @@ import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -60,7 +61,7 @@ public class RatingWidget extends VerticalPanel {
         } else if (event.getSource() == star5) {
           vote = 5;
         }
-        DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "wait");
+        ((Widget) event.getSource()).getElement().getStyle().setCursor(Cursor.WAIT);
         setUserRating(permissibleObject, vote);
       }
     }
@@ -70,15 +71,14 @@ public class RatingWidget extends VerticalPanel {
 
     public void onMouseOver(MouseOverEvent event) {
       if (isSubmitting) {
-        DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "wait");
+        ((Widget) event.getSource()).getElement().getStyle().setCursor(Cursor.WAIT);
         return;
       }
       if (interactive && userRating == null) {
-        DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "hand");
-        DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "pointer");
+        ((Widget) event.getSource()).getElement().getStyle().setCursor(Cursor.POINTER);
         starMoused((Widget) event.getSource());
       } else {
-        DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "default");
+        ((Widget) event.getSource()).getElement().getStyle().setCursor(Cursor.DEFAULT);
       }
     }
   };
@@ -86,7 +86,7 @@ public class RatingWidget extends VerticalPanel {
   MouseOutHandler starOutHandler = new MouseOutHandler() {
 
     public void onMouseOut(MouseOutEvent event) {
-      DOM.setStyleAttribute(((Widget) event.getSource()).getElement(), "cursor", "default");
+      ((Widget) event.getSource()).getElement().getStyle().setCursor(Cursor.DEFAULT);
       setStars();
     }
   };
@@ -115,7 +115,7 @@ public class RatingWidget extends VerticalPanel {
 
     statsLabel = new Label(BaseApplication.getMessages().getString("ratingStatsLabel", "{0} rating from {1} users",
         NumberFormat.getFormat("0.0").format(permissibleObject.getAverageRating()), "" + permissibleObject.getNumRatingVotes()), false);
-    DOM.setStyleAttribute(statsLabel.getElement(), "fontSize", "8pt");
+    statsLabel.getElement().getStyle().setFontSize(8, Unit.PT);
     if (showStatsLabel) {
       add(statsLabel);
     }
@@ -170,8 +170,8 @@ public class RatingWidget extends VerticalPanel {
     star.addMouseOverHandler(starOverHandler);
     star.addMouseOutHandler(starOutHandler);
     star.addMouseUpHandler(starUpHandler);
-    DOM.setStyleAttribute(star.getElement(), "margin", "0px");
-    DOM.setStyleAttribute(star.getElement(), "padding", "0px");
+    star.getElement().getStyle().setMargin(0, Unit.PT);
+    star.getElement().getStyle().setPadding(0, Unit.PT);
     starPanel.add(star);
     star.setTitle("");
     return star;
@@ -285,17 +285,17 @@ public class RatingWidget extends VerticalPanel {
     }
 
     if (isSubmitting) {
-      DOM.setStyleAttribute(star1.getElement(), "cursor", "wait");
-      DOM.setStyleAttribute(star2.getElement(), "cursor", "wait");
-      DOM.setStyleAttribute(star3.getElement(), "cursor", "wait");
-      DOM.setStyleAttribute(star4.getElement(), "cursor", "wait");
-      DOM.setStyleAttribute(star5.getElement(), "cursor", "wait");
+      star1.getElement().getStyle().setCursor(Cursor.WAIT);
+      star2.getElement().getStyle().setCursor(Cursor.WAIT);
+      star3.getElement().getStyle().setCursor(Cursor.WAIT);
+      star4.getElement().getStyle().setCursor(Cursor.WAIT);
+      star5.getElement().getStyle().setCursor(Cursor.WAIT);
     } else {
-      DOM.setStyleAttribute(star1.getElement(), "cursor", "default");
-      DOM.setStyleAttribute(star2.getElement(), "cursor", "default");
-      DOM.setStyleAttribute(star3.getElement(), "cursor", "default");
-      DOM.setStyleAttribute(star4.getElement(), "cursor", "default");
-      DOM.setStyleAttribute(star5.getElement(), "cursor", "default");
+      star1.getElement().getStyle().setCursor(Cursor.DEFAULT);
+      star2.getElement().getStyle().setCursor(Cursor.DEFAULT);
+      star3.getElement().getStyle().setCursor(Cursor.DEFAULT);
+      star4.getElement().getStyle().setCursor(Cursor.DEFAULT);
+      star5.getElement().getStyle().setCursor(Cursor.DEFAULT);
     }
 
   }

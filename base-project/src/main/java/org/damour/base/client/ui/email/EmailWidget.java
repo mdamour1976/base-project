@@ -3,9 +3,10 @@ package org.damour.base.client.ui.email;
 import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.PermissibleObject;
 
+import com.google.gwt.dom.client.Style.Cursor;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -34,9 +35,9 @@ public class EmailWidget extends HorizontalPanel {
     setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
     Label emailLabel = new Label("Email");
     if (showLabel && labelOnLeft) {
-      DOM.setStyleAttribute(mailIcon.getElement(), "marginLeft", "3px");
+      mailIcon.getElement().getStyle().setMarginLeft(3, Unit.PX);
     } else if (showLabel && !labelOnLeft) {
-      DOM.setStyleAttribute(mailIcon.getElement(), "marginRight", "3px");
+      mailIcon.getElement().getStyle().setMarginRight(3, Unit.PX);
     }
     if (showLabel) {
       if (labelOnLeft) {
@@ -53,10 +54,8 @@ public class EmailWidget extends HorizontalPanel {
     emailLabel.addClickHandler(clickHandler);
     mailIcon.setTitle("Email this!");
     emailLabel.setTitle("Email this!");
-    DOM.setStyleAttribute(emailLabel.getElement(), "cursor", "hand");
-    DOM.setStyleAttribute(emailLabel.getElement(), "cursor", "pointer");
-    DOM.setStyleAttribute(mailIcon.getElement(), "cursor", "hand");
-    DOM.setStyleAttribute(mailIcon.getElement(), "cursor", "pointer");
+    emailLabel.getElement().getStyle().setCursor(Cursor.POINTER);
+    mailIcon.getElement().getStyle().setCursor(Cursor.POINTER);
   }
 
   public PermissibleObject getPermissibleObject() {
