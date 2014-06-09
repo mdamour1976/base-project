@@ -4,8 +4,6 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import org.damour.base.client.exceptions.SimpleMessageException;
-import org.damour.base.client.objects.File;
-import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.Permission;
@@ -93,103 +91,6 @@ public class BaseService extends RemoteServiceServlet implements org.damour.base
       return PermissibleObjectHelper.getMyPermissibleObjects(session.get(), authUser, parent, clazz);
     } catch (ClassNotFoundException cnfe) {
       throw new SimpleMessageException(cnfe.getMessage());
-    }
-  }
-
-  public Folder createNewFolder(Folder newFolder) throws SimpleMessageException {
-    if (newFolder == null) {
-      throw new SimpleMessageException("Folder not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      if (newFolder.getParent() != null) {
-        newFolder.setParent((PermissibleObject) session.get().load(PermissibleObject.class, newFolder.getParent().getId()));
-      }
-      if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, newFolder.getParent(), PERM.WRITE)) {
-        throw new SimpleMessageException("User is not authorized to create a new folder here.");
-      }
-      if (newFolder.getId() != null) {
-        Folder hibNewFolder = (Folder) session.get().load(Folder.class, newFolder.getId());
-        if (hibNewFolder != null) {
-          if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, hibNewFolder, PERM.WRITE)) {
-            throw new SimpleMessageException("User is not authorized to save a new folder here.");
-          }
-          hibNewFolder.setName(newFolder.getName());
-          hibNewFolder.setDescription(newFolder.getDescription());
-          hibNewFolder.setParent(newFolder.getParent());
-          newFolder = hibNewFolder;
-        }
-      }
-
-      newFolder.setOwner(authUser);
-      session.get().save(newFolder);
-      tx.commit();
-      return newFolder;
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public void renameFile(File file) throws SimpleMessageException {
-    if (file == null) {
-      throw new SimpleMessageException("File not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      File hibfile = (File) session.get().load(File.class, file.getId());
-      if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, hibfile, PERM.WRITE)) {
-        throw new SimpleMessageException("User is not authorized to rename this file.");
-      }
-      hibfile.setName(file.getName());
-      session.get().save(hibfile);
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
-    }
-  }
-
-  public void renameFolder(Folder folder) throws SimpleMessageException {
-    if (folder == null) {
-      throw new SimpleMessageException("Folder not supplied.");
-    }
-    User authUser = (new UserResource()).getAuthenticatedUser(session.get(), getThreadLocalRequest(), getThreadLocalResponse());
-    if (authUser == null) {
-      throw new SimpleMessageException("User is not authenticated.");
-    }
-    Transaction tx = session.get().beginTransaction();
-    try {
-      Folder hibfolder = (Folder) session.get().load(Folder.class, folder.getId());
-      if (!SecurityHelper.doesUserHavePermission(session.get(), authUser, hibfolder, PERM.WRITE)) {
-        throw new SimpleMessageException("User is not authorized to rename this folder.");
-      }
-      hibfolder.setName(folder.getName());
-      session.get().save(hibfolder);
-      tx.commit();
-    } catch (Throwable t) {
-      Logger.log(t);
-      try {
-        tx.rollback();
-      } catch (Throwable tt) {
-      }
-      throw new SimpleMessageException(t.getMessage());
     }
   }
 

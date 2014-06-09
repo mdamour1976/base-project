@@ -15,6 +15,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -30,6 +31,7 @@ import org.damour.base.client.objects.PermissibleObjectTreeRequest;
 import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.RepositoryTreeNode;
 import org.damour.base.client.objects.User;
+import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.Logger;
 import org.damour.base.server.hibernate.HibernateUtil;
 import org.damour.base.server.hibernate.ReflectionCache;
@@ -472,6 +474,93 @@ public class PermissibleResource {
       throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       session.close();
+    }
+  }
+
+  @PUT
+  @Path("/newFolder")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Folder createNewFolder(Folder newFolder, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (newFolder == null) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+    Transaction tx = null;
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      tx = session.beginTransaction();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+
+      if (newFolder.getParent() != null) {
+        newFolder.setParent((PermissibleObject) session.load(PermissibleObject.class, newFolder.getParent().getId()));
+      }
+      if (!SecurityHelper.doesUserHavePermission(session, authUser, newFolder.getParent(), PERM.WRITE)) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      if (newFolder.getId() != null) {
+        Folder hibNewFolder = (Folder) session.load(Folder.class, newFolder.getId());
+        if (hibNewFolder != null) {
+          if (!SecurityHelper.doesUserHavePermission(session, authUser, hibNewFolder, PERM.WRITE)) {
+            throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+          }
+          hibNewFolder.setName(newFolder.getName());
+          hibNewFolder.setDescription(newFolder.getDescription());
+          hibNewFolder.setParent(newFolder.getParent());
+          newFolder = hibNewFolder;
+        }
+      }
+      newFolder.setOwner(authUser);
+      session.save(newFolder);
+      tx.commit();
+      return newFolder;
+    } catch (Throwable t) {
+      Logger.log(t);
+      try {
+        tx.rollback();
+      } catch (Throwable tt) {
+      }
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @POST
+  @Path("/rename/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public PermissibleObject rename(@PathParam("id") Long id, String name, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (id == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    if (StringUtils.isEmpty(name)) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+    Transaction tx = null;
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      tx = session.beginTransaction();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      PermissibleObject hibObj = (Folder) session.load(PermissibleObject.class, id);
+      if (!SecurityHelper.doesUserHavePermission(session, authUser, hibObj, PERM.WRITE)) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      hibObj.setName(name);
+      session.save(hibObj);
+      tx.commit();
+      return hibObj;
+    } catch (Throwable t) {
+      Logger.log(t);
+      try {
+        tx.rollback();
+      } catch (Throwable tt) {
+      }
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     }
   }
 

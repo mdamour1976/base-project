@@ -12,6 +12,7 @@
   <properties>
     <gwt.version>2.6.1</gwt.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <gwt.localWorkers>2</gwt.localWorkers>
   </properties>
 
   <repositories>
@@ -81,6 +82,7 @@
             <extraJvmArgs>-XX:MaxPermSize=512m -Xmx1024m</extraJvmArgs>
             <runTarget>base.jsp</runTarget>
             <webappDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</webappDirectory>
+            <localWorkers>${gwt.localWorkers}</localWorkers>
           </configuration>
         </plugin>
 

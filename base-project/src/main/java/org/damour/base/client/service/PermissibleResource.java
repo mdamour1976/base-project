@@ -11,8 +11,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.Page;
 import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
@@ -79,6 +81,16 @@ public interface PermissibleResource extends RestService {
   @GET
   @Path("/filetree")
   void getRepositoryTree(MethodCallback<RepositoryTreeNode> callback);
+
+  @PUT
+  @Path("/newFolder")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  void createNewFolder(Folder newFolder, MethodCallback<Folder> callback);
+
+  @POST
+  @Path("/rename/{id}")
+  void rename(@PathParam("id") Long id, String name, MethodCallback<PermissibleObject> callback);
 
   @POST
   @Path("/echo")

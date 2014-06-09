@@ -12,6 +12,7 @@
   <properties>
     <gwt.version>2.6.1</gwt.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <gwt.localWorkers>2</gwt.localWorkers>
   </properties>
 
   <repositories>
@@ -71,6 +72,7 @@
           <runTarget>base.jsp</runTarget>
           <webappDirectory>${project.build.directory}/${project.artifactId}-${project.version}/</webappDirectory>
           <draftCompile>true</draftCompile>
+          <localWorkers>${gwt.localWorkers}</localWorkers>
         </configuration>
       </plugin>
 

@@ -1,16 +1,15 @@
 package org.damour.base.client.ui.repository;
 
-import org.damour.base.client.objects.File;
-import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
 import org.damour.base.client.ui.dialogs.IDialogValidatorCallback;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.TextBox;
 
 public class RenameObjectCommand implements Command {
@@ -31,26 +30,19 @@ public class RenameObjectCommand implements Command {
     dialogBox.setContent(nameTextBox);
     dialogBox.setCallback(new IDialogCallback() {
       public void okPressed() {
-        final AsyncCallback<Void> renameCallback = new AsyncCallback<Void>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox messageDialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
+        final MethodCallback<PermissibleObject> renameCallback = new MethodCallback<PermissibleObject>() {
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox messageDialog = new MessageDialogBox("Error", exception.getMessage(), false, true, true);
             messageDialog.center();
           }
 
-          public void onSuccess(Void nothing) {
+          public void onSuccess(Method method, PermissibleObject permissibleObject) {
             repositoryCallback.objectRenamed(permissibleObject);
           }
         };
 
-        if (permissibleObject instanceof File) {
-          File file = (File) permissibleObject;
-          file.setName(nameTextBox.getText());
-          BaseServiceCache.getService().renameFile(file, renameCallback);
-        } else if (permissibleObject instanceof Folder) {
-          Folder folder = (Folder) permissibleObject;
-          folder.setName(nameTextBox.getText());
-          BaseServiceCache.getService().renameFolder(folder, renameCallback);
-        }
+        permissibleObject.setName(nameTextBox.getText());
+        ResourceCache.getPermissibleResource().rename(permissibleObject.getId(), nameTextBox.getText(), renameCallback);
       }
 
       public void cancelPressed() {

@@ -3,14 +3,15 @@ package org.damour.base.client.ui.repository;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
 import org.damour.base.client.objects.PermissibleObject;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.dialogs.IDialogCallback;
 import org.damour.base.client.ui.dialogs.IDialogValidatorCallback;
 import org.damour.base.client.ui.dialogs.MessageDialogBox;
 import org.damour.base.client.ui.dialogs.PromptDialogBox;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.TextBox;
 
 public class CreateNewFolderCommand implements Command {
@@ -38,13 +39,13 @@ public class CreateNewFolderCommand implements Command {
           PermissibleObject permissibleObject = (PermissibleObject) repositoryTree.getLastItem().getUserObject();
           parentFolder = permissibleObject;
         }
-        AsyncCallback<Folder> callback = new AsyncCallback<Folder>() {
-          public void onFailure(Throwable caught) {
-            MessageDialogBox messageDialog = new MessageDialogBox("Error", caught.getMessage(), false, true, true);
+        MethodCallback<Folder> callback = new MethodCallback<Folder>() {
+          public void onFailure(Method method, Throwable exception) {
+            MessageDialogBox messageDialog = new MessageDialogBox("Error", exception.getMessage(), false, true, true);
             messageDialog.center();
           }
 
-          public void onSuccess(Folder newFolder) {
+          public void onSuccess(Method method, Folder newFolder) {
             repositoryTree.setLastItemId(newFolder.getId());
             repositoryTree.fetchRepositoryTree(repositoryCallback);
           }
@@ -53,7 +54,7 @@ public class CreateNewFolderCommand implements Command {
         newFolder.setParent(parentFolder);
         newFolder.setName(folderNameTextBox.getText());
         newFolder.setDescription(folderNameTextBox.getText());
-        BaseServiceCache.getService().createNewFolder(newFolder, callback);
+        ResourceCache.getPermissibleResource().createNewFolder(newFolder, callback);
       }
 
       public void cancelPressed() {
