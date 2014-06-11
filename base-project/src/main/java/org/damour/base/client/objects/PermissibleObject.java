@@ -439,7 +439,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
 
   public int getFieldLength(String fieldName) {
     if (fieldName.equals("contentHTML")) {
-      return 4096;
+      return 16384;
     }
     return -1;
   }
