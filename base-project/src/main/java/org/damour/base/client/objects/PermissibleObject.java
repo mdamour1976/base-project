@@ -24,12 +24,11 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public Long creationDate = System.currentTimeMillis();
   public Long lastModifiedDate = System.currentTimeMillis();
 
+  public boolean allowRating = true;
   public float averageRating = 0f;
   public long numRatingVotes = 0;
-
   public float averageAdvisory = 0f;
   public long numAdvisoryVotes = 0;
-
   public long numUpVotes = 0;
   public long numDownVotes = 0;
 
@@ -217,6 +216,17 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     this.lastModifiedDate = lastModifiedDate;
   }
 
+  public boolean isAllowRating() {
+    return allowRating;
+  }
+
+  public void setAllowRating(Boolean allowRating) {
+    if (allowRating == null) {
+      return;
+    }
+    this.allowRating = allowRating;
+  }
+  
   /**
    * @return the averageRating
    */

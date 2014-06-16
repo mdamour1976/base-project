@@ -43,6 +43,7 @@ public class GeneralPanel extends FlexTable {
   private CheckBox globalCreateChildrenCheckBox = new CheckBox("Create Children");
   private CheckBox hiddenCheckBox = new CheckBox("Hidden");
   private CheckBox allowCommentsCheckBox = new CheckBox("Allow Comments");
+  private CheckBox allowRatingsCheckBox = new CheckBox("Allow Ratings");
 
   private boolean dirty = false;
 
@@ -80,6 +81,11 @@ public class GeneralPanel extends FlexTable {
       }
     });
     allowCommentsCheckBox.addClickHandler(new ClickHandler() {
+      public void onClick(ClickEvent event) {
+        dirty = true;
+      }
+    });
+    allowRatingsCheckBox.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
         dirty = true;
       }
@@ -149,6 +155,7 @@ public class GeneralPanel extends FlexTable {
     globalCreateChildrenCheckBox.setValue(permissibleObject.isGlobalCreateChild());
     hiddenCheckBox.setValue(permissibleObject.isHidden());
     allowCommentsCheckBox.setValue(permissibleObject.isAllowComments());
+    allowRatingsCheckBox.setValue(permissibleObject.isAllowComments());
     globalPermissionsPanel.setHeight("100%");
     globalPermissionsPanel.add(globalReadCheckBox);
     globalPermissionsPanel.add(globalWriteCheckBox);
@@ -156,6 +163,7 @@ public class GeneralPanel extends FlexTable {
     globalPermissionsPanel.add(globalCreateChildrenCheckBox);
     globalPermissionsPanel.add(hiddenCheckBox);
     globalPermissionsPanel.add(allowCommentsCheckBox);
+    globalPermissionsPanel.add(allowRatingsCheckBox);
   }
 
   @SuppressWarnings("deprecation")
@@ -249,6 +257,7 @@ public class GeneralPanel extends FlexTable {
       permissibleObject.setGlobalCreateChild(globalCreateChildrenCheckBox.getValue());
       permissibleObject.setHidden(hiddenCheckBox.getValue());
       permissibleObject.setAllowComments(allowCommentsCheckBox.getValue());
+      permissibleObject.setAllowRating(allowRatingsCheckBox.getValue());
       MethodCallback<PermissibleObject> updatePermissibleObjectCallback = new MethodCallback<PermissibleObject>() {
         @Override
         public void onFailure(Method method, Throwable exception) {
