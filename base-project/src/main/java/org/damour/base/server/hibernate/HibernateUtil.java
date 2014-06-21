@@ -51,6 +51,36 @@ public class HibernateUtil {
   private String dialect = "org.hibernate.dialect.MySQL5InnoDBDialect";
   private boolean generateStatistics = true;
 
+  static {
+    Runnable monitor = new Runnable() {
+      public void run() {
+        int counter = 0;
+        while (true) {
+          try {
+            // every minute
+            Thread.sleep(60000);
+          } catch (Exception e) {
+          }
+
+          counter++;
+          if (counter % 240 == 0) {
+            // reset the hibernate cache every 4 hours
+            HibernateUtil.resetHibernate();
+          }
+
+          // System.gc();
+          long total = Runtime.getRuntime().totalMemory();
+          long free = Runtime.getRuntime().freeMemory();
+          Logger.log(DecimalFormat.getNumberInstance().format(total) + " allocated " + DecimalFormat.getNumberInstance().format(total - free) + " used "
+              + DecimalFormat.getNumberInstance().format(free) + " free");
+        }
+      }
+    };
+    Thread t = new Thread(monitor);
+    t.setDaemon(true);
+    t.start();
+  }
+
   private HibernateUtil(HashMap<String, String> overrides) {
     Logger.log("creating new HibernateUtil()");
 
@@ -135,35 +165,6 @@ public class HibernateUtil {
     if (instance == null) {
       instance = new HibernateUtil(overrides);
       instance.bootstrap();
-      if (Logger.DEBUG) {
-        Runnable r = new Runnable() {
-          public void run() {
-            int counter = 0;
-            while (true) {
-              try {
-                // every minute
-                Thread.sleep(60000);
-              } catch (Exception e) {
-              }
-
-              counter++;
-              if (counter % 240 == 0) {
-                // reset the hibernate cache every 4 hours
-                HibernateUtil.resetHibernate();
-              }
-
-              System.gc();
-              long total = Runtime.getRuntime().totalMemory();
-              long free = Runtime.getRuntime().freeMemory();
-              Logger.log(DecimalFormat.getNumberInstance().format(total) + " allocated " + DecimalFormat.getNumberInstance().format(total - free) + " used "
-                  + DecimalFormat.getNumberInstance().format(free) + " free");
-            }
-          }
-        };
-        Thread t = new Thread(r);
-        t.setDaemon(true);
-        t.start();
-      }
     }
     return instance;
   }
