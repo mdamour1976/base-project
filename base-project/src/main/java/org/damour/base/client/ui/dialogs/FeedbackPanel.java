@@ -26,16 +26,36 @@ import com.google.gwt.user.datepicker.client.DateBox.DefaultFormat;
 
 public class FeedbackPanel extends VerticalPanel {
 
-  private TextBox contactName = new TextBox();
-  private TextBox email = new TextBox();
-  private TextBox phone = new TextBox();
-  private TextArea comments = new TextArea();
+  protected TextBox contactName = new TextBox();
+  protected TextBox email = new TextBox();
+  protected TextBox phone = new TextBox();
+  protected TextArea comments = new TextArea();
   private Button sendButton = new Button("Send");
   private DateBox datePicker;
   private String subject;
 
-  public FeedbackPanel(final String title, final String subject, boolean showDatePicker) {
+  protected FlexTable formTable = new FlexTable();
+  protected int row = 0;
+  protected boolean showDatePicker = false;
+  protected boolean showComments = false;
+
+  public FeedbackPanel(final String title, final String subject, boolean showDatePicker, boolean showComments) {
     this.subject = subject;
+    this.showDatePicker = showDatePicker;
+    this.showComments = showComments;
+
+    buildForm();
+
+    Label feedbackLabel = new Label(title);
+    feedbackLabel.setStyleName("feedbackTitle");
+    setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+    add(feedbackLabel);
+
+    setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+    add(formTable);
+  }
+
+  public void buildForm() {
     if (AuthenticationHandler.getInstance().getUser() != null) {
       email.setText(AuthenticationHandler.getInstance().getUser().getEmail());
       contactName.setText(AuthenticationHandler.getInstance().getUser().getFirstname() + " " + AuthenticationHandler.getInstance().getUser().getLastname());
@@ -50,16 +70,6 @@ public class FeedbackPanel extends VerticalPanel {
     phone.setWidth("250px");
     email.setWidth("250px");
     comments.setWidth("250px");
-
-    setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
-
-    Label feedbackLabel = new Label(title);
-    feedbackLabel.setStyleName("feedbackTitle");
-    add(feedbackLabel);
-
-    FlexTable formTable = new FlexTable();
-
-    int row = 0;
     formTable.setWidget(row++, 0, contactName);
     formTable.setWidget(row++, 0, email);
     formTable.setWidget(row++, 0, phone);
@@ -70,7 +80,10 @@ public class FeedbackPanel extends VerticalPanel {
       datePicker.getElement().setAttribute("placeHolder", "Date");
       formTable.setWidget(row++, 0, datePicker);
     }
-    formTable.setWidget(row++, 0, comments);
+    addCustomFields();
+    if (showComments) {
+      formTable.setWidget(row++, 0, comments);
+    }
 
     sendButton.setCommand(new Command() {
       public void execute() {
@@ -84,19 +97,37 @@ public class FeedbackPanel extends VerticalPanel {
     while (row > 0) {
       formTable.getFlexCellFormatter().setColSpan(--row, 0, 2);
     }
-
-    setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-    add(formTable);
   }
 
-  public boolean submit() {
+  public void addCustomFields() {
+    // override and add fields
+  }
+
+  public String validate() {
     String errorStr = "";
     if (StringUtils.isEmpty(email.getText()) && StringUtils.isEmpty(phone.getText())) {
       errorStr += "Please enter an Email address or phone number.<BR>";
     }
-    if (StringUtils.isEmpty(comments.getText())) {
+    if (showComments && StringUtils.isEmpty(comments.getText())) {
       errorStr += "Please enter a message in the form.<BR>";
     }
+    return errorStr;
+  }
+
+  public String getMessage() {
+    return comments.getText();
+  }
+
+  public String getSubject() {
+    String s = subject;
+    if (!StringUtils.isEmpty(s) && showDatePicker) {
+      s = subject.replaceAll("\\{date\\}", DateTimeFormat.getFormat(PredefinedFormat.DATE_MEDIUM).format(datePicker.getValue()));
+    }
+    return s;
+  }
+
+  public boolean submit() {
+    String errorStr = validate();
     if (!StringUtils.isEmpty(errorStr)) {
       MessageDialogBox.alert("Error", errorStr);
       sendButton.setEnabled(true);
@@ -125,10 +156,8 @@ public class FeedbackPanel extends VerticalPanel {
       if (datePicker != null) {
         feedback.setDate(datePicker.getValue());
       }
-      if (subject != null) {
-        feedback.setSubject(subject.replaceAll("\\{date\\}", DateTimeFormat.getFormat(PredefinedFormat.DATE_MEDIUM).format(datePicker.getValue())));
-      }
-      feedback.setComments(comments.getText());
+      feedback.setSubject(getSubject());
+      feedback.setMessage(getMessage());
       ResourceCache.getBaseResource().submitFeedback(feedback, callback);
     }
     return false;

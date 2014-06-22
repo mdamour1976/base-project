@@ -106,7 +106,7 @@ public class FeedbackDialog extends PromptDialogBox implements IDialogValidatorC
       feedback.setContactName(contactName.getText());
       feedback.setEmail(email.getText());
       feedback.setPhone(phone.getText());
-      feedback.setComments(comments.getText());
+      feedback.setMessage(comments.getText());
       ResourceCache.getBaseResource().submitFeedback(feedback, callback);
     }
     return false;

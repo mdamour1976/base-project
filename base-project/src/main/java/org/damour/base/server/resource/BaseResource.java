@@ -213,14 +213,16 @@ public class BaseResource {
   @POST
   @Path("feedback")
   public Boolean submitFeedback(Feedback feedback, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
-    String text = "Contact Name: " + feedback.getContactName() + "<BR>";
+    String text = "Name: " + feedback.getContactName() + "<BR>";
     text += "E-Mail: " + feedback.getEmail() + "<BR>";
     text += "Phone: " + feedback.getPhone() + "<BR>";
     if (feedback.getDate() != null) {
       text += "Date: " + feedback.getDate() + "<BR>";
     }
-    text += "Comments: " + feedback.getComments() + "<BR>";
-    String subject = feedback.getContactName() + " has submitted feedback for " + BaseSystem.getDomainName();
+    if (feedback.getMessage() != null) {
+      text += feedback.getMessage() + "<BR>";
+    }
+    String subject = feedback.getContactName() + " has submitted feedback for " + httpRequest.getServerName();
     if (feedback.getSubject() != null) {
       subject = feedback.getSubject();
     }

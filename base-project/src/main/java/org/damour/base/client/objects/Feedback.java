@@ -9,7 +9,7 @@ public class Feedback {
   private String contactName;
   private String email;
   private String phone;
-  private String comments;
+  private String message;
 
   public Feedback() {
   }
@@ -38,12 +38,12 @@ public class Feedback {
     this.phone = phone;
   }
 
-  public String getComments() {
-    return comments;
+  public String getMessage() {
+    return message;
   }
 
-  public void setComments(String comments) {
-    this.comments = comments;
+  public void setMessage(String comments) {
+    this.message = comments;
   }
 
   public Date getDate() {
