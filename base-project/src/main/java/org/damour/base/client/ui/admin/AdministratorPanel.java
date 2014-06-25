@@ -21,7 +21,8 @@ public class AdministratorPanel extends VerticalPanel implements IAdminCallback 
   HibernateAdminPanel hibernateAdminPanel;
   HQLPanel hqlPanel;
   ReferralPanel referralPanel;
-  MemoryAdminPanel memoryAdminPanel;
+  SystemAdminPanel systemAdminPanel;
+  LogPanel logPanel;
 
   List<UserGroup> groups;
   List<User> users;
@@ -63,8 +64,10 @@ public class AdministratorPanel extends VerticalPanel implements IAdminCallback 
         adminTabPanel.addTab("Hibernate", "Hibernate", false, hibernateAdminPanel);
         hqlPanel = new HQLPanel();
         adminTabPanel.addTab("HQL", "HQL", false, hqlPanel);
-        memoryAdminPanel = new MemoryAdminPanel();
-        adminTabPanel.addTab("Memory", "Memory", false, memoryAdminPanel);
+        systemAdminPanel = new SystemAdminPanel();
+        adminTabPanel.addTab("System", "System", false, systemAdminPanel);
+        logPanel = new LogPanel();
+        adminTabPanel.addTab("Logs", "Logs", false, logPanel);
         adminTabPanel.selectTab(0);
       }
     };

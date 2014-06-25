@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class MemoryStats implements Serializable {
 
+  public long uptime;
+  public long startupDate;
   public long freeMemory;
   public long totalMemory;
   public long maxMemory;
@@ -33,6 +35,22 @@ public class MemoryStats implements Serializable {
 
   public void setMaxMemory(long maxMemory) {
     this.maxMemory = maxMemory;
+  }
+
+  public long getUptime() {
+    return uptime;
+  }
+
+  public void setUptime(long uptime) {
+    this.uptime = uptime;
+  }
+
+  public long getStartupDate() {
+    return startupDate;
+  }
+
+  public void setStartupDate(long startupDate) {
+    this.startupDate = startupDate;
   }
 
 }

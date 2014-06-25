@@ -47,7 +47,7 @@ public class Logger {
   }
 
   public static String convertStringToHTML(final String input) {
-    return input.replaceAll("\n", "<BR/>\n").replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+    return input.replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\n", "<BR/>\n").replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
   }
 
   public synchronized static void log(Throwable throwable) {
