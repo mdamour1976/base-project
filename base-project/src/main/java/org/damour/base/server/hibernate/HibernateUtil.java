@@ -3,7 +3,6 @@ package org.damour.base.server.hibernate;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -50,36 +49,6 @@ public class HibernateUtil {
   private String hbm2ddlMode = "update";
   private String dialect = "org.hibernate.dialect.MySQL5InnoDBDialect";
   private boolean generateStatistics = true;
-
-  static {
-    Runnable monitor = new Runnable() {
-      public void run() {
-        int counter = 0;
-        while (true) {
-          try {
-            // every minute
-            Thread.sleep(60000);
-          } catch (Exception e) {
-          }
-
-          counter++;
-          if (counter % 240 == 0) {
-            // reset the hibernate cache every 4 hours
-            HibernateUtil.resetHibernate();
-          }
-
-          // System.gc();
-          long total = Runtime.getRuntime().totalMemory();
-          long free = Runtime.getRuntime().freeMemory();
-          Logger.log(DecimalFormat.getNumberInstance().format(total) + " allocated " + DecimalFormat.getNumberInstance().format(total - free) + " used "
-              + DecimalFormat.getNumberInstance().format(free) + " free");
-        }
-      }
-    };
-    Thread t = new Thread(monitor);
-    t.setDaemon(true);
-    t.start();
-  }
 
   private HibernateUtil(HashMap<String, String> overrides) {
     Logger.log("creating new HibernateUtil()");
