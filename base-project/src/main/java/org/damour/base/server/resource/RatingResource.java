@@ -107,7 +107,8 @@ public class RatingResource {
       userRating.setRating(rating);
       userRating.setVoter(authUser);
       userRating.setVoterGUID(RatingHelper.getVoterGUID(httpRequest, httpResponse));
-
+      userRating.setIp(httpRequest.getRemoteAddr());
+      
       session.save(userRating);
       tx.commit();
       return userRating;

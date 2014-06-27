@@ -10,6 +10,7 @@ public class UserRating implements Serializable, IHibernateFriendly {
   public String voterGUID;
   public int rating = 0; // 0-5
   public long ratingDate = System.currentTimeMillis();
+  public String ip;
 
   public UserRating() {
   }
@@ -51,7 +52,7 @@ public class UserRating implements Serializable, IHibernateFriendly {
   public int getFieldLength(String fieldName) {
     return -1;
   }
-  
+
   public User getVoter() {
     return voter;
   }
@@ -82,6 +83,14 @@ public class UserRating implements Serializable, IHibernateFriendly {
 
   public void setRating(int rating) {
     this.rating = rating;
+  }
+
+  public String getIp() {
+    return ip;
+  }
+
+  public void setIp(String ip) {
+    this.ip = ip;
   }
 
   /*
