@@ -1,5 +1,7 @@
 package org.damour.base.server.resource;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.IOUtils;
 import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.AdvertisingInfo;
 import org.damour.base.client.objects.Email;
@@ -26,6 +29,7 @@ import org.damour.base.client.objects.Feedback;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.MemoryStats;
+import org.damour.base.client.objects.StringWrapper;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.BaseSystem;
@@ -109,6 +113,13 @@ public class BaseResource {
     return new Date(BaseSystem.getStartupDate());
   }
 
+  @GET
+  @Path("/uptime")
+  @Produces(MediaType.TEXT_PLAIN)
+  public long getUptime() {
+    return System.currentTimeMillis() - BaseSystem.getStartupDate();
+  }
+
   @POST
   @Path("/hibernate/executeHQL")
   @Produces(MediaType.TEXT_PLAIN)
@@ -172,6 +183,8 @@ public class BaseResource {
     stats.setMaxMemory(Runtime.getRuntime().maxMemory());
     stats.setTotalMemory(Runtime.getRuntime().totalMemory());
     stats.setFreeMemory(Runtime.getRuntime().freeMemory());
+    stats.setStartupDate(BaseSystem.getStartupDate());
+    stats.setUptime(System.currentTimeMillis() - BaseSystem.getStartupDate());
     return stats;
   }
 
@@ -287,6 +300,42 @@ public class BaseResource {
     } catch (Throwable t) {
       Logger.log(t);
       throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/log/{lines}")
+  public StringWrapper getLog(@PathParam("lines") Long lines, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    Session session = HibernateUtil.getInstance().getSession();
+    try {
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null || !authUser.isAdministrator()) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      String logString = null;
+      if (lines != null && lines > 0) {
+        // tail, by our definition, will just return the last 4k of text
+        File logFile = new File(Logger.getLogName());
+        FileInputStream logStream = new FileInputStream(logFile);
+        if (logFile.length() > lines) {
+          long skip = logFile.length() - lines;
+          logStream.skip(skip);
+        }
+        logString = IOUtils.toString(logStream);
+        logString = logString.substring(logString.indexOf("\n") + 1);
+        logStream.close();
+      } else {
+        FileInputStream logStream = new FileInputStream(Logger.getLogName());
+        logString = IOUtils.toString(logStream);
+        logStream.close();
+      }
+      logString = Logger.convertStringToHTML(logString);
+      return new StringWrapper(logString);
+    } catch (Exception ex) {
+      return new StringWrapper(Logger.convertStringToHTML(Logger.convertThrowableToString(ex)));
     } finally {
       session.close();
     }

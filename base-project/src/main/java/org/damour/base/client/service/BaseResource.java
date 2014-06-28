@@ -17,6 +17,7 @@ import org.damour.base.client.objects.Feedback;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.HibernateStat;
 import org.damour.base.client.objects.MemoryStats;
+import org.damour.base.client.objects.StringWrapper;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
 
@@ -38,6 +39,11 @@ public interface BaseResource extends RestService {
   @GET
   @Path("startupDate")
   void getServerStartupDate(MethodCallback<Date> callback);
+
+  @GET
+  @Path("/uptime")
+  @Produces(MediaType.TEXT_PLAIN)
+  void getUptime(MethodCallback<Long> callback);
 
   @POST
   @Path("hibernate/executeHQL")
@@ -76,6 +82,10 @@ public interface BaseResource extends RestService {
   @GET
   @Path("fileUploadStatus")
   public void getFileUploadStatus(MethodCallback<FileUploadStatus> callback);
-  
-  
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("log/{lines}")
+  public void getLog(@PathParam("lines") Long lines, MethodCallback<StringWrapper> callback);
+
 }
