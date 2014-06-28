@@ -17,10 +17,16 @@
 package org.damour.base.client.utils;
 
 import com.google.gwt.http.client.URL;
+import com.google.gwt.i18n.client.NumberFormat;
 
 // see: http://commons.apache.org/lang/apidocs/org/apache/commons/lang/StringUtils.html
 
 public class StringUtils {
+
+  public final static long SECOND = 1000;
+  public final static long MINUTE = SECOND * 60;
+  public final static long HOUR = MINUTE * 60;
+  public final static long DAY = HOUR * 24;
 
   public static boolean isEmpty(String str) {
     return null == str || "".equals(str.trim()); //$NON-NLS-1$
@@ -40,6 +46,36 @@ public class StringUtils {
 
   public static String divideStringWithInt(String strDividend, int divisor) {
     return Integer.toString(Integer.parseInt(strDividend) / divisor);
+  }
+
+  public static String getPrettyDuration(long duration) {
+    NumberFormat daysFormat = NumberFormat.getFormat("#,###");
+    NumberFormat tsFormat = NumberFormat.getFormat("00");
+    StringBuffer sb = new StringBuffer();
+    if (duration >= SECOND) {
+      long days = duration / DAY;
+      if (days > 0) {
+        duration -= days * DAY;
+        sb.append(daysFormat.format(days)).append(" day").append(days > 1 ? "s" : "").append(duration >= MINUTE ? ", " : "");
+      }
+
+      long hours = duration / HOUR;
+      if (hours > 0) {
+        duration -= hours * HOUR;
+      }
+
+      long minutes = duration / MINUTE;
+      if (minutes > 0) {
+        duration -= minutes * MINUTE;
+      }
+
+      long seconds = duration / SECOND;
+      
+      sb.append(tsFormat.format(hours)).append(":").append(tsFormat.format(minutes)).append(":").append(tsFormat.format(seconds));
+
+      return sb.toString();
+    }
+    return duration + "ms";
   }
 
   public static String patchURL(String unsafeURL) {
@@ -82,4 +118,5 @@ public class StringUtils {
       return strInt.matches(MATCH_POSITIVE_INTEGER_RE);
     }
   }
+
 }

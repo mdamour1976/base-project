@@ -11,7 +11,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.damour.base.client.objects.Folder;
@@ -101,7 +100,7 @@ public interface PermissibleResource extends RestService {
   void getCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
 
   @POST
-  @Path("/counter/{id}")
+  @Path("/counterTick/{id}")
   void incrementCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
 
 }

@@ -15,7 +15,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -63,9 +62,13 @@ public class PermissibleResource {
       session = HibernateUtil.getInstance().getSession();
       tx = session.beginTransaction();
 
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
-      if (authUser == null && permissibleObject instanceof IAnonymousPermissibleObject) {
-        authUser = UserHelper.getUser(session, "anonymous");
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+        if (permissibleObject instanceof IAnonymousPermissibleObject) {
+          authUser = UserHelper.getUser(session, "anonymous");
+        }
       }
       if (authUser == null) {
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -162,7 +165,14 @@ public class PermissibleResource {
       tx = session.beginTransaction();
       User newOwner = ((User) session.load(User.class, permissibleObject.getOwner().getId()));
 
-      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      User authUser = null;
+      try {
+        authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      } catch (Throwable t) {
+        if (permissibleObject instanceof IAnonymousPermissibleObject) {
+          authUser = UserHelper.getUser(session, "anonymous");
+        }
+      }
       if (authUser == null) {
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
@@ -546,7 +556,7 @@ public class PermissibleResource {
       if (authUser == null) {
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
-      PermissibleObject hibObj = (Folder) session.load(PermissibleObject.class, id);
+      PermissibleObject hibObj = (PermissibleObject) session.load(PermissibleObject.class, id);
       if (!SecurityHelper.doesUserHavePermission(session, authUser, hibObj, PERM.WRITE)) {
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
@@ -594,7 +604,7 @@ public class PermissibleResource {
   }
 
   @POST
-  @Path("/counter")
+  @Path("/counterTick")
   @Produces(MediaType.APPLICATION_JSON)
   public Long incrementCustomCounter1(@PathParam("id") Long id, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     if (id == null) {
