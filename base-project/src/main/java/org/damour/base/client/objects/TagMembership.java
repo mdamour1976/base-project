@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class TagMembership implements Serializable, IHibernateFriendly {
+public class TagMembership implements Serializable {
 
   public Long id;
   public Tag tag;
@@ -42,7 +42,7 @@ public class TagMembership implements Serializable, IHibernateFriendly {
   public int getFieldLength(String fieldName) {
     return -1;
   }
-  
+
   public Tag getTag() {
     return tag;
   }

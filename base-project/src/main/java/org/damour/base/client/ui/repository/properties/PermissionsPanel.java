@@ -9,7 +9,6 @@ import org.damour.base.client.objects.SecurityPrincipal;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.objects.UserGroup;
 import org.damour.base.client.service.ResourceCache;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.admin.commands.CreateGroupCommand;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
@@ -290,15 +289,15 @@ public class PermissionsPanel extends VerticalPanel {
 
   public void apply(final AsyncCallback<Void> callback) {
     if (dirty) {
-      AsyncCallback<Void> setPermCallback = new AsyncCallback<Void>() {
-        public void onFailure(Throwable caught) {
-          callback.onFailure(caught);
+      MethodCallback<Void> setPermCallback = new MethodCallback<Void>() {
+        public void onFailure(Method method, Throwable exception) {
+          callback.onFailure(exception);
         }
 
-        public void onSuccess(Void nothing) {
+        public void onSuccess(Method method, Void response) {
         }
       };
-      BaseServiceCache.getService().setPermissions(permissibleObject, permissions, setPermCallback);
+      ResourceCache.getPermissibleResource().setPermissions(permissibleObject.getId(), permissions, setPermCallback);
     }
   }
 

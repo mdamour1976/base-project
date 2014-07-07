@@ -7,7 +7,6 @@ import org.damour.base.client.localization.IResourceBundleLoadCallback;
 import org.damour.base.client.localization.ResourceBundle;
 import org.damour.base.client.objects.Referral;
 import org.damour.base.client.objects.User;
-import org.damour.base.client.service.BaseServiceCache;
 import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.IGenericCallback;
 import org.damour.base.client.ui.authentication.AuthenticationHandler;
@@ -21,12 +20,10 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.gwt.user.client.ui.RootPanel;
 
 public class BaseApplication implements EntryPoint, StartupListener {
 
-  public static final String BASE_SERVICE_PATH = "/servlet/org.damour.base.server.BaseService";
   public static final String CAPTCHA_SERVICE_PATH = "/servlet/org.damour.base.server.CaptchaImageGeneratorService";
   public static final String FILE_UPLOAD_SERVICE_PATH = "/servlet/org.damour.base.server.FileUploadService";
   public static final String GET_FILE_SERVICE_PATH = "/files/";
@@ -94,8 +91,6 @@ public class BaseApplication implements EntryPoint, StartupListener {
     setApplicationInitialized();
 
     addStartupListener(this);
-    // set default base service path
-    ((ServiceDefTarget) BaseServiceCache.getServiceUnsafe()).setServiceEntryPoint(BASE_SERVICE_PATH);
 
     GWT.runAsync(new RunAsyncCallback() {
 
@@ -177,10 +172,6 @@ public class BaseApplication implements EntryPoint, StartupListener {
         settings_override.loadBundle("settings/", "settings_override", false, new IResourceBundleLoadCallback() {
           public void bundleLoaded(String bundleName) {
             settings.mergeResourceBundle(settings_override);
-            String serviceEntryPoint = settings.getString("BaseService", BASE_SERVICE_PATH);
-            if (!StringUtils.isEmpty(serviceEntryPoint)) {
-              ((ServiceDefTarget) BaseServiceCache.getServiceUnsafe()).setServiceEntryPoint(serviceEntryPoint);
-            }
             callback.invoke(null);
           }
         });

@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class Referral implements Serializable, IHibernateFriendly {
+public class Referral implements Serializable {
   public Long id;
   public PermissibleObject subject;
   public String url;
@@ -43,7 +43,7 @@ public class Referral implements Serializable, IHibernateFriendly {
     }
     return -1;
   }
-  
+
   public String getSqlUpdate() {
     return null;
   }

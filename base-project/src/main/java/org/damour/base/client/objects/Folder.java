@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class Folder extends PermissibleObject implements Serializable, IHibernateFriendly {
+public class Folder extends PermissibleObject implements Serializable {
 
   public boolean hidden = false;
 

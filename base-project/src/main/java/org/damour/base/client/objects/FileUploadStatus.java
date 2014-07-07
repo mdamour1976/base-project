@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class FileUploadStatus implements Serializable {
+public class FileUploadStatus  {
   public static final int UPLOADING = 1;
   public static final int CREATING_FILE = 2;
   public static final int WRITING_FILE = 3;

@@ -7,6 +7,7 @@ import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.buttons.Button;
 import org.damour.base.client.ui.scrolltable.ScrollTable;
 import org.damour.base.client.utils.ParameterParser;
+import org.damour.base.client.utils.StringUtils;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 
@@ -49,12 +50,12 @@ public class ReferralPanel extends VerticalPanel {
   }
 
   private void fetchReferrals(final ScrollTable table) {
+    table.removeAllRows();
     ResourceCache.getReferralResource().getReferrals(new MethodCallback<List<Referral>>() {
       public void onFailure(Method method, Throwable caught) {
       }
 
       public void onSuccess(Method method, List<Referral> referrals) {
-        table.removeAllRows();
         int row = 0;
         for (Referral referral : referrals) {
           int col = 0;
@@ -71,7 +72,7 @@ public class ReferralPanel extends VerticalPanel {
           if (referralUrl.length() > 100) {
             referralUrl = referralUrl.substring(0, 100);
           }
-          Label referrerLabel = new Label(referralUrl);
+          Label referrerLabel = new Label(StringUtils.truncateString(referralUrl, 90, true));
           referrerLabel.setTitle(referral.getReferralURL());
           
           Label counterLabel = new Label(referral.getCounter() + "");

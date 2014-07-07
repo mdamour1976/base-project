@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class UserThumb implements Serializable, IHibernateFriendly {
+public class UserThumb implements Serializable {
 
   public Long id;
   public User voter;
@@ -51,7 +51,7 @@ public class UserThumb implements Serializable, IHibernateFriendly {
   public int getFieldLength(String fieldName) {
     return -1;
   }
-  
+
   public User getVoter() {
     return voter;
   }

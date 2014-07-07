@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class File extends PermissibleObject implements Serializable, IHibernateFriendly {
+public class File extends PermissibleObject {
 
   public String contentType;
 

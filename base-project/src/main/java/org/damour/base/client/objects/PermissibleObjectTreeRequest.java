@@ -1,9 +1,8 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class PermissibleObjectTreeRequest implements Serializable {
+public class PermissibleObjectTreeRequest {
 
   public PermissibleObject parent;
   public User owner;

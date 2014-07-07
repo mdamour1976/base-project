@@ -1,10 +1,9 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Page<T> implements Serializable {
+public class Page<T> {
 
   public List<T> results = new ArrayList<T>();
   public int pageNumber;

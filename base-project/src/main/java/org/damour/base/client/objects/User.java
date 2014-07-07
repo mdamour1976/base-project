@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class User extends SecurityPrincipal implements Serializable, IHibernateFriendly {
+public class User extends SecurityPrincipal {
 
   public String username;
   public transient String passwordHash;

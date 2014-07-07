@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.damour.base.client.BaseApplication;
 import org.damour.base.client.images.BaseImageBundle;
 import org.damour.base.client.objects.File;
 import org.damour.base.client.objects.Folder;
@@ -33,6 +34,8 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class GeneralPanel extends FlexTable {
 
   private VerticalPanel globalPermissionsPanel = new VerticalPanel();
+  private VerticalPanel optionsPanel = new VerticalPanel();
+
   private PermissibleObject permissibleObject;
   private TextBox nameTextBox = new TextBox();
   private TextBox priorityTextBox = new TextBox();
@@ -44,6 +47,10 @@ public class GeneralPanel extends FlexTable {
   private CheckBox hiddenCheckBox = new CheckBox("Hidden");
   private CheckBox allowCommentsCheckBox = new CheckBox("Allow Comments");
   private CheckBox allowRatingsCheckBox = new CheckBox("Allow Ratings");
+
+  private CheckBox customFlag1CheckBox = new CheckBox(BaseApplication.getMessages().getString("customFlag1", "Custom Flag 1"));
+  private CheckBox customFlag2CheckBox = new CheckBox(BaseApplication.getMessages().getString("customFlag2", "Custom Flag 2"));
+  private CheckBox customFlag3CheckBox = new CheckBox(BaseApplication.getMessages().getString("customFlag3", "Custom Flag 3"));
 
   private boolean dirty = false;
 
@@ -86,6 +93,21 @@ public class GeneralPanel extends FlexTable {
       }
     });
     allowRatingsCheckBox.addClickHandler(new ClickHandler() {
+      public void onClick(ClickEvent event) {
+        dirty = true;
+      }
+    });
+    customFlag1CheckBox.addClickHandler(new ClickHandler() {
+      public void onClick(ClickEvent event) {
+        dirty = true;
+      }
+    });
+    customFlag2CheckBox.addClickHandler(new ClickHandler() {
+      public void onClick(ClickEvent event) {
+        dirty = true;
+      }
+    });
+    customFlag3CheckBox.addClickHandler(new ClickHandler() {
       public void onClick(ClickEvent event) {
         dirty = true;
       }
@@ -140,6 +162,11 @@ public class GeneralPanel extends FlexTable {
     globalPermissionsPanelWrapper.setContentWidget(globalPermissionsPanel);
     setWidget(++row, 0, globalPermissionsPanelWrapper);
     getFlexCellFormatter().setColSpan(row, 0, 2);
+    // options
+    CaptionPanel optionsPanelWrapper = new CaptionPanel("Options");
+    optionsPanelWrapper.setContentWidget(optionsPanel);
+    setWidget(++row, 0, optionsPanelWrapper);
+    getFlexCellFormatter().setColSpan(row, 0, 2);
   }
 
   private Label buildOwnerLabel() {
@@ -156,14 +183,24 @@ public class GeneralPanel extends FlexTable {
     hiddenCheckBox.setValue(permissibleObject.isHidden());
     allowCommentsCheckBox.setValue(permissibleObject.isAllowComments());
     allowRatingsCheckBox.setValue(permissibleObject.isAllowComments());
+    customFlag1CheckBox.setValue(permissibleObject.getCustomFlag1());
+    customFlag2CheckBox.setValue(permissibleObject.getCustomFlag2());
+    customFlag3CheckBox.setValue(permissibleObject.getCustomFlag3());
+
     globalPermissionsPanel.setHeight("100%");
     globalPermissionsPanel.add(globalReadCheckBox);
     globalPermissionsPanel.add(globalWriteCheckBox);
     globalPermissionsPanel.add(globalExecuteCheckBox);
     globalPermissionsPanel.add(globalCreateChildrenCheckBox);
-    globalPermissionsPanel.add(hiddenCheckBox);
-    globalPermissionsPanel.add(allowCommentsCheckBox);
-    globalPermissionsPanel.add(allowRatingsCheckBox);
+
+    optionsPanel.setHeight("100%");
+    optionsPanel.add(hiddenCheckBox);
+    optionsPanel.add(allowCommentsCheckBox);
+    optionsPanel.add(allowRatingsCheckBox);
+    optionsPanel.add(customFlag1CheckBox);
+    optionsPanel.add(customFlag2CheckBox);
+    optionsPanel.add(customFlag3CheckBox);
+
   }
 
   @SuppressWarnings("deprecation")
@@ -258,6 +295,11 @@ public class GeneralPanel extends FlexTable {
       permissibleObject.setHidden(hiddenCheckBox.getValue());
       permissibleObject.setAllowComments(allowCommentsCheckBox.getValue());
       permissibleObject.setAllowRating(allowRatingsCheckBox.getValue());
+
+      permissibleObject.setCustomFlag1(customFlag1CheckBox.getValue());
+      permissibleObject.setCustomFlag2(customFlag2CheckBox.getValue());
+      permissibleObject.setCustomFlag3(customFlag3CheckBox.getValue());
+
       MethodCallback<PermissibleObject> updatePermissibleObjectCallback = new MethodCallback<PermissibleObject>() {
         @Override
         public void onFailure(Method method, Throwable exception) {

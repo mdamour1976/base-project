@@ -7,10 +7,9 @@ import org.codehaus.jackson.annotate.JsonTypeInfo.As;
 import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
 import org.codehaus.jackson.map.annotate.JsonTypeIdResolver;
 
-@SuppressWarnings({ "serial", "rawtypes" })
 @JsonTypeIdResolver(org.damour.base.server.resource.PermissibleObjectResolver.class)
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "@type")
-public class PermissibleObject implements Serializable, IHibernateFriendly, Comparable {
+public class PermissibleObject implements Serializable, Comparable<PermissibleObject> {
 
   public Long id;
   public User owner;
@@ -43,6 +42,11 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
   public Long customCounter1 = new Long(0);
   public Long customCounter2 = new Long(0);
   public Long customCounter3 = new Long(0);
+
+  // custom flags which may be optionally used by clients
+  public Boolean customFlag1 = false;
+  public Boolean customFlag2 = false;
+  public Boolean customFlag3 = false;
 
   public boolean hidden = false;
 
@@ -226,7 +230,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     }
     this.allowRating = allowRating;
   }
-  
+
   /**
    * @return the averageRating
    */
@@ -385,6 +389,39 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     this.customCounter3 = customCounter3;
   }
 
+  public Boolean getCustomFlag1() {
+    if (customFlag1 == null) {
+      customFlag1 = false;
+    }
+    return customFlag1;
+  }
+
+  public void setCustomFlag1(Boolean customFlag1) {
+    this.customFlag1 = customFlag1;
+  }
+
+  public Boolean getCustomFlag2() {
+    if (customFlag2 == null) {
+      customFlag2 = false;
+    }
+    return customFlag2;
+  }
+
+  public void setCustomFlag2(Boolean customFlag2) {
+    this.customFlag2 = customFlag2;
+  }
+
+  public Boolean getCustomFlag3() {
+    if (customFlag3 == null) {
+      customFlag3 = false;
+    }
+    return customFlag3;
+  }
+
+  public void setCustomFlag3(Boolean customFlag3) {
+    this.customFlag3 = customFlag3;
+  }
+
   public boolean isHidden() {
     return hidden;
   }
@@ -401,7 +438,7 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     return null;
   }
 
-  public int compareTo(Object o) {
+  public int compareTo(PermissibleObject o) {
     if (o instanceof PermissibleObject == false) {
       return 0;
     }
@@ -434,6 +471,9 @@ public class PermissibleObject implements Serializable, IHibernateFriendly, Comp
     target.customCounter1 = source.customCounter1;
     target.customCounter2 = source.customCounter2;
     target.customCounter3 = source.customCounter3;
+    target.customFlag1 = source.customFlag1;
+    target.customFlag2 = source.customFlag2;
+    target.customFlag3 = source.customFlag3;
     target.hidden = source.hidden;
     target.globalRead = source.globalRead;
     target.globalWrite = source.globalWrite;

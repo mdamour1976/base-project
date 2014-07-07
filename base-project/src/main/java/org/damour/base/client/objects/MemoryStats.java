@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class MemoryStats implements Serializable {
+public class MemoryStats  {
 
   public long uptime;
   public long startupDate;

@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class UserRating implements Serializable, IHibernateFriendly {
+public class UserRating implements Serializable {
 
   public Long id;
   public User voter;

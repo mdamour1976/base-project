@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class HibernateStat implements Serializable {
+public class HibernateStat {
 
   public String regionName;
   public long cachePuts;

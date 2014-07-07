@@ -15,6 +15,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -27,6 +28,7 @@ import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.PermissibleObjectTreeRequest;
+import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.Permission.PERM;
 import org.damour.base.client.objects.RepositoryTreeNode;
 import org.damour.base.client.objects.User;
@@ -632,4 +634,154 @@ public class PermissibleResource {
     }
   }
 
+  @GET
+  @Path("/my/{parent}/{objectType}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObject> getMyPermissibleObjects(@PathParam("parent") Long parentId, @PathParam("objectType") String objectType,
+      @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (parentId == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      PermissibleObject parent = (PermissibleObject) session.load(PermissibleObject.class, parentId);
+      Class<?> clazz = Class.forName(objectType);
+      return PermissibleObjectHelper.getMyPermissibleObjects(session, authUser, parent, clazz);
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
+  @GET
+  @Path("/perms/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<Permission> getPermissions(@PathParam("id") Long id, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    if (id == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      PermissibleObject permissibleObject = ((PermissibleObject) session.load(PermissibleObject.class, id));
+      if (!authUser.isAdministrator() && !permissibleObject.getOwner().equals(authUser)) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      return SecurityHelper.getPermissions(session, permissibleObject);
+    } catch (Throwable t) {
+      Logger.log(t);
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      session.close();
+    }
+  }
+
+  @POST
+  @Path("/perms/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public void setPermissions(@PathParam("id") Long id, List<Permission> permissions, @Context HttpServletRequest httpRequest,
+      @Context HttpServletResponse httpResponse) {
+    if (id == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    if (permissions == null) {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
+    }
+    Session session = null;
+    Transaction tx = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      if (authUser == null) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      tx = session.beginTransaction();
+      PermissibleObject hibPermissibleObject = ((PermissibleObject) session.load(PermissibleObject.class, id));
+      if (!authUser.isAdministrator() && !hibPermissibleObject.getOwner().equals(authUser)) {
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+      }
+      session.evict(authUser);
+
+      SecurityHelper.deletePermissions(session, hibPermissibleObject);
+      for (Permission permission : permissions) {
+        session.save(permission);
+      }
+
+      List<Field> fields = ReflectionCache.getFields(hibPermissibleObject.getClass());
+      for (Field field : fields) {
+        try {
+          // do not update parent permission only our 'owned' objects
+          if (!"parent".equals(field.getName())) {
+            Object obj = field.get(hibPermissibleObject);
+            if (obj instanceof PermissibleObject) {
+              PermissibleObject childObj = (PermissibleObject) obj;
+              childObj.setGlobalRead(hibPermissibleObject.isGlobalRead());
+              childObj.setGlobalWrite(hibPermissibleObject.isGlobalWrite());
+              childObj.setGlobalExecute(hibPermissibleObject.isGlobalExecute());
+              childObj.setGlobalCreateChild(hibPermissibleObject.isGlobalCreateChild());
+              SecurityHelper.deletePermissions(session, childObj);
+              for (Permission permission : permissions) {
+                Permission newPerm = new Permission();
+                newPerm.setPermissibleObject(childObj);
+                newPerm.setSecurityPrincipal(permission.getSecurityPrincipal());
+                newPerm.setReadPerm(permission.isReadPerm());
+                newPerm.setWritePerm(permission.isWritePerm());
+                newPerm.setExecutePerm(permission.isExecutePerm());
+                newPerm.setCreateChildPerm(permission.isCreateChildPerm());
+                session.save(newPerm);
+              }
+            }
+          }
+        } catch (Exception e) {
+          Logger.log(e);
+        }
+      }
+      tx.commit();
+    } catch (Throwable t) {
+      Logger.log(t);
+      try {
+        tx.rollback();
+      } catch (Throwable tt) {
+      }
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @GET
+  @Path("/search/{parent}/{searchObjectType}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PermissibleObjectTreeNode> searchPermissibleObjects(@PathParam("parent") Long parent, @PathParam("searchObjectType") String searchObjectType,
+      @QueryParam("query") String query, @QueryParam("sortField") String sortField, @QueryParam("sortDescending") boolean sortDescending,
+      @QueryParam("searchNames") boolean searchNames, @QueryParam("searchDescriptions") boolean searchDescriptions,
+      @QueryParam("searchKeywords") boolean searchKeywords, @QueryParam("useExactPhrase") boolean useExactPhrase, @Context HttpServletRequest httpRequest,
+      @Context HttpServletResponse httpResponse) {
+    Session session = null;
+    try {
+      session = HibernateUtil.getInstance().getSession();
+      User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
+      // return all permissible objects which match the name/description
+      Class<?> clazz = Class.forName(searchObjectType);
+      return PermissibleObjectHelper.search(session, authUser, RatingHelper.getVoterGUID(httpRequest, httpResponse), clazz, query, sortField, sortDescending,
+          searchNames, searchDescriptions, searchKeywords, useExactPhrase);
+    } catch (Throwable t) {
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

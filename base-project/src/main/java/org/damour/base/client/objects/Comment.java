@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class Comment extends PermissibleObject implements Serializable {
+public class Comment extends PermissibleObject {
 
   public User author;
   public String comment;

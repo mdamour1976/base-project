@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class Photo extends File implements Serializable, IHibernateFriendly {
+public class Photo extends File {
 
   public PhotoThumbnail slideshowImage;
   public PhotoThumbnail previewImage;

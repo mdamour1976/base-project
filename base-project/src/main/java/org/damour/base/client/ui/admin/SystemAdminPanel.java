@@ -115,6 +115,15 @@ public class SystemAdminPanel extends VerticalPanel {
   }
 
   private void requestGarbageCollection() {
+    for (int row = 1; row < statsTable.getRowCount(); row++) {
+      statsTable.setWidget(row, 0, new Label("."));
+      statsTable.setWidget(row, 1, new Label("."));
+      statsTable.setWidget(row, 2, new Label("."));
+      statsTable.setWidget(row, 3, new Label("."));
+      statsTable.setWidget(row, 4, new Label("."));
+      statsTable.setWidget(row, 5, new Label("."));
+      statsTable.setWidget(row, 6, new Label("."));
+    }    
     final MethodCallback<MemoryStats> callback = new MethodCallback<MemoryStats>() {
       public void onFailure(Method method, Throwable caught) {
         Window.alert(caught.getMessage());

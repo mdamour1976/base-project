@@ -1,8 +1,6 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
-
-public class UserGroup extends SecurityPrincipal implements Serializable, IHibernateFriendly {
+public class UserGroup extends SecurityPrincipal {
 
   public String name;
   public String description;

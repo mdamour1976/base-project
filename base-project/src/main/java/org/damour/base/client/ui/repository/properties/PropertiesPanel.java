@@ -5,8 +5,10 @@ import java.util.List;
 
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.Permission;
-import org.damour.base.client.service.BaseServiceCache;
+import org.damour.base.client.service.ResourceCache;
 import org.damour.base.client.ui.tabs.BaseTabPanel;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -51,7 +53,7 @@ public class PropertiesPanel extends SimplePanel {
   private void populateUI() {
     tabPanel.closeAllTabs();
     tabPanel.addTab("General", "General", false, generalPanel);
-    tabPanel.addTab("User Permissions", "User Permissions", false, userPermissionsPanel); 
+    tabPanel.addTab("User Permissions", "User Permissions", false, userPermissionsPanel);
     tabPanel.addTab("Groups Permissions", "Groups Permissions", false, groupPermissionsPanel);
     if (defaultView.equals(VIEW.GENERAL)) {
       tabPanel.selectTab(0);
@@ -73,17 +75,18 @@ public class PropertiesPanel extends SimplePanel {
   }
 
   private void fetchPermissions() {
-    AsyncCallback<List<Permission>> callback = new AsyncCallback<List<Permission>>() {
-      public void onFailure(Throwable caught) {
+    MethodCallback<List<Permission>> callback = new MethodCallback<List<Permission>>() {
+
+      public void onFailure(Method method, Throwable exception) {
         handleFetchFailure();
       }
 
-      public void onSuccess(List<Permission> inPermissions) {
+      public void onSuccess(Method method, List<Permission> inPermissions) {
         permissions = inPermissions;
         populateUI();
       }
     };
-    BaseServiceCache.getService().getPermissions(permissibleObject, callback);
+    ResourceCache.getPermissibleResource().getPermissions(permissibleObject.getId(), callback);
   }
 
   public void apply(AsyncCallback<Void> callback) {

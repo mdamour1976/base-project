@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class FileData implements Serializable, IHibernateFriendly {
+public class FileData implements Serializable {
 
   public Long id;
 

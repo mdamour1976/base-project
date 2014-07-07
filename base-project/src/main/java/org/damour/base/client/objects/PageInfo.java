@@ -1,8 +1,7 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 
-public class PageInfo implements Serializable {
+public class PageInfo {
 
   public long totalRowCount;
   public long lastPageNumber;

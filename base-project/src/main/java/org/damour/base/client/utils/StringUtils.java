@@ -70,7 +70,7 @@ public class StringUtils {
       }
 
       long seconds = duration / SECOND;
-      
+
       sb.append(tsFormat.format(hours)).append(":").append(tsFormat.format(minutes)).append(":").append(tsFormat.format(seconds));
 
       return sb.toString();
@@ -117,6 +117,17 @@ public class StringUtils {
     } else {
       return strInt.matches(MATCH_POSITIVE_INTEGER_RE);
     }
+  }
+
+  public static String truncateString(String input, int length, boolean showEllipsis) {
+    String str = input;
+    if (input.length() > length) {
+      str = input.substring(0, length);
+      if (showEllipsis) {
+        str += "..";
+      }
+    }
+    return str;
   }
 
 }

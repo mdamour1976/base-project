@@ -2,7 +2,8 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class Permission implements Serializable, IHibernateFriendly {
+
+public class Permission implements Serializable {
 
   public static enum PERM {
     READ, WRITE, EXECUTE, CREATE_CHILD

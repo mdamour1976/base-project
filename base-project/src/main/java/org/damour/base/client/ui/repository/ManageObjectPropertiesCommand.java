@@ -8,6 +8,7 @@ import org.damour.base.client.ui.repository.properties.PropertiesPanel;
 import org.damour.base.client.ui.repository.properties.PropertiesPanel.VIEW;
 
 import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -50,6 +51,12 @@ public class ManageObjectPropertiesCommand implements Command {
           public void cancelPressed() {
           }
         });
+        Timer t = new Timer() {
+          public void run() {
+            dialogBox.center();
+          }
+        };
+        t.schedule(250);
         dialogBox.center();
       }
     } catch (Exception e) {

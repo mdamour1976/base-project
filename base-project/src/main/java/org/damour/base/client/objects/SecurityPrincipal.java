@@ -2,7 +2,14 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class SecurityPrincipal implements Serializable, IHibernateFriendly {
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.annotate.JsonTypeInfo.As;
+import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
+import org.codehaus.jackson.map.annotate.JsonTypeIdResolver;
+
+@JsonTypeIdResolver(org.damour.base.server.resource.SecurityPrincipalResolver.class)
+@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "@type")
+public class SecurityPrincipal implements Serializable {
   public Long id;
 
   public Long getId() {
@@ -24,11 +31,11 @@ public class SecurityPrincipal implements Serializable, IHibernateFriendly {
   public String getFieldType(String fieldName) {
     return null;
   }
-  
+
   public int getFieldLength(String fieldName) {
     return -1;
   }
-  
+
   public String getSqlUpdate() {
     return null;
   }

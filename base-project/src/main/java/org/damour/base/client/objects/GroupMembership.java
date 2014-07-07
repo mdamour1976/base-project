@@ -2,7 +2,7 @@ package org.damour.base.client.objects;
 
 import java.io.Serializable;
 
-public class GroupMembership implements Serializable, IHibernateFriendly {
+public class GroupMembership implements Serializable {
 
   public User user;
   public UserGroup userGroup;

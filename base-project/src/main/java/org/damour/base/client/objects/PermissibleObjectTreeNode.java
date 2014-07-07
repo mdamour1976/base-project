@@ -1,10 +1,9 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PermissibleObjectTreeNode implements Serializable, Comparable<PermissibleObjectTreeNode> {
+public class PermissibleObjectTreeNode implements Comparable<PermissibleObjectTreeNode> {
 
   public PermissibleObject object;
   public UserRating userRating;

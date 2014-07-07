@@ -11,6 +11,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.damour.base.client.objects.Folder;
@@ -19,6 +20,7 @@ import org.damour.base.client.objects.PageInfo;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.PermissibleObjectTreeNode;
 import org.damour.base.client.objects.PermissibleObjectTreeRequest;
+import org.damour.base.client.objects.Permission;
 import org.damour.base.client.objects.RepositoryTreeNode;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
@@ -102,5 +104,24 @@ public interface PermissibleResource extends RestService {
   @POST
   @Path("/counterTick/{id}")
   void incrementCustomCounter1(@PathParam("id") Long id, MethodCallback<Long> callback);
+
+  @GET
+  @Path("/my/{parent}/{objectType}")
+  void getMyPermissibleObjects(@PathParam("parent") Long parent, @PathParam("objectType") String objectType, MethodCallback<List<PermissibleObject>> callback);
+
+  @GET
+  @Path("/perms/{id}")
+  void getPermissions(@PathParam("id") Long id, MethodCallback<List<Permission>> callback);
+
+  @POST
+  @Path("/perms/{id}")
+  void setPermissions(@PathParam("id") Long id, List<Permission> permissions, MethodCallback<Void> callback);
+
+  @GET
+  @Path("/search/{parent}/{searchObjectType}")
+  void searchPermissibleObjects(@PathParam("parent") Long parent, @PathParam("searchObjectType") String searchObjectType, @QueryParam("query") String query,
+      @QueryParam("sortField") String sortField, @QueryParam("sortDescending") boolean sortDescending, @QueryParam("searchNames") boolean searchNames,
+      @QueryParam("searchDescriptions") boolean searchDescriptions, @QueryParam("searchKeywords") boolean searchKeywords,
+      @QueryParam("useExactPhrase") boolean useExactPhrase, MethodCallback<List<PermissibleObjectTreeNode>> callback);
 
 }

@@ -11,7 +11,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-import org.damour.base.client.objects.IHibernateFriendly;
 import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.BaseSystem;
 import org.damour.base.server.Logger;
@@ -335,16 +334,20 @@ public class HibernateUtil {
       String sqlUpdate = null;
       String cachePolicy = "none";
       boolean lazy = true;
-      if (IHibernateFriendly.class.isAssignableFrom(clazz)) {
-        try {
-          Method getSqlUpdate = clazz.getMethod("getSqlUpdate");
-          sqlUpdate = (String) getSqlUpdate.invoke(clazz.newInstance());
-          Method getCachePolicy = clazz.getMethod("getCachePolicy");
-          Method isLazy = clazz.getMethod("isLazy");
-          cachePolicy = (String) getCachePolicy.invoke(clazz.newInstance());
-          lazy = (Boolean) isLazy.invoke(clazz.newInstance());
-        } catch (Exception e) {
-        }
+      try {
+        Method getSqlUpdate = clazz.getMethod("getSqlUpdate");
+        sqlUpdate = (String) getSqlUpdate.invoke(clazz.newInstance());
+      } catch (Exception e) {
+      }
+      try {
+        Method getCachePolicy = clazz.getMethod("getCachePolicy");
+        cachePolicy = (String) getCachePolicy.invoke(clazz.newInstance());
+      } catch (Exception e) {
+      }
+      try {
+        Method isLazy = clazz.getMethod("isLazy");
+        lazy = (Boolean) isLazy.invoke(clazz.newInstance());
+      } catch (Exception e) {
       }
       if (sqlUpdate != null && !"".equals(sqlUpdate)) {
         mappingElement.addElement("sql-update").setText(sqlUpdate);
@@ -394,18 +397,25 @@ public class HibernateUtil {
         Boolean isUnique = Boolean.FALSE;
         String typeOverride = null;
         int fieldLength = -1;
-        if (IHibernateFriendly.class.isAssignableFrom(clazz)) {
-          try {
-            Method isKeyMethod = clazz.getMethod("isFieldKey", String.class);
-            Method isUniqueMethod = clazz.getMethod("isFieldUnique", String.class);
-            Method getFieldTypeMethod = clazz.getMethod("getFieldType", String.class);
-            Method getFieldLengthMethod = clazz.getMethod("getFieldLength", String.class);
-            isKey = (Boolean) isKeyMethod.invoke(clazz.newInstance(), name);
-            isUnique = (Boolean) isUniqueMethod.invoke(clazz.newInstance(), name);
-            typeOverride = (String) getFieldTypeMethod.invoke(clazz.newInstance(), name);
-            fieldLength = (Integer) getFieldLengthMethod.invoke(clazz.newInstance(), name);
-          } catch (Exception e) {
-          }
+        try {
+          Method isKeyMethod = clazz.getMethod("isFieldKey", String.class);
+          isKey = (Boolean) isKeyMethod.invoke(clazz.newInstance(), name);
+        } catch (Exception e) {
+        }
+        try {
+          Method isUniqueMethod = clazz.getMethod("isFieldUnique", String.class);
+          isUnique = (Boolean) isUniqueMethod.invoke(clazz.newInstance(), name);
+        } catch (Exception e) {
+        }
+        try {
+          Method getFieldTypeMethod = clazz.getMethod("getFieldType", String.class);
+          typeOverride = (String) getFieldTypeMethod.invoke(clazz.newInstance(), name);
+        } catch (Exception e) {
+        }
+        try {
+          Method getFieldLengthMethod = clazz.getMethod("getFieldLength", String.class);
+          fieldLength = (Integer) getFieldLengthMethod.invoke(clazz.newInstance(), name);
+        } catch (Exception e) {
         }
         if (isKey) {
           Element keyElement = idElementMap.get(clazz);

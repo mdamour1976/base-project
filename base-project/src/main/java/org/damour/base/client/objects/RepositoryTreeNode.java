@@ -1,10 +1,9 @@
 package org.damour.base.client.objects;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RepositoryTreeNode implements Serializable {
+public class RepositoryTreeNode {
 
   public List<RepositoryTreeNode> children = new ArrayList<RepositoryTreeNode>();
   // either a File or Folder
