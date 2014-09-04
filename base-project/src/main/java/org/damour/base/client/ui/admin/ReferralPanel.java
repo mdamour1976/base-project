@@ -25,7 +25,7 @@ public class ReferralPanel extends VerticalPanel {
   }
 
   public void initUI() {
-    String[] columnWidths = new String[] { "600px", "400px", "60px" };
+    String[] columnWidths = new String[] { "700px", "350px", "60px" };
 
     final ScrollTable table = new ScrollTable(columnWidths, false);
     clear();

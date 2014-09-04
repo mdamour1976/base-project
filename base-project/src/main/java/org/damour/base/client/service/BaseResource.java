@@ -9,14 +9,16 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.damour.base.client.objects.AdvertisingInfo;
+import org.damour.base.client.objects.CpuStats;
 import org.damour.base.client.objects.Email;
 import org.damour.base.client.objects.Feedback;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.HibernateStat;
-import org.damour.base.client.objects.MemoryStats;
+import org.damour.base.client.objects.SystemStats;
 import org.damour.base.client.objects.StringWrapper;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.RestService;
@@ -56,12 +58,12 @@ public interface BaseResource extends RestService {
   void executeUpdateHQL(String query, MethodCallback<String> callback);
 
   @GET
-  @Path("memory/stats")
-  void getMemoryStats(MethodCallback<MemoryStats> callback);
+  @Path("system/stats")
+  void getSystemStats(@QueryParam("from") Long from, @QueryParam("to") Long to, @QueryParam("ago") Long ago, MethodCallback<List<SystemStats>> callback);
 
   @POST
   @Path("memory/gc")
-  void requestGarbageCollection(MethodCallback<MemoryStats> callback);
+  void requestGarbageCollection(MethodCallback<SystemStats> callback);
 
   @GET
   @Path("ping")

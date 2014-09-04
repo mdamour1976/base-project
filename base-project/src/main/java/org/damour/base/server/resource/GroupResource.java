@@ -11,10 +11,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.GroupMembership;
 import org.damour.base.client.objects.PendingGroupMembership;
 import org.damour.base.client.objects.User;
@@ -42,18 +43,18 @@ public class GroupResource {
       session = HibernateUtil.getInstance().getSession();
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (authUser == null) {
-        throw new SimpleMessageException("Could not join group, attempt to join with unauthorized client.");
+        throw new WebApplicationException(new Exception("Could not join group, attempt to join with unauthorized client."), Response.Status.UNAUTHORIZED);
       }
       UserGroup group = (UserGroup) session.load(UserGroup.class, groupId);
       User user = (User) session.load(User.class, userId);
 
       if (group == null || user == null) {
-        throw new SimpleMessageException("Could not join group, user and group not found.");
+        throw new WebApplicationException(new Exception("Could not join group, user and group not found."), Response.Status.NOT_FOUND);
       }
 
       // the group owner and an administrator may add users to groups without obeying the 'lock'
       if (group.isLocked() && !authUser.isAdministrator() && !group.getOwner().getId().equals(authUser.getId())) {
-        throw new SimpleMessageException("This group is currently not accepting new members.");
+        throw new WebApplicationException(new Exception("This group is currently not accepting new members."), Response.Status.FORBIDDEN);
       }
 
       if (authUser.isAdministrator() || group.isAutoJoin() || group.getOwner().getId().equals(authUser.getId())) {
@@ -75,15 +76,15 @@ public class GroupResource {
         BaseSystem.getEmailService().sendMessage(BaseSystem.getSmtpHost(), BaseSystem.getAdminEmailAddress(), BaseSystem.getAdminEmailAddress(),
             group.getOwner().getEmail(), "Group join request from " + user.getUsername(),
             "[" + BaseSystem.getDomainName() + "] " + user.getUsername() + " has requested permission to join your group " + group.getName());
-        throw new SimpleMessageException("Could not join group, request submitted to group owner.");
+        throw new WebApplicationException(new Exception("Could not join group, request submitted to group owner."), Response.Status.ACCEPTED);
       }
-      throw new SimpleMessageException("Could not join group.");
+      throw new WebApplicationException(new Exception("Could not join group."), Response.Status.FORBIDDEN);
     } catch (org.hibernate.exception.ConstraintViolationException e) {
       try {
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException("Could not join group, user already a member or add request pending.");
+      throw new WebApplicationException(new Exception("Could not join group, user already a member or add request pending."), Response.Status.FORBIDDEN);
     } finally {
       try {
         session.close();
@@ -116,7 +117,7 @@ public class GroupResource {
           List<UserGroup> existingGroups = SecurityHelper.getOwnedUserGroups(session, group.getOwner());
           for (UserGroup existingGroup : existingGroups) {
             if (existingGroup.getName().equalsIgnoreCase(group.getName())) {
-              throw new SimpleMessageException("A group already exists with this name.");
+              throw new WebApplicationException(new Exception("A group already exists with this name."), Response.Status.CONFLICT);
             }
           }
           session.save(group);
@@ -140,7 +141,7 @@ public class GroupResource {
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException(t.getMessage());
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       try {
         session.close();
@@ -159,13 +160,14 @@ public class GroupResource {
       session = HibernateUtil.getInstance().getSession();
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (authUser == null) {
-        throw new SimpleMessageException("Could not remove user from group, attempt made with unauthorized client.");
+        throw new WebApplicationException(new Exception("Could not remove user from group, attempt made with unauthorized client."),
+            Response.Status.UNAUTHORIZED);
       }
       UserGroup group = (UserGroup) session.load(UserGroup.class, groupId);
       User user = (User) session.load(User.class, userId);
 
       if (group == null || user == null) {
-        throw new SimpleMessageException("Could not remove user from group, user or group not found.");
+        throw new WebApplicationException(new Exception("Could not remove user from group, user or group not found."), Response.Status.NOT_FOUND);
       }
 
       if (authUser.isAdministrator() || group.isAutoJoin() || group.getOwner().getId().equals(authUser.getId())) {
@@ -182,7 +184,7 @@ public class GroupResource {
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException(t.getMessage());
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       try {
         session.close();
@@ -205,14 +207,14 @@ public class GroupResource {
         SecurityHelper.deleteUserGroup(session, group);
         tx.commit();
       } else {
-        throw new SimpleMessageException("Could not delete group, insufficient privilidges.");
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
     } catch (Throwable t) {
       try {
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException(t.getMessage());
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       try {
         session.close();
@@ -230,22 +232,22 @@ public class GroupResource {
       session = HibernateUtil.getInstance().getSession();
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (authUser == null) {
-        throw new SimpleMessageException("Could not join group, attempt to join with unauthorized client.");
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
       User user = (User) session.load(User.class, userId);
 
       if (user == null) {
-        throw new SimpleMessageException("Could not get pending groups for supplied user.");
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
 
       if (authUser.isAdministrator() || user.getId().equals(authUser.getId())) {
         // remember, administrator owns all
         return SecurityHelper.getPendingGroupMemberships(session, user);
       } else {
-        throw new SimpleMessageException("Could not get pending group memberships.");
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
       }
     } catch (Throwable t) {
-      throw new SimpleMessageException(t.getMessage());
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     } finally {
       try {
         session.close();
@@ -260,11 +262,11 @@ public class GroupResource {
   public List<PendingGroupMembership> submitPendingGroupMembershipApproval(@PathParam("userId") Long userId, @PathParam("approve") boolean approve,
       Set<PendingGroupMembership> members, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     if (members == null || members.size() == 0) {
-      throw new SimpleMessageException("List of members provided was empty.");
+      throw new WebApplicationException(new Exception("List of members provided was empty."), Response.Status.NOT_ACCEPTABLE);
     }
 
     if (userId == null) {
-      throw new SimpleMessageException("User not supplied.");
+      throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
 
     Session session = null;
@@ -274,7 +276,7 @@ public class GroupResource {
       tx = session.beginTransaction();
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (authUser == null) {
-        throw new SimpleMessageException("Cannot approve or deny requests without authentication.");
+        throw new WebApplicationException(new Exception("Cannot approve or deny requests without authentication."), Response.Status.UNAUTHORIZED);
       }
 
       // only the authenticated: admin or user themselves
@@ -298,7 +300,7 @@ public class GroupResource {
 
         return SecurityHelper.getPendingGroupMemberships(session, user);
       } else {
-        throw new SimpleMessageException("Cannot approve or deny requests without proper authentication.");
+        throw new WebApplicationException(new Exception("Cannot approve or deny requests without authentication."), Response.Status.UNAUTHORIZED);
       }
     } catch (Throwable t) {
       Logger.log(t);
@@ -306,21 +308,20 @@ public class GroupResource {
         tx.rollback();
       } catch (Throwable tt) {
       }
-      throw new SimpleMessageException(t.getMessage());
+      throw new WebApplicationException(t, Response.Status.INTERNAL_SERVER_ERROR);
     }
   }
 
   @GET
   @Path("/{groupId}/users")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<User> getUsers(@PathParam("groupId") Long groupId, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse)
-      throws SimpleMessageException {
+  public List<User> getUsers(@PathParam("groupId") Long groupId, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (authUser == null) {
-        throw new SimpleMessageException("User is not authenticated.");
+        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
       UserGroup group = (UserGroup) session.load(UserGroup.class, groupId);
       // only the group owner, group members and administrator can see the users in a group
@@ -332,7 +333,7 @@ public class GroupResource {
       if (memberships.contains(group)) {
         return SecurityHelper.getUsersInUserGroup(session, group);
       }
-      throw new SimpleMessageException("User is not authorized to list users in group.");
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
     } finally {
       session.close();
     }
@@ -341,7 +342,7 @@ public class GroupResource {
   @GET
   @Path("/list")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<UserGroup> getGroups(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) throws SimpleMessageException {
+  public List<UserGroup> getGroups(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
@@ -359,8 +360,7 @@ public class GroupResource {
   @GET
   @Path("/{username}/groups")
   @Produces(MediaType.APPLICATION_JSON)
-  public List<UserGroup> getGroups(@PathParam("username") String username, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse)
-      throws SimpleMessageException {
+  public List<UserGroup> getGroups(@PathParam("username") String username, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
@@ -381,7 +381,7 @@ public class GroupResource {
   @Path("/{username}/owned-groups")
   @Produces(MediaType.APPLICATION_JSON)
   public List<UserGroup> getOwnedGroups(@PathParam("username") String username, @Context HttpServletRequest httpRequest,
-      @Context HttpServletResponse httpResponse) throws SimpleMessageException {
+      @Context HttpServletResponse httpResponse) {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();

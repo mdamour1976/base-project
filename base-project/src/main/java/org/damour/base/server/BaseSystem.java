@@ -2,12 +2,18 @@ package org.damour.base.server;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.damour.base.client.objects.CpuStats;
+import org.damour.base.client.objects.SystemStats;
 import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.hibernate.HibernateUtil;
+
+import com.sun.management.OperatingSystemMXBean;
 
 public class BaseSystem {
 
@@ -17,6 +23,10 @@ public class BaseSystem {
   private static boolean isDomainNameSet = false;
   private static ClassLoader classLoader = null;
   private static Properties settings = null;
+
+  private static final int SYSTEM_STAT_INTERVAL = 10000; // interval
+  private static final int SYSTEM_STAT_SIZE = (24 * 60 * 60 * 1000) / SYSTEM_STAT_INTERVAL; // one day in 30/second intervals
+  private static ArrayList<SystemStats> systemStats = new ArrayList<SystemStats>();
 
   static {
     try {
@@ -30,6 +40,53 @@ public class BaseSystem {
         Logger.log(tt);
       }
     }
+
+    Thread t = new Thread(new Runnable() {
+      public void run() {
+        while (true) {
+          try {
+            systemStats.add(getSystemStat());
+            while (systemStats.size() > SYSTEM_STAT_SIZE) {
+              systemStats.remove(0);
+            }
+            Thread.sleep(SYSTEM_STAT_INTERVAL);
+          } catch (Throwable t) {
+          }
+        }
+      }
+    });
+    t.setDaemon(true);
+    t.start();
+  }
+
+  private static OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+
+  public static SystemStats getSystemStat() {
+    SystemStats stat = new SystemStats();
+
+    stat.setMaxMemory(Runtime.getRuntime().maxMemory());
+    stat.setTotalMemory(Runtime.getRuntime().totalMemory());
+    stat.setFreeMemory(Runtime.getRuntime().freeMemory());
+    stat.setStartupDate(BaseSystem.getStartupDate());
+    stat.setUptime(System.currentTimeMillis() - BaseSystem.getStartupDate());
+    stat.setCores(Runtime.getRuntime().availableProcessors());
+
+    stat.setArch(osBean.getArch());
+    stat.setFreePhysicalMemorySize(osBean.getFreePhysicalMemorySize());
+    stat.setFreeSwapSpaceSize(osBean.getFreeSwapSpaceSize());
+    stat.setOsName(osBean.getName());
+    stat.setTotalPhysicalMemorySize(osBean.getTotalPhysicalMemorySize());
+    stat.setTotalSwapSpaceSize(osBean.getTotalSwapSpaceSize());
+    stat.setVersion(osBean.getVersion());
+
+    CpuStats cpuStat = new CpuStats();
+    cpuStat.setProcessCpuLoad(osBean.getProcessCpuLoad());
+    cpuStat.setProcessCpuTime(osBean.getProcessCpuTime());
+    cpuStat.setSystemCpuLoad(osBean.getSystemCpuLoad());
+    cpuStat.setSystemLoadAverage(osBean.getSystemLoadAverage());
+    stat.setCpuStats(cpuStat);
+
+    return stat;
   }
 
   public static String getBaseUrl(HttpServletRequest request) {
@@ -193,4 +250,11 @@ public class BaseSystem {
     return settings;
   }
 
+  public static ArrayList<SystemStats> getSystemStats() {
+    return systemStats;
+  }
+
+  public static void setCpuStats(ArrayList<SystemStats> systemStats) {
+    BaseSystem.systemStats = systemStats;
+  }
 }

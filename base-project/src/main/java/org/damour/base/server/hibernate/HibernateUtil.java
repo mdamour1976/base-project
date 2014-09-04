@@ -204,13 +204,13 @@ public class HibernateUtil {
         // add c3p0 configuration
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.connection.provider_class")
             .setText("org.hibernate.connection.C3P0ConnectionProvider");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.min_size").setText("5");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.min_size").setText("1");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.max_size").setText("20");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.acquire_increment").setText("5");
+        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.acquire_increment").setText("1");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.timeout").setText("300");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.max_statements").setText("0");
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.idle_test_period").setText("120");
-        sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.numHelperThreads").setText("6");
+        //sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.c3p0.numHelperThreads").setText("10");
 
         // generate ddl and update database (if configured)
         sessionFactoryElement.addElement("property").addAttribute("name", "hibernate.hbm2ddl.auto").setText(hbm2ddlMode);

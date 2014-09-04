@@ -16,20 +16,20 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
-import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.AdvertisingInfo;
 import org.damour.base.client.objects.Email;
 import org.damour.base.client.objects.Feedback;
 import org.damour.base.client.objects.FileUploadStatus;
 import org.damour.base.client.objects.HibernateStat;
-import org.damour.base.client.objects.MemoryStats;
 import org.damour.base.client.objects.StringWrapper;
+import org.damour.base.client.objects.SystemStats;
 import org.damour.base.client.objects.User;
 import org.damour.base.client.utils.StringUtils;
 import org.damour.base.server.BaseSystem;
@@ -176,22 +176,34 @@ public class BaseResource {
   }
 
   @GET
-  @Path("/memory/stats")
+  @Path("/system/stats")
   @Produces(MediaType.APPLICATION_JSON)
-  public MemoryStats getMemoryStats(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) throws SimpleMessageException {
-    MemoryStats stats = new MemoryStats();
-    stats.setMaxMemory(Runtime.getRuntime().maxMemory());
-    stats.setTotalMemory(Runtime.getRuntime().totalMemory());
-    stats.setFreeMemory(Runtime.getRuntime().freeMemory());
-    stats.setStartupDate(BaseSystem.getStartupDate());
-    stats.setUptime(System.currentTimeMillis() - BaseSystem.getStartupDate());
+  public List<SystemStats> getSystemStats(@QueryParam("from") Long from, @QueryParam("to") Long to, @QueryParam("ago") Long ago,
+      @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
+    List<SystemStats> stats = new ArrayList<SystemStats>();
+    if (ago != null) {
+      to = System.currentTimeMillis();
+      from = to - ago;
+    }
+    if (to == null) {
+      to = System.currentTimeMillis();
+    }
+    if (from != null && BaseSystem.getSystemStats().size() > 0) {
+      for (SystemStats stat : BaseSystem.getSystemStats()) {
+        if (stat.getTime() >= from && stat.getTime() <= to) {
+          stats.add(stat);
+        }
+      }
+    } else {
+      stats.add(BaseSystem.getSystemStat());
+    }
     return stats;
   }
 
   @POST
   @Path("/memory/gc")
   @Produces(MediaType.APPLICATION_JSON)
-  public MemoryStats requestGarbageCollection(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) throws SimpleMessageException {
+  public SystemStats requestGarbageCollection(@Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     User authUser = (new UserResource()).getAuthenticatedUser(httpRequest, httpResponse);
     if (authUser != null && authUser.isAdministrator()) {
       try {
@@ -200,7 +212,7 @@ public class BaseResource {
         Logger.log(t);
       }
     }
-    return getMemoryStats(httpRequest, httpResponse);
+    return getSystemStats(null, null, null, httpRequest, httpResponse).get(0);
   }
 
   @GET

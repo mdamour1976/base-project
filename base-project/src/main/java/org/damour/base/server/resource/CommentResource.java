@@ -14,7 +14,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.damour.base.client.exceptions.SimpleMessageException;
 import org.damour.base.client.objects.Comment;
 import org.damour.base.client.objects.PermissibleObject;
 import org.damour.base.client.objects.Permission.PERM;
@@ -44,12 +43,10 @@ public class CommentResource {
       } catch (WebApplicationException wa) {
       }
       if (comment == null) {
-        Exception t = new SimpleMessageException("Comment not supplied.");
-        throw new WebApplicationException(t, Response.Status.NOT_FOUND);
+        throw new WebApplicationException(new Exception("Comment not supplied."), Response.Status.NOT_FOUND);
       }
       if (comment.getParent() == null) {
-        Exception t = new SimpleMessageException("PermissibleObject not supplied with comment.");
-        throw new WebApplicationException(t, Response.Status.NOT_FOUND);
+        throw new WebApplicationException(new Exception("PermissibleObject not supplied with comment."), Response.Status.NOT_FOUND);
       }
       Transaction tx = session.beginTransaction();
       try {
@@ -57,12 +54,10 @@ public class CommentResource {
         parentPermissibleObject.setNumComments(parentPermissibleObject.getNumComments() + 1);
         comment.setParent(parentPermissibleObject);
         if (!SecurityHelper.doesUserHavePermission(session, authUser, comment.getParent(), PERM.READ)) {
-          Exception t = new SimpleMessageException("User is not authorized to make comments on this content.");
-          throw new WebApplicationException(t, Response.Status.UNAUTHORIZED);
+          throw new WebApplicationException(new Exception("User is not authorized to make comments on this content."), Response.Status.UNAUTHORIZED);
         }
         if (!comment.getParent().isAllowComments()) {
-          Exception t = new SimpleMessageException("Comments are not allowed on this content.");
-          throw new WebApplicationException(t, Response.Status.UNAUTHORIZED);
+          throw new WebApplicationException(new Exception("Comments are not allowed on this content."), Response.Status.UNAUTHORIZED);
         }
         // the comment is approved if we are not moderating or if the commenter is the file owner
         comment.setApproved(!comment.getParent().isModerateComments() || comment.getParent().getOwner().equals(authUser));
@@ -87,16 +82,14 @@ public class CommentResource {
   @GET
   @Path("/{commentId}/approve")
   @Produces(MediaType.APPLICATION_JSON)
-  public Comment approveComment(@PathParam("commentId") Long commentId, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse)
-      throws SimpleMessageException {
+  public Comment approveComment(@PathParam("commentId") Long commentId, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
 
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (commentId == null) {
-        Exception t = new SimpleMessageException("Comment not supplied.");
-        throw new WebApplicationException(t, Response.Status.NOT_FOUND);
+        throw new WebApplicationException(new Exception("Comment not supplied."), Response.Status.NOT_FOUND);
       }
       if (authUser == null) {
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
@@ -105,7 +98,7 @@ public class CommentResource {
       try {
         Comment comment = ((Comment) session.load(Comment.class, commentId));
         if (!SecurityHelper.doesUserHavePermission(session, authUser, comment.getParent(), PERM.WRITE)) {
-          throw new SimpleMessageException("User is not authorized to approve comments for this content.");
+          throw new WebApplicationException(new Exception("User is not authorized to approve comments for this content."), Response.Status.UNAUTHORIZED);
         }
         comment.setApproved(true);
         session.save(comment);
@@ -127,24 +120,23 @@ public class CommentResource {
   @DELETE
   @Path("/{commentId}/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  public Boolean deleteComment(@PathParam("commentId") Long commentId, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse)
-      throws SimpleMessageException {
+  public Boolean deleteComment(@PathParam("commentId") Long commentId, @Context HttpServletRequest httpRequest, @Context HttpServletResponse httpResponse) {
     Session session = null;
     try {
       session = HibernateUtil.getInstance().getSession();
       if (commentId == null) {
-        throw new SimpleMessageException("Comment not supplied.");
+        throw new WebApplicationException(new Exception("Comment not supplied."), Response.Status.INTERNAL_SERVER_ERROR);
       }
       User authUser = (new UserResource()).getAuthenticatedUser(session, httpRequest, httpResponse);
       if (authUser == null) {
-        throw new SimpleMessageException("User is not authenticated.");
+        throw new WebApplicationException(new Exception("User is not authenticated."), Response.Status.INTERNAL_SERVER_ERROR);
       }
       Transaction tx = session.beginTransaction();
       try {
         Comment comment = ((Comment) session.load(Comment.class, commentId));
         boolean isAuthor = comment.getAuthor() != null && comment.getAuthor().equals(authUser);
         if (!isAuthor && !SecurityHelper.doesUserHavePermission(session, authUser, comment.getParent(), PERM.WRITE)) {
-          throw new SimpleMessageException("User is not authorized to delete comments for this content.");
+          throw new WebApplicationException(new Exception("User is not authorized to delete comments for this content."), Response.Status.INTERNAL_SERVER_ERROR);
         }
         // we can't delete this comment until we delete all the child comments
         CommentHelper.deleteComment(session, comment);

@@ -1,6 +1,7 @@
 package org.damour.base.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.damour.base.client.localization.IResourceBundleLoadCallback;
@@ -17,6 +18,7 @@ import org.fusesource.restygwt.client.MethodCallback;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Window;
@@ -57,6 +59,31 @@ public class BaseApplication implements EntryPoint, StartupListener {
       return false;
     }
     return window.top.applicationInitialized;
+  }-*/;
+
+  private static HashMap<String, JavaScriptObject> loadedJsMap = new HashMap<String, JavaScriptObject>();
+
+  public static JavaScriptObject loadjsfile(String src, IGenericCallback<JavaScriptObject> loadedCallback) {
+    JavaScriptObject script = loadedJsMap.get(src);
+    if (script == null) {
+      script = _loadjsfile(src, loadedCallback);
+      loadedJsMap.put(src, script);
+    } else {
+      loadedCallback.invoke(script);  
+    }
+    return script;
+  }
+
+  private static native JavaScriptObject _loadjsfile(String src, IGenericCallback<JavaScriptObject> loadedCallback)
+  /*-{
+    var fileref=$doc.createElement('script');
+    fileref.setAttribute("type","text/javascript");
+    fileref.setAttribute("src", src);
+    $doc.getElementsByTagName("head")[0].appendChild(fileref);
+    fileref.onload = function () {
+      loadedCallback.@org.damour.base.client.ui.IGenericCallback::invoke(Ljava/lang/Object;)(fileref);
+    }
+    return fileref;
   }-*/;
 
   /**
